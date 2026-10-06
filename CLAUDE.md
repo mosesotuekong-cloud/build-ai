@@ -1,1 +1,25 @@
 @AGENTS.md
+
+# Builda
+
+**Start of every session: read `BRIEF.md` in full.** It is the product brief and decisions log. Ask Moses before changing it; record confirmed decisions in its "Decisions log".
+
+## Commands
+
+- `npm run dev`: Next.js dev server on http://localhost:3000
+- `npm run db:start` / `npm run db:stop`: Supabase local stack (needs Docker Desktop running)
+- `npm run db:reset`: re-run every migration and `supabase/seed.sql`, then `npm run db:seed-users`
+- `npm run db:types`: regenerate `lib/db/types.ts` from the local database
+- `npm test`: Vitest unit tests; `npm run test:e2e`: Playwright
+- `npm run typecheck`, `npm run lint`
+
+Local URLs: Studio http://localhost:54323, test inbox (magic links) http://localhost:54319.
+
+## Rules of thumb
+
+- Schema changes go only in new files in `supabase/migrations/`. Every table has RLS enabled.
+- All AI calls go through `getAIProvider()` in `lib/ai/`. Validate every response with zod. Prompts live in `lib/ai/prompts/`, one file per prompt.
+- All n8n calls go through `lib/n8n/client.ts`.
+- `lib/supabase/admin.ts` (service role) is server-only. Never import it from client components.
+- Never assume a facilitator is present in a session (see "Architecture rule" in the brief).
+- Player-facing copy is plain, friendly British English.

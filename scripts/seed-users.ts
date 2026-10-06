@@ -1,0 +1,73 @@
+// Creates local users, the demo organisation and memberships.
+// Runs after `supabase db reset` (see `npm run db:reset`). Safe to re-run.
+import { config } from "dotenv";
+import { createClient } from "@supabase/supabase-js";
+
+config({ path: ".env.local" });
+
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!serviceKey) {
+  console.error("SUPABASE_SERVICE_ROLE_KEY missing. Run `npm run env:local` first.");
+  process.exit(1);
+}
+if (!/127\.0\.0\.1|localhost/.test(url)) {
+  console.error(`Refusing to seed users into a non-local Supabase (${url}).`);
+  process.exit(1);
+}
+
+const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+
+const superAdmins = (process.env.SUPER_ADMIN_EMAILS ?? "otumosesjobs@gmail.com")
+  .split(",")
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
+
+const DEMO_ORG = { name: "Demo Company Ltd", slug: "demo-company", session_credits: 10 };
+const FACILITATOR_EMAIL = "facilitator@builda.test";
+const PENDING_EMAIL = "pending@builda.test"; // signed up but not in any org
+
+async function ensureUser(email: string): Promise<string> {
+  const { data: list, error: listError } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  if (listError) throw listError;
+  const existing = list.users.find((u) => u.email?.toLowerCase() === email);
+  if (existing) return existing.id;
+  const { data, error } = await admin.auth.admin.createUser({ email, email_confirm: true });
+  if (error || !data.user) throw error ?? new Error(`Could not create ${email}`);
+  return data.user.id;
+}
+
+async function main() {
+  const { data: org, error: orgError } = await admin
+    .from("organizations")
+    .upsert(DEMO_ORG, { onConflict: "slug" })
+    .select("id")
+    .single();
+  if (orgError) throw orgError;
+
+  const facilitatorId = await ensureUser(FACILITATOR_EMAIL);
+  await ensureUser(PENDING_EMAIL);
+
+  const members = [{ org_id: org.id, user_id: facilitatorId, role: "admin" as const }];
+
+  for (const email of superAdmins) {
+    const id = await ensureUser(email);
+    const { error } = await admin.from("platform_admins").upsert({ user_id: id, email });
+    if (error) throw error;
+    // Super admins are also members of the demo org so they can try everything.
+    members.push({ org_id: org.id, user_id: id, role: "admin" });
+  }
+
+  const { error: memberError } = await admin.from("org_members").upsert(members, { onConflict: "org_id,user_id" });
+  if (memberError) throw memberError;
+
+  console.log("Seeded local users:");
+  console.log(`  ${FACILITATOR_EMAIL}  admin of ${DEMO_ORG.name}`);
+  for (const email of superAdmins) console.log(`  ${email}  super admin, admin of ${DEMO_ORG.name}`);
+  console.log(`  ${PENDING_EMAIL}  no organisation (sees the waiting page)`);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

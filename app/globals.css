@@ -1,26 +1,44 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Builda palette: warm clay, deep green, cream and ink. No SaaS blue. */
+@theme {
+  --color-cream-50: #fcf9f3;
+  --color-cream-100: #f7f0e4;
+  --color-cream-200: #ecdfc9;
+  --color-cream-300: #dccab0;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-clay-50: #fbeee7;
+  --color-clay-100: #f5d9cb;
+  --color-clay-400: #d9724b;
+  --color-clay-500: #c2562f;
+  --color-clay-600: #a84624;
+  --color-clay-700: #86381d;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-forest-50: #e8f1ec;
+  --color-forest-100: #d3e5da;
+  --color-forest-500: #2f6e52;
+  --color-forest-600: #255a43;
+  --color-forest-700: #1d4734;
+  --color-forest-900: #12301f;
+
+  --color-sun-100: #fbedd2;
+  --color-sun-400: #e8a33d;
+  --color-sun-700: #8a5a14;
+
+  --color-ink-900: #241c17;
+  --color-ink-700: #4a3f37;
+  --color-ink-500: #7a6c61;
+  --color-ink-300: #b5a89c;
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display-face), var(--font-body), ui-sans-serif, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-cream-50);
+  color: var(--color-ink-900);
+}
+
+::selection {
+  background: var(--color-clay-100);
 }

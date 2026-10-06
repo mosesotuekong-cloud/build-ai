@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Builda
 
-## Getting Started
+A game-based workshop tool that teaches teams to spot and design automations in their own work, and gives the business a ranked list of real automation opportunities at the end. The product brief and decisions log are in [BRIEF.md](BRIEF.md).
 
-First, run the development server:
+## Run it locally
+
+You need Node 22+ and Docker Desktop (running). No external accounts are needed: without keys, the app uses mock AI and a local n8n fallback.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run db:start      # Supabase local stack (Postgres, Auth, Realtime, Storage)
+npm run env:local     # writes the local Supabase keys into .env.local
+npm run db:reset      # migrations + seed + local users
+npm run dev           # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Local users (sign in with a magic link; emails land in the test inbox at http://localhost:54319):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Email | What they see |
+| --- | --- |
+| `facilitator@builda.test` | Console for Demo Company Ltd |
+| `otumosesjobs@gmail.com` | Console plus super admin badge |
+| `pending@builda.test` | "Waiting for access" page |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Supabase Studio: http://localhost:54323
 
-## Learn More
+## Tests
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm test              # Vitest unit tests
+npm run test:e2e      # Playwright (starts the dev server if needed)
+npm run typecheck
+npm run lint
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Going live later
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Fill in `ANTHROPIC_API_KEY`, `N8N_WEBHOOK_BASE_URL` and `N8N_WEBHOOK_SECRET` in `.env.local`. The "Mock AI" and "Mock n8n" banners in the console disappear when the matching key is set. See `.env.example` for every variable.
 
-## Deploy on Vercel
+## Where things live
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `lib/config/`: product name, env, model names
+- `lib/ai/`: the AI provider (Anthropic or mock), prompts, schemas, fixtures
+- `lib/n8n/`: the n8n client and its local fallback
+- `lib/supabase/`: Supabase clients (browser, server, service role)
+- `supabase/migrations/`: every schema change
+- `seed/hr-cards.md`: the default HR deck
