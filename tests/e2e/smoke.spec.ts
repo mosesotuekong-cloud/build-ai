@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-test("home page shows the wordmark and the five slots", async ({ page }) => {
+test("home page shows the headline and plays the demo round", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByLabel("Builda").first()).toBeVisible();
-  await expect(page.getByRole("list", { name: "The five-slot canvas" }).getByRole("listitem")).toHaveCount(5);
+  await expect(page.getByRole("heading", { level: 1, name: "Your team knows what's broken." })).toBeVisible();
+  await expect(page.getByText("Watch a round")).toBeVisible();
+  // The demo deals cards, then builds the five-slot design.
+  await expect(page.getByText("Candidate submits the application form")).toBeVisible({ timeout: 10_000 });
 });
 
 test("the console sends signed-out visitors to sign in", async ({ page }) => {

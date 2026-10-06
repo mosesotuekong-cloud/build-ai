@@ -8,9 +8,13 @@ The product name lives in a single config constant (`lib/config/app.ts`) so it c
 
 Newest first. Add a line whenever Moses confirms a change.
 
+- 2026-10-06: The app is gamified (see "Game feel"). Motion library: `motion` (motion/react). Reduced-motion settings are honoured.
+- 2026-10-06: Brand updated to match the promo reel: green #0E5E4E (primary), amber #EAAB4E (reserved for "Human in control" and game highlights), cream #FDF5E8 (background), ink #1B1F1D (text). Fonts: Caladea Bold (display) and Carlito (UI). This replaces the earlier clay palette.
+- 2026-10-06: The reveal includes a few awards on top of the overall score, such as "Best human checkpoint" and "Most believable hours saved".
+- 2026-10-06: Optional sound on the presenter screen only, never on phones, with a facilitator toggle.
+- 2026-10-06: Claude writes a one-line "what it costs the business" for each seed HR card, from its story. Moses can edit them.
 - 2026-10-06: Project lives at `C:\dev\automation-breakout` (moved out of OneDrive).
 - 2026-10-06: Product name shown in the UI is **Builda**. The logo is the word "BUILDA" set as a wordmark, with no separate mark.
-- 2026-10-06: Palette is warm: clay/terracotta (primary), deep green (secondary), cream (background), ink (text). No SaaS blue.
 - 2026-10-06: Super admin is set by `SUPER_ADMIN_EMAILS` (default `otumosesjobs@gmail.com`) and synced into a `platform_admins` table.
 - 2026-10-06: Until milestone 10 (super admin screens), orgs and memberships come only from the seed. A signed-in facilitator with no org sees a "waiting for access" page.
 - 2026-10-06: A session credit is used when a session first moves from `draft` to `lobby`. Drafts are free.
@@ -55,6 +59,19 @@ Plus: automation name, hours saved per month (rough guess), tools (optional), an
 
 Worked example shown to players: "Candidate submits the application form (trigger) → CV text is read (steps) → AI scores it against the job (decision) → invite, recruiter review or polite decline is sent (action) → recruiter decides on every 50–69 score (human)."
 
+## Game feel
+
+Builda should feel like a game in the room, while rewarding good thinking rather than speed. Agreed 2026-10-06.
+
+- Real game objects, not form fields. Case studies are physical-looking cards that tilt, cast a shadow and flip; teams draw a case from a fanned hand. The five slots are sockets on a board: filling one snaps it shut with a spring and lights the connector to the next, so a complete design lights up like a circuit. Amber is reserved for "Human in control".
+- Hint tokens are coins. Spending one flips a coin out of the stash; the twist drops a bonus coin in.
+- Big moments: the twist dims the screen, stamps "TWIST" on the canvas and vibrates Android phones; teams "Lock it in" to submit; the reveal flips the reference solution slot by slot beside the team's design.
+- Presenter screen as a scoreboard: team names pop in as they join; live progress boards show which slots each team has filled, never their content; judging ends with a drumroll and an animated leaderboard; awards at reveal. Optional sound on the projector only.
+- The facilitator console stays calm, with light motion only.
+- Never reward speed. No points for submitting first.
+- Performance: animate transform and opacity only, keep phones light (many players use budget Android phones on venue wifi), and honour the reduced-motion setting.
+- The shared game pieces (card, slot socket, connector, token coin, stamp, meter, score ring) live in `components/game/` and are reused on every screen.
+
 ## Build without keys first
 
 Real keys and accounts come later. Everything must run locally with no external accounts:
@@ -68,7 +85,7 @@ Real keys and accounts come later. Everything must run locally with no external 
 ## Stack
 
 - Next.js (App Router) with TypeScript, deployed to Vercel later.
-- Tailwind CSS. Mobile-first for the team view. Clean, warm, confident design, not generic SaaS blue.
+- Tailwind CSS. Mobile-first for the team view. Clean, warm, confident design, not generic SaaS blue. Gamified motion with the `motion` library (see "Game feel").
 - Supabase: Postgres with row-level security, Auth (email magic link for facilitators and admins; anonymous sign-in for players), Realtime for live session sync, Storage for exports.
 - Anthropic TypeScript SDK for live AI calls, with structured outputs. Validate every AI response with zod before using it. Keep model names in config.
 - n8n (Moses's cloud instance) for non-live AI work, reached by authenticated webhooks with a shared secret header. n8n writes results back to Supabase using a service key, or returns them to the app.

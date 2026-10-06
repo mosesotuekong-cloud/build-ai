@@ -26,7 +26,7 @@ export default async function WaitingPage() {
           </p>
           <p className="text-sm text-ink-500">Signed in as {ctx.email}</p>
           <form action="/auth/signout" method="post">
-            <button className="text-sm font-semibold text-clay-600 hover:underline">Sign out</button>
+            <button className="text-sm font-semibold text-green-700 hover:underline">Sign out</button>
           </form>
         </Card>
       </div>

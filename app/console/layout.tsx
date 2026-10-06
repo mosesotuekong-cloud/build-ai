@@ -10,7 +10,7 @@ export default async function ConsoleLayout({ children }: LayoutProps<"/console"
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <MockBanner status={getMockStatus()} />
-      <header className="border-b border-cream-200 bg-cream-50/90 backdrop-blur">
+      <header className="border-b border-cream-200 bg-cream-100/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
           <div className="flex items-center gap-4">
             <Link href="/console">
@@ -23,12 +23,15 @@ export default async function ConsoleLayout({ children }: LayoutProps<"/console"
             )}
           </div>
           <div className="flex items-center gap-4 text-sm">
+            <Link href="/console/kit" className="font-semibold text-ink-700 hover:text-green-700">
+              Game kit
+            </Link>
             {ctx.isPlatformAdmin && (
-              <span className="rounded-full bg-forest-100 px-3 py-1 font-semibold text-forest-700">Super admin</span>
+              <span className="rounded-full bg-green-100 px-3 py-1 font-semibold text-green-700">Super admin</span>
             )}
             <span className="hidden text-ink-500 md:inline">{ctx.email}</span>
             <form action="/auth/signout" method="post">
-              <button className="font-semibold text-ink-700 hover:text-clay-600">Sign out</button>
+              <button className="font-semibold text-ink-700 hover:text-green-700">Sign out</button>
             </form>
           </div>
         </div>

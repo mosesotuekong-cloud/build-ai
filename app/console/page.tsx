@@ -29,7 +29,7 @@ export default async function ConsoleHome() {
         </Card>
         <Card className="space-y-2">
           <h2 className="font-display text-lg font-semibold">Session credits</h2>
-          <p className="font-display text-4xl font-bold text-forest-600">{org?.sessionCredits ?? 0}</p>
+          <p className="font-display text-4xl font-bold text-green-600">{org?.sessionCredits ?? 0}</p>
           <p className="text-sm text-ink-500">One credit is used when a session opens its lobby.</p>
         </Card>
       </div>

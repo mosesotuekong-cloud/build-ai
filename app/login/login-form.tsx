@@ -15,7 +15,7 @@ export function LoginForm({ next, isLocal }: { next?: string; isLocal: boolean }
           We&apos;ve sent a sign-in link to <strong>{state.email}</strong>. It works once and expires in an hour.
         </p>
         {isLocal && (
-          <p className="rounded-xl bg-forest-50 p-3 text-sm text-forest-700">
+          <p className="rounded-xl bg-green-50 p-3 text-sm text-green-700">
             Running locally? Open the test inbox at{" "}
             <a className="font-semibold underline" href="http://localhost:54319" target="_blank" rel="noreferrer">
               localhost:54319
@@ -38,11 +38,11 @@ export function LoginForm({ next, isLocal }: { next?: string; isLocal: boolean }
           required
           autoComplete="email"
           placeholder="you@company.com"
-          className="w-full rounded-xl border border-cream-300 bg-white px-4 py-3 text-base outline-none focus:border-clay-500 focus:ring-2 focus:ring-clay-100"
+          className="w-full rounded-xl border border-cream-300 bg-white px-4 py-3 text-base outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100"
         />
       </label>
       {state.status === "error" && (
-        <p className="text-sm text-clay-700" role="alert">
+        <p className="text-sm text-danger-700" role="alert">
           {state.message}
         </p>
       )}

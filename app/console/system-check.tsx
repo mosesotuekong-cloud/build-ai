@@ -24,14 +24,14 @@ export function SystemCheck() {
       </div>
 
       {result && !result.ok && (
-        <p className="rounded-xl bg-clay-50 p-3 text-sm text-clay-700" role="alert">
+        <p className="rounded-xl bg-danger-50 p-3 text-sm text-danger-700" role="alert">
           {result.message}
         </p>
       )}
 
       {result?.ok && (
         <div className="space-y-3">
-          <p className="text-sm text-forest-700">
+          <p className="text-sm text-green-700">
             Six valid cases in {(result.ms / 1000).toFixed(1)}s via {result.mode === "local" ? "the local n8n fallback" : "n8n"}.
           </p>
           <ul className="grid gap-3 md:grid-cols-2">
@@ -39,7 +39,7 @@ export function SystemCheck() {
               <li key={c.title} className="space-y-2 rounded-xl border border-cream-200 bg-cream-50 p-4">
                 <h3 className="font-display font-semibold">{c.title}</h3>
                 <p className="text-sm text-ink-700">{c.story}</p>
-                <p className="text-sm text-clay-700">{c.cost}</p>
+                <p className="text-sm text-amber-700">{c.cost}</p>
                 <p className="text-xs text-ink-500">Who feels it: {c.who_feels_it}</p>
               </li>
             ))}
