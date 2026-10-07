@@ -4,6 +4,7 @@ import type { MockStatus } from "@/lib/config/env";
 export function MockBanner({ status }: { status: MockStatus }) {
   const active = [status.mockAI && "Mock AI", status.mockN8n && "Mock n8n"].filter(Boolean) as string[];
   if (active.length === 0) return null;
+  const live = status.aiProvider === "openai" ? "AI is live on OpenAI. " : status.aiProvider === "anthropic" ? "AI is live on Anthropic. " : "";
   return (
     <div role="status" className="border-b border-amber-400/40 bg-amber-100 px-4 py-2 text-sm text-amber-700">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2">
@@ -12,7 +13,12 @@ export function MockBanner({ status }: { status: MockStatus }) {
             {label}
           </span>
         ))}
-        <span>Responses come from local sample data. Add the keys in <code>.env.local</code> to go live.</span>
+        <span>
+          {live}
+          {status.mockAI ? "AI responses come from local sample data. " : ""}
+          {status.mockN8n ? "n8n jobs run locally inside the app. " : ""}
+          Add the keys in <code>.env.local</code> to go live.
+        </span>
       </div>
     </div>
   );

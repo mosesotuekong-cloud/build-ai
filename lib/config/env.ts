@@ -15,10 +15,13 @@ const serverEnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: optionalString,
   NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
   ANTHROPIC_API_KEY: optionalString,
+  OPENAI_API_KEY: optionalString,
   N8N_WEBHOOK_BASE_URL: optionalString,
   N8N_WEBHOOK_SECRET: optionalString,
   SUPER_ADMIN_EMAILS: z.string().default("otumosesjobs@gmail.com"),
   AI_MOCK_DELAY_MS: z.coerce.number().int().min(0).default(600),
+  // auto: Anthropic, then OpenAI, then mock. Set to mock to save credit while clicking around.
+  AI_PROVIDER: z.enum(["auto", "anthropic", "openai", "mock"]).default("auto"),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -27,12 +30,25 @@ export function readServerEnv(source: Record<string, string | undefined> = proce
   return serverEnvSchema.parse(source);
 }
 
-export type MockStatus = { mockAI: boolean; mockN8n: boolean };
+export type AIProviderName = "anthropic" | "openai" | "mock";
+export type MockStatus = { mockAI: boolean; mockN8n: boolean; aiProvider: AIProviderName };
+
+// Which AI provider is live: Anthropic first, then OpenAI, then the mock.
+export function activeAIProvider(env: ServerEnv = readServerEnv()): AIProviderName {
+  if (env.AI_PROVIDER === "mock") return "mock";
+  if (env.AI_PROVIDER === "anthropic" && env.ANTHROPIC_API_KEY) return "anthropic";
+  if (env.AI_PROVIDER === "openai" && env.OPENAI_API_KEY) return "openai";
+  if (env.ANTHROPIC_API_KEY) return "anthropic";
+  if (env.OPENAI_API_KEY) return "openai";
+  return "mock";
+}
 
 export function getMockStatus(env: ServerEnv = readServerEnv()): MockStatus {
+  const aiProvider = activeAIProvider(env);
   return {
-    mockAI: !env.ANTHROPIC_API_KEY,
+    mockAI: aiProvider === "mock",
     mockN8n: !env.N8N_WEBHOOK_BASE_URL,
+    aiProvider,
   };
 }
 

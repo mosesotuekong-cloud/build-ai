@@ -37,7 +37,7 @@ export type StreamTextRequest = {
 };
 
 export interface AIProvider {
-  readonly name: "anthropic" | "mock";
+  readonly name: "anthropic" | "openai" | "mock";
   // Returns an object that has already passed schema validation.
   generateObject<T>(req: GenerateObjectRequest<T>): Promise<T>;
   // Yields text chunks as they arrive.

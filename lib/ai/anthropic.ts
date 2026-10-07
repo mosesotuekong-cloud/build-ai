@@ -1,12 +1,12 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { MODELS, MODEL_EFFORT } from "@/lib/config/models";
+import { MODELS, MODEL_EFFORT, type ModelRole } from "@/lib/config/models";
 import { AIOutputError, AIRefusalError, type AIProvider, type GenerateObjectRequest, type StreamTextRequest } from "./types";
 
 // Haiku 4.5 does not accept the effort setting or server-side fallbacks.
-function modelOptions(role: keyof typeof MODELS) {
-  const model = MODELS[role];
+function modelOptions(role: ModelRole) {
+  const model = MODELS.anthropic[role];
   if (model.startsWith("claude-haiku")) return { model };
   return {
     model,
