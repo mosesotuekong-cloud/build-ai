@@ -8,6 +8,9 @@ The product name lives in a single config constant (`lib/config/app.ts`) so it c
 
 Newest first. Add a line whenever Moses confirms a change.
 
+- 2026-10-07: OpenAI added as a second AI provider (Moses has an OpenAI key). Provider order: Anthropic if `ANTHROPIC_API_KEY` is set, otherwise OpenAI if `OPENAI_API_KEY` is set, otherwise the mock. Model names for both providers live in `lib/config/models.ts`. Every guardrail and zod check applies to both.
+- 2026-10-07: The "A day in the office" intro (office simulation) is proposed but not approved; not in the plan yet.
+- 2026-10-07: Market research additions approved. Phase one gains a proactive inline coach with token earn-back, a prioritise phase, a commitments phase and optional before-and-after checks with player names at join. Phase one and a half designs the data model now (compliance and funding pack, certificates, AI risk twists, extra opportunity map exports) but builds the screens after the first paid pilot. See "Market research additions".
 - 2026-10-06: The app is gamified (see "Game feel"). Motion library: `motion` (motion/react). Reduced-motion settings are honoured.
 - 2026-10-06: Brand updated to match the promo reel: green #0E5E4E (primary), amber #EAAB4E (reserved for "Human in control" and game highlights), cream #FDF5E8 (background), ink #1B1F1D (text). Fonts: Caladea Bold (display) and Carlito (UI). This replaces the earlier clay palette.
 - 2026-10-06: The reveal includes a few awards on top of the overall score, such as "Best human checkpoint" and "Most believable hours saved".
@@ -32,18 +35,29 @@ It started as a paper breakout game run at an HR & Automation event: teams got a
 
 The buyers are L&D and HR leads in companies, and trainers who run in-house sessions. The audience is mostly Nigerian businesses, so case content should reflect local reality (WhatsApp, guarantor forms, HMOs, paper forms, Excel, Microsoft and Google tools, local HRIS).
 
+What buyers need to see, from Moses's market research:
+
+- Proof of competence, not attendance. L&D buyers want evidence people got better, hence the before-and-after check.
+- Follow-through. Discovery workshops (SAP, OpenAI) end with ranked use cases, named owners and first milestones; internal hackathons rarely show follow-through. Hence the prioritise and commitments phases.
+- Funding and compliance evidence. Nigerian employers pay 1% of payroll to the ITF and can claim back up to 50% for ITF-approved training, with evidence. HR professionals earn CIPM CPD points for external training. EU-facing companies need documented AI literacy covering risks and human oversight. Hence the compliance pack, certificates and AI risk twists (phase one and a half).
+- A tutor people actually use. Socratic tutors get ignored when students have to ask for help; Khan Academy fixed this by putting the tutor inline and having it appear automatically after mistakes. Hence the proactive inline coach.
+
 ## The flow
 
 1. A facilitator logs in, creates a session, enters light company context (industry, size, tools staff use) and picks one or more functions (HR, Finance, Sales, Procurement, Operations, Customer Service, IT).
 2. AI generates six case studies per function. The facilitator can edit, delete, reorder or add their own cases. Decks are saved and reusable.
-3. Teams join on their phones with a session code and a team name. No player accounts.
-4. Each team picks or is assigned a case and fills the five-slot canvas, plus an automation name, hours saved per month and tools.
-5. An AI coach helps each team scope the solution through questions. It never gives the answer.
-6. Halfway through, a twist changes the team's situation and they adapt their design.
-7. Designs are judged against a rubric. The facilitator can override any score. A leaderboard shows on the presenter screen.
-8. Reveal: a reference solution for each case is generated and shown.
-9. Each team downloads its own design as a tool-neutral blueprint and a starter n8n workflow JSON.
-10. The facilitator gets an opportunity map: a ranked automation backlog for the company plus a learning section showing where teams struggled.
+3. Players join on their phones with a session code, their name and a team name. No player accounts.
+4. Optional (on by default) baseline check: each player spends 4 minutes alone on a short problem card and the five slots.
+5. Each team picks or is assigned a case and fills the five-slot canvas, plus an automation name, hours saved per month and tools.
+6. An AI coach helps each team scope the solution through questions. It never gives the answer. It appears inline next to a weak slot, and the full conversation lives in a side thread.
+7. Halfway through, a twist changes the team's situation and they adapt their design.
+8. Prioritise: each team places its own design on an impact by effort grid and says how often the process happens and whether the data is ready.
+9. Designs are judged against a rubric. The facilitator can override any score. A leaderboard shows on the presenter screen.
+10. Reveal: a reference solution for each case is generated and shown.
+11. Optional (on by default) post check: each player does a different card of the same difficulty, alone.
+12. Commitments: each team names an owner, one first step and a due date within 30 days.
+13. Each team downloads its own design as a tool-neutral blueprint and a starter n8n workflow JSON.
+14. The facilitator gets an opportunity map: a ranked automation backlog for the company, the teams' commitments, the before-and-after improvement, and a learning section showing where teams struggled.
 
 ## The five-slot canvas
 
@@ -66,6 +80,8 @@ Builda should feel like a game in the room, while rewarding good thinking rather
 - Real game objects, not form fields. Case studies are physical-looking cards that tilt, cast a shadow and flip; teams draw a case from a fanned hand. The five slots are sockets on a board: filling one snaps it shut with a spring and lights the connector to the next, so a complete design lights up like a circuit. Amber is reserved for "Human in control".
 - Hint tokens are coins. Spending one flips a coin out of the stash; the twist drops a bonus coin in.
 - Big moments: the twist dims the screen, stamps "TWIST" on the canvas and vibrates Android phones; teams "Lock it in" to submit; the reveal flips the reference solution slot by slot beside the team's design.
+- The new phases use the same game pieces: the baseline and post checks are a solo "warm-up round" and "final round" on the same slot sockets; prioritise is dragging the team's card onto the impact by effort grid; commitments is signing a pledge card that gets a stamp.
+- The inline coach pops up beside the weak slot as a small speech bubble, never a modal. Earning a token back drops a coin into the stash.
 - Presenter screen as a scoreboard: team names pop in as they join; live progress boards show which slots each team has filled, never their content; judging ends with a drumroll and an animated leaderboard; awards at reveal. Optional sound on the projector only.
 - The facilitator console stays calm, with light motion only.
 - Never reward speed. No points for submitting first.
@@ -87,7 +103,7 @@ Real keys and accounts come later. Everything must run locally with no external 
 - Next.js (App Router) with TypeScript, deployed to Vercel later.
 - Tailwind CSS. Mobile-first for the team view. Clean, warm, confident design, not generic SaaS blue. Gamified motion with the `motion` library (see "Game feel").
 - Supabase: Postgres with row-level security, Auth (email magic link for facilitators and admins; anonymous sign-in for players), Realtime for live session sync, Storage for exports.
-- Anthropic TypeScript SDK for live AI calls, with structured outputs. Validate every AI response with zod before using it. Keep model names in config.
+- Anthropic TypeScript SDK or OpenAI SDK for live AI calls (whichever key is set; see decisions log), with structured outputs. Validate every AI response with zod before using it. Keep model names in config.
 - n8n (Moses's cloud instance) for non-live AI work, reached by authenticated webhooks with a shared secret header. n8n writes results back to Supabase using a service key, or returns them to the app.
 - Vitest for unit tests and Playwright for a few end-to-end flows.
 
@@ -95,7 +111,7 @@ Real keys and accounts come later. Everything must run locally with no external 
 
 - Super admin (Moses): create organizations, activate or deactivate them, grant session credits. Billing is manual for now.
 - Facilitator (org member): build and edit decks, create and run sessions, watch any team's coach thread live, override scores, see reports.
-- Team player (anonymous): join by code, pick a team, work on the canvas, use the coach, submit.
+- Team player (anonymous sign-in, no account): join by code with their name, pick a team, do the optional checks, work on the canvas, use the coach, prioritise, submit, commit.
 - Presenter screen: a read-only view for the projector showing phase, timer, twist reveal, leaderboard and reveal.
 
 ## Architecture rule that matters most
@@ -106,9 +122,11 @@ A session must not require a facilitator, and must work with a single team of a 
 
 Model the session as an explicit state machine with server-side transitions only:
 
-`draft → lobby → solving → twist → solving_after_twist → judging → reveal → report → closed`
+`draft → lobby → baseline_check (optional) → solving → twist → solving_after_twist → prioritise → judging → reveal → post_check (optional) → commitments → report → closed`
 
 The facilitator (or, in a facilitator-less session, the system or the solo player) advances phases. Every transition is broadcast on a Realtime channel for the session. Timers are server-authoritative: store phase start time and duration, and let clients compute the countdown. Write unit tests for every allowed and disallowed transition.
+
+Optional phases: when the before-and-after check is off, `lobby → solving` and `reveal → commitments` are allowed directly and `baseline_check` / `post_check` are not. The transition table depends on session settings, and the tests cover both settings. The no-facilitator, single-player rule applies to every new phase: a solo player can complete the checks, prioritise and commit on their own.
 
 ## Data model (starting point)
 
@@ -116,17 +134,24 @@ Adjust as needed, but keep org isolation through RLS on every table.
 
 - organizations, org_members (role: admin, facilitator)
 - functions (catalog), decks, cases (title, story, cost of the problem, who feels it, function, source: ai or manual, order)
-- sessions (org, deck, phase, phase_started_at, phase_duration, settings: hint tokens, coach strictness, coach on/off, twist on/off), session_code
-- teams (session, name, case, hint_tokens_remaining), players (anonymous user, team)
-- designs (team, version: before_twist or after_twist, the five slots, name, hours saved, tools, systems, updated_at)
-- coach_messages (team, role, type: question, nudge, analogy, flag, content, slot, tokens_spent)
+- sessions (org, deck, phase, phase_started_at, phase_duration, started_at, ended_at, settings: hint tokens, twist bonus tokens, coach strictness, coach on/off, inline coach on/off and idle delay, max tokens earned back, twist on/off, twist mix (operational, risk or mixed), before-and-after check on/off), session_code
+- teams (session, name, case, hint_tokens_remaining, hint_tokens_earned), players (anonymous user, team, display name, joined_at, left_at)
+- designs (team, version: before_twist or after_twist, the five slots, name, hours saved, tools, systems, updated_at, plus prioritise fields on the final version: impact 1–5, effort 1–5, frequency, data readiness)
+- coach_messages (team, role, type: question, nudge, analogy, flag, content, slot, trigger: asked, inline_idle or inline_flag, tokens_spent, token_earned_at)
 - design_checks (team, design version, flags with slot, kind and question)
-- twists (team, content)
+- twists (team, kind: operational or risk, content)
 - scores (team, rubric breakdown, total, ai_reasoning, facilitator_override, final)
+- check_cards (a curated bank of short problem cards in matched pairs of equal difficulty, function, difficulty, pair id)
+- individual_checks (player, session, kind: baseline or post, check card, the five slots, rubric breakdown, total, ai_reasoning)
+- commitments (team, session, owner name, owner email optional, first step, due date within 30 days of the session, follow-up status)
 - reference_solutions (case, the five slots, explanation), generated only at reveal
 - blueprints (team, neutral plan JSON, n8n JSON in storage)
 - reports (session, opportunity map JSON, rendered document in storage)
-- jobs (type, status, payload, result, error) for n8n background work
+- report_exports (report, format: pdf, csv, jira or uipath, file in storage). PDF only in phase one.
+- compliance_templates (org or global, kind: itf_pack or ai_literacy, version, programme outline, learning outcomes, layout settings). Phase one and a half.
+- compliance_packs (session, template version, file in storage, generated_at). Phase one and a half.
+- certificates (player, session, hours, certificate number, file in storage, issued_at). Phase one and a half.
+- jobs (type, status, payload, result, error) for n8n background work, including `commitment-follow-up`
 
 ## AI features
 
@@ -150,6 +175,17 @@ It never fills a slot or writes their design for them, even if asked directly, a
 
 Access and privacy: for every system a team names, the coach asks early who owns it, whether the team can get access, and whether the data includes personal information.
 
+Proactive inline coach. As well as the side thread, the coach appears inline next to a slot when that slot looks weak, with one short question (always level 1, free):
+
+- a slot is still empty after the session's idle delay (default 4 minutes into solving), or
+- a design check flagged that slot.
+
+At most one open inline question per slot, and not again for the same slot until the team has changed it. The side thread keeps the full conversation, and inline questions appear in it too.
+
+Token earn-back. When a team meaningfully changes a slot after a coach question about that slot (inline or in the thread), it earns one hint token back. Each coach message can earn at most one token. The change must be real (not a single character or whitespace), and a team can earn at most the session's earn-back cap (default 3). Enforced on the server.
+
+All existing guardrails apply to inline questions: structured output, leak check and server-side tokens.
+
 Guardrails, all three required:
 
 - Structured output: every reply is `{ type: "question" | "nudge" | "analogy", slot, text }`. The app rejects any other shape.
@@ -171,11 +207,27 @@ Each flag names the slot and asks a question. It never fixes anything. Flags do 
 
 ### Hint tokens
 
-Default three per team, plus one when the twist lands. The facilitator can change both numbers per session. Plain coach questions are free.
+Default three per team, plus one when the twist lands, plus up to three earned back by acting on coach questions. The facilitator can change all three numbers per session. Plain coach questions are free.
 
 ### Twist (live)
 
 Generated per team, specific to their case and current design, realistic for the context. Examples: "The line manager is on leave for two weeks", "Half the staff don't have work email", "Finance says no new software this quarter". The pre-twist design is saved as a version.
+
+Twists have a kind. Phase one builds operational twists only. The `kind` field and the session's twist mix setting exist from the start, so AI risk twists (phase one and a half) slot in without a migration.
+
+### Prioritise (team, no AI)
+
+After solving_after_twist, each team drags its design onto an impact (low to high) by effort (low to high) grid, picks how often the process happens (daily, weekly, monthly, quarterly or less) and whether the data is ready (ready, partly, not yet). Stored on the final design version. The opportunity map shows the team's placement beside the AI's assessment, and points out where they disagree.
+
+### Before-and-after check (optional, on by default)
+
+At the start, each player does a 4-minute solo exercise on their own phone: a short problem card and the five slots. After the reveal, they do a different card of the same difficulty. Both are scored with the existing judge rubric and stored as individual checks. Cards come from a curated bank of matched pairs, not AI-generated per session, so difficulty stays consistent and results compare fairly across sessions. The report shows average improvement per session and per criterion, with human control and rule versus AI first.
+
+Players enter a name at join, with a short note: "Your facilitator sees your name next to your results. Anything shared outside your organisation is anonymous." Names never go to the AI provider. Prompts use player ids or "Player 1". Anything shared outside the facilitator's organisation is anonymised.
+
+### Commitments (team, no AI)
+
+After the reveal (and the post check, if on), each team names an owner (name, optional email), one first step and a due date within 30 days. Stored in commitments and listed in the opportunity map. A `commitment-follow-up` n8n job type exists from the start, to message each owner on the due date. In phase one it is only stored and mocked locally; nothing is sent.
 
 ### Judge (live, all teams in parallel)
 
@@ -196,7 +248,7 @@ Generated per case only when the session reaches reveal, with a short explanatio
 
 ### Opportunity map (n8n, after the session)
 
-Ranked automation backlog for the company: each case and the team's design, estimated hours saved, rule versus AI, effort, and whether IT access or approval is needed first. Plus a learning section built from coach threads and design-check flags, for example "6 of 8 teams left out a human checkpoint until prompted". Written in plain, human prose, not heavy tables. Exportable as PDF.
+Ranked automation backlog for the company: each case and the team's design, estimated hours saved, rule versus AI, effort, and whether IT access or approval is needed first. The ranking uses the team's own prioritise placement alongside the AI's assessment, and shows both when they disagree. Then the commitments (owner, first step, due date). Then the before-and-after improvement, if the check was on. Plus a learning section built from coach threads and design-check flags, for example "6 of 8 teams left out a human checkpoint until prompted". Written in plain, human prose, not heavy tables. Exportable as PDF (phase one), then CSV, Jira and UiPath Automation Hub formats (phase one and a half).
 
 ## Blueprint and n8n export
 
@@ -211,9 +263,29 @@ Do not let the AI write n8n JSON directly.
 
 The neutral plan is the source of truth. Later we will add Power Automate and Copilot Studio compilers, so keep the n8n compiler behind an interface. Write tests that compile every fixture plan and check the output is valid JSON with consistent node names and connections.
 
+## Market research additions
+
+Approved 2026-10-07. Phase one items are built inside the existing milestones (see "Build order"). Phase one and a half items get their data model now; their screens come after the first paid pilot.
+
+Phase one:
+
+1. Proactive inline coach with token earn-back (see "Coach").
+2. Prioritise phase (see "Prioritise").
+3. Commitments phase, commitments table and the mocked `commitment-follow-up` job (see "Commitments").
+4. Before-and-after check with player names at join (see "Before-and-after check").
+
+Phase one and a half (after the first paid pilot):
+
+5. Compliance and funding pack per session: attendance register (names, dates, duration), programme outline, learning outcomes and before-and-after results, formatted to attach to an ITF reimbursement claim or an AI literacy record. Built from editable templates (`compliance_templates`), because Moses will confirm the exact ITF requirements before the format is final.
+6. Per-participant PDF certificates with session details and hours, worded so HR staff can claim CIPM CPD credit.
+7. AI risk twist cards, for example "the AI scored a candidate unfairly", "the AI made up a leave balance", "staff data was pasted into a public chatbot". The facilitator chooses operational, risk or mixed. They push teams to strengthen the human control slot.
+8. More opportunity map exports: CSV first, then Jira and UiPath Automation Hub.
+
 ## Phase one scope
 
-In: everything above for facilitated sessions, with the default HR deck and AI-generated decks for the other functions.
+In: everything above for facilitated sessions, with the default HR deck and AI-generated decks for the other functions, including the phase one market research additions.
+
+Phase one and a half: the data model for items 5–8 above is designed into the phase one migrations; screens and generators are built after the first paid pilot.
 
 Out (phase two and later): solo mode UI, staff pain-point intake survey, Power Automate and Copilot exports, pushing workflows directly into a client's n8n, Paystack self-serve payments, trainer licensing. Keep the architecture ready for them, but do not build them.
 
@@ -223,15 +295,17 @@ Work in milestones. At the end of each one, run the tests, run the app locally, 
 
 1. Project setup: Next.js, Tailwind, Supabase local, migrations, seed, `.env.example`, mock AI and mock n8n providers, basic layout and auth for facilitators.
 2. Decks: function catalog, seed HR deck, create and edit decks and cases, AI case generation through the n8n client (mocked locally).
-3. Session engine: create a session, join code, lobby, the state machine, Realtime sync, server timers, presenter screen.
-4. Team canvas: phone view, five slots plus extras, autosave, live sync to facilitator view.
-5. Coach: streamed chat, hint ladder, structured output, leak check, tokens, access and privacy questions, facilitator live view.
-6. Design check and twist.
-7. Judging, facilitator overrides, leaderboard, reveal with reference solutions.
+3. Session engine: create a session, join code, lobby, the state machine with all phases (including baseline_check, prioritise, post_check and commitments, and the optional-phase rules), tests for every allowed and disallowed transition under both check settings, session settings (before-and-after check, inline coach delay, earn-back cap, twist mix), player name at join with the privacy note, attendance timestamps, Realtime sync, server timers, presenter screen.
+4. Team canvas: phone view, five slots plus extras, autosave, live sync to facilitator view; the prioritise grid (impact by effort, frequency, data readiness); the solo check screens for baseline and post checks on the same slot sockets; the check card bank (matched pairs) as seed data.
+5. Coach: streamed chat, hint ladder, structured output, leak check, tokens, access and privacy questions, facilitator live view; the proactive inline coach on idle slots; token earn-back with its server-side rules.
+6. Design check and twist: inline coach also appears on flagged slots; twists carry a kind (operational only in phase one).
+7. Judging, facilitator overrides, leaderboard, reveal with reference solutions; scoring of baseline and post checks with the same rubric; the commitments phase screen and the commitments table; the `commitment-follow-up` job type, mocked locally.
 8. Blueprint and n8n export.
-9. Opportunity map report and PDF export.
+9. Opportunity map report and PDF export, with the team's prioritise placement beside the AI's assessment, commitments, and before-and-after improvement per session and per criterion.
 10. Super admin: organizations, activation, session credits.
-11. Hardening: RLS tests, Playwright happy path for a full session with two teams, loading and error states, empty states, mobile checks.
+11. Hardening: RLS tests (including names staying inside the org), Playwright happy path for a full session with two teams through every phase with the checks on, and a shorter run with them off, loading and error states, empty states, mobile checks.
+
+Phase one and a half (after the first paid pilot, data model already in place): compliance and funding pack, certificates, AI risk twists, CSV, Jira and UiPath exports.
 
 ## Working agreements
 
@@ -239,6 +313,7 @@ Work in milestones. At the end of each one, run the tests, run the app locally, 
 - Prefer simple, readable code over clever abstractions.
 - Every AI response is validated before use, and every failure has a graceful fallback so a live room never stalls.
 - Never log or store API keys, and never send player content anywhere except the AI provider and our own database.
+- Player names and owner emails stay in our database. They never go to the AI provider, and anything shared outside the facilitator's organisation is anonymised.
 - Text the players see should sound human and friendly, in plain British English.
 
 ## Seed content: the default HR deck

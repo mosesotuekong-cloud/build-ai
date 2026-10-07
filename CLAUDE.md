@@ -21,5 +21,9 @@ Local URLs: Studio http://localhost:54323, test inbox (magic links) http://local
 - All AI calls go through `getAIProvider()` in `lib/ai/`. Validate every response with zod. Prompts live in `lib/ai/prompts/`, one file per prompt.
 - All n8n calls go through `lib/n8n/client.ts`.
 - `lib/supabase/admin.ts` (service role) is server-only. Never import it from client components.
-- Never assume a facilitator is present in a session (see "Architecture rule" in the brief).
+- Never assume a facilitator is present in a session (see "Architecture rule" in the brief). This includes every new phase: baseline_check, prioritise, post_check and commitments.
+- Session phases come from one transition table in `lib/session/`. The optional phases depend on session settings, and every allowed and disallowed transition has a unit test under both settings.
+- Player names and commitment owner emails never go to the AI provider. Use player ids or "Player 1" in prompts. Anything shared outside the facilitator's organisation is anonymised.
+- Hint tokens, earn-back and phase changes are enforced on the server only.
+- Phase one and a half features (compliance pack, certificates, AI risk twists, CSV/Jira/UiPath exports) get their columns and tables now; do not build their screens until Moses says so.
 - Player-facing copy is plain, friendly British English.
