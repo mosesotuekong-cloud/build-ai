@@ -79,6 +79,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"commitments": {
+                  Row: {
+                    "created_at": string,"due_date": string,"first_step": string,"follow_up_status": string,"id": string,"owner_email": string | null,"owner_name": string,"session_id": string,"team_id": string,"updated_at": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"due_date": string,"first_step": string,"follow_up_status"?: string,"id"?: string,"owner_email"?: string | null,"owner_name": string,"session_id": string,"team_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"due_date"?: string,"first_step"?: string,"follow_up_status"?: string,"id"?: string,"owner_email"?: string | null,"owner_name"?: string,"session_id"?: string,"team_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "commitments_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "sessions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "commitments_team_id_fkey"
+      columns: ["team_id"]
+isOneToOne: true
+      referencedRelation: "teams"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"decks": {
                   Row: {
                     "company_size": string,"copied_from": string | null,"country": string,"created_at": string,"created_by": string | null,"function_slugs": (string)[],"id": string,"industry": string,"name": string,"org_id": string | null,"pain_points": string,"target_platforms": (string)[],"tools": (string)[],"updated_at": string
@@ -327,13 +352,13 @@ isOneToOne: true
                   ]
                 },"scores": {
                   Row: {
-                    "ai_summary": string,"breakdown": NonNullable<Json>,"created_at": string,"design_version": Database["public"]['Enums']["design_version"],"facilitator_override": number | null,"final": number | null,"id": string,"team_id": string,"total": number
+                    "ai_summary": string,"assessment": Json | null,"breakdown": Json | null,"created_at": string,"design_version": Database["public"]['Enums']["design_version"],"facilitator_override": number | null,"final": number | null,"id": string,"status": string,"team_id": string,"total": number | null
                   }
                   Insert: {
-                    "ai_summary"?: string,"breakdown": NonNullable<Json>,"created_at"?: string,"design_version": Database["public"]['Enums']["design_version"],"facilitator_override"?: number | null,"final"?: never,"id"?: string,"team_id": string,"total": number
+                    "ai_summary"?: string,"assessment"?: Json | null,"breakdown"?: Json | null,"created_at"?: string,"design_version": Database["public"]['Enums']["design_version"],"facilitator_override"?: number | null,"final"?: never,"id"?: string,"status"?: string,"team_id": string,"total"?: number | null
                   }
                   Update: {
-                    "ai_summary"?: string,"breakdown"?: NonNullable<Json>,"created_at"?: string,"design_version"?: Database["public"]['Enums']["design_version"],"facilitator_override"?: number | null,"final"?: never,"id"?: string,"team_id"?: string,"total"?: number
+                    "ai_summary"?: string,"assessment"?: Json | null,"breakdown"?: Json | null,"created_at"?: string,"design_version"?: Database["public"]['Enums']["design_version"],"facilitator_override"?: number | null,"final"?: never,"id"?: string,"status"?: string,"team_id"?: string,"total"?: number | null
                   }
                   Relationships: [
                     {

@@ -145,13 +145,10 @@ export async function finishPractice(teamId: string): Promise<FinishResult> {
 
   const scorePromise = judgeDesign(provider, { case: data.case, design: data.design })
     .then(async (result) => {
-      await admin.from("scores").insert({
-        team_id: data.team.id,
-        design_version: "before_twist",
-        breakdown: result.breakdown,
-        total: result.total,
-        ai_summary: result.summary,
-      });
+      await admin.from("scores").upsert(
+        { team_id: data.team.id, design_version: "before_twist", breakdown: result.breakdown, total: result.total, ai_summary: result.summary, status: "done" },
+        { onConflict: "team_id,design_version" },
+      );
       return result;
     })
     .catch((error) => {

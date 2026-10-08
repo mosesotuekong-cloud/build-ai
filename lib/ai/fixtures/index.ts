@@ -2,6 +2,7 @@ import type { AITask } from "../types";
 import type { CoachReply, LeakCheck } from "../schemas/coach";
 import type { JudgeOutput, ReferenceSolution } from "../schemas/judge";
 import type { DesignCheck, Twist } from "../schemas/check";
+import type { Assessment } from "../schemas/assessment";
 import { caseFixtures } from "./cases";
 
 // Fixtures for the mock provider. Each task maps fixture keys to a value;
@@ -63,6 +64,16 @@ const designCheck: DesignCheck = {
 
 const twist: Twist = { twist: "The line manager who approves these is on leave for the next two weeks.", affects: ["human", "decision"] };
 
+const assessment: Assessment = {
+  impact: 4,
+  effort: 2,
+  data_readiness: "partly",
+  risk: "medium",
+  ai_kind: "rule",
+  platform_fit: null,
+  note: "Worth doing soon: it saves HR hours every week and stops leave clashes. First check that the leave balances in the spreadsheet are up to date.",
+};
+
 export const objectFixtures: Partial<Record<AITask, Record<string, unknown>>> = {
   "generate-cases": { default: caseFixtures.finance, ...caseFixtures },
   "coach-reply": { default: coachReplies.question, ...coachReplies },
@@ -71,6 +82,7 @@ export const objectFixtures: Partial<Record<AITask, Record<string, unknown>>> = 
   "reference-solution": { default: referenceSolution },
   "design-check": { default: designCheck },
   twist: { default: twist },
+  assessment: { default: assessment },
 };
 
 export const textFixtures: Partial<Record<AITask, Record<string, string>>> = {

@@ -8,6 +8,8 @@ import { LiveRefresh } from "@/components/session/live-refresh";
 import { PhaseTimer } from "@/components/session/phase-timer";
 import { Wordmark } from "@/components/ui/wordmark";
 import { PHASE_LABELS, type Phase } from "@/lib/session/machine";
+import { Drumroll, Leaderboard, type BoardRow } from "@/components/present/leaderboard";
+import type { Award } from "@/lib/judging/awards";
 
 type PresenterTeam = { id: string; name: string; players: number; filled: Record<string, boolean>; twist: string | null };
 
@@ -16,11 +18,15 @@ export function PresenterScreen({
   teams,
   joinHost,
   serverNow,
+  results,
+  pledges,
 }: {
   session: { id: string; name: string; phase: string; startedAt: string | null; duration: number | null; joinCode: string | null };
   teams: PresenterTeam[];
   joinHost: string;
   serverNow: string;
+  results: { leaderboard: BoardRow[]; awards: Award[]; done: number; total: number } | null;
+  pledges: { teamName: string; first_step: string; due_date: string }[];
 }) {
   const phase = session.phase as Phase;
   // The big code is for the lobby; once design starts, a small strip lets latecomers join.
@@ -31,7 +37,7 @@ export function PresenterScreen({
 
   return (
     <main className="relative flex min-h-screen flex-col gap-8 overflow-hidden bg-cream-100 px-10 py-8">
-      <LiveRefresh sessionId={session.id} teamIds={teams.map((t) => t.id)} watch={["sessions", "teams", "players", "designs"]} throttleMs={3000} />
+      <LiveRefresh sessionId={session.id} teamIds={teams.map((t) => t.id)} watch={["sessions", "teams", "players", "designs", "scores", "commitments"]} throttleMs={3000} />
 
       <header className="flex items-center justify-between gap-6">
         <Wordmark size="md" />
@@ -68,7 +74,23 @@ export function PresenterScreen({
           )}
 
           {phase === "closed" && <p className="font-display text-6xl font-bold">Thanks for playing</p>}
-          {!showCode && !showProgress && phase !== "closed" && <p className="max-w-3xl text-4xl text-ink-700">{PHASE_LABELS[phase].player}</p>}
+          {phase === "judging" && results && <Drumroll done={results.done} total={results.total} />}
+          {(phase === "reveal" || phase === "report") && results && <Leaderboard rows={results.leaderboard} awards={results.awards} />}
+          {phase === "commitments" && (
+            <ul className="w-full max-w-5xl space-y-3 text-left" aria-label="Pledges">
+              {pledges.length === 0 && <li className="text-center text-3xl text-ink-500">Teams are writing their pledges…</li>}
+              {pledges.map((p) => (
+                <li key={p.teamName} className="rounded-3xl border-2 border-green-600 bg-cream-50 p-5 shadow-card">
+                  <p className="font-display text-3xl font-bold">{p.teamName}</p>
+                  <p className="text-2xl text-ink-700">{p.first_step}</p>
+                  <p className="text-xl text-green-700">By {new Date(p.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "long" })}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+          {!showCode && !showProgress && !["closed", "judging", "reveal", "report", "commitments"].includes(phase) && (
+            <p className="max-w-3xl text-4xl text-ink-700">{PHASE_LABELS[phase].player}</p>
+          )}
         </motion.section>
       </AnimatePresence>
 

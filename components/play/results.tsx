@@ -24,7 +24,7 @@ export function Results({
   score: { total: number; breakdown: ScoredCriterion[]; summary: string } | null;
   reference: ReferenceSolution | null;
   platforms: string[];
-  onKeepGoing: () => Promise<void>;
+  onKeepGoing?: () => Promise<void>;
 }) {
   const [reopening, setReopening] = useState(false);
   const stack = (platforms.length ? platforms : ["n8n"]).map(getPlatform).filter((p): p is Platform => Boolean(p));
@@ -32,7 +32,7 @@ export function Results({
   return (
     <div className="space-y-8">
       {/* Score */}
-      <section className="space-y-5 rounded-2xl border border-cream-300 bg-cream-50 p-5 shadow-card">
+      <section className="border-cream-300 bg-cream-50 shadow-card space-y-5 rounded-2xl border p-5">
         {score ? (
           <>
             <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
@@ -46,12 +46,12 @@ export function Results({
               {score.breakdown.map((c, i) => (
                 <li key={c.key} className="space-y-1">
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="font-semibold text-ink-900">{c.label}</span>
-                    <span className="font-display font-bold text-ink-700">
+                    <span className="text-ink-900 font-semibold">{c.label}</span>
+                    <span className="font-display text-ink-700 font-bold">
                       {c.score}/{c.max}
                     </span>
                   </div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-cream-300">
+                  <div className="bg-cream-300 h-2.5 overflow-hidden rounded-full">
                     <motion.div
                       className={`h-full origin-left rounded-full ${c.key === "human" ? "bg-amber-400" : "bg-green-500"}`}
                       initial={{ scaleX: 0 }}
@@ -59,13 +59,15 @@ export function Results({
                       transition={{ ...SPRINGS.gentle, delay: 0.3 + i * 0.1 }}
                     />
                   </div>
-                  <p className="text-sm text-ink-500">{c.reasoning}</p>
+                  <p className="text-ink-500 text-sm">{c.reasoning}</p>
                 </li>
               ))}
             </ul>
           </>
         ) : (
-          <p className="text-ink-700">We couldn&apos;t score this design just now. Keep improving it and finish again in a moment.</p>
+          <p className="text-ink-700">
+            We couldn&apos;t score this design just now. Keep improving it and finish again in a moment.
+          </p>
         )}
       </section>
 
@@ -73,7 +75,9 @@ export function Results({
       <section className="space-y-4">
         <div className="space-y-1">
           <h2 className="font-display text-2xl font-bold">One strong answer</h2>
-          <p className="text-ink-500">A model answer for this case, next to yours. It isn&apos;t the only right answer.</p>
+          <p className="text-ink-500">
+            A model answer for this case, next to yours. It isn&apos;t the only right answer.
+          </p>
         </div>
         {reference ? (
           <>
@@ -86,18 +90,24 @@ export function Results({
                   transition={{ ...SPRINGS.bouncy, delay: 0.2 + i * 0.15 }}
                   className="grid gap-2 sm:grid-cols-2"
                 >
-                  <div className="rounded-xl border border-cream-300 bg-cream-50 p-3">
-                    <p className="text-[11px] font-bold tracking-wider text-ink-500 uppercase">You · {SLOT_LABELS[slot].title}</p>
-                    <p className="text-sm text-ink-700">{design[slot] || <em className="text-ink-500">Empty</em>}</p>
+                  <div className="border-cream-300 bg-cream-50 rounded-xl border p-3">
+                    <p className="text-ink-500 text-[11px] font-bold tracking-wider uppercase">
+                      You · {SLOT_LABELS[slot].title}
+                    </p>
+                    <p className="text-ink-700 text-sm">{design[slot] || <em className="text-ink-500">Empty</em>}</p>
                   </div>
-                  <div className={`rounded-xl p-3 ${slot === "human" ? "bg-amber-400 text-ink-900" : "bg-green-600 text-cream-50"}`}>
-                    <p className="text-[11px] font-bold tracking-wider uppercase opacity-80">Model answer · {SLOT_LABELS[slot].title}</p>
+                  <div
+                    className={`rounded-xl p-3 ${slot === "human" ? "text-ink-900 bg-amber-400" : "text-cream-50 bg-green-600"}`}
+                  >
+                    <p className="text-[11px] font-bold tracking-wider uppercase opacity-80">
+                      Model answer · {SLOT_LABELS[slot].title}
+                    </p>
                     <p className="text-sm">{reference[slot]}</p>
                   </div>
                 </motion.li>
               ))}
             </ol>
-            <p className="rounded-xl bg-cream-200/60 p-4 leading-relaxed text-ink-700">{reference.explanation}</p>
+            <p className="bg-cream-200/60 text-ink-700 rounded-xl p-4 leading-relaxed">{reference.explanation}</p>
           </>
         ) : (
           <p className="text-ink-700">The model answer isn&apos;t ready. Finish again in a moment to see it.</p>
@@ -120,20 +130,25 @@ export function Results({
         <BuildGuides design={design} stack={stack} />
       </section>
 
-      <div className="flex flex-wrap gap-3">
-        <Button
-          disabled={reopening}
-          onClick={async () => {
-            setReopening(true);
-            await onKeepGoing();
-          }}
-        >
-          {reopening ? "Opening…" : "Keep improving my design"}
-        </Button>
-        <Link href="/console/decks" className="inline-flex items-center rounded-xl px-5 py-3 font-semibold text-ink-700 hover:bg-cream-200">
-          Back to decks
-        </Link>
-      </div>
+      {onKeepGoing && (
+        <div className="flex flex-wrap gap-3">
+          <Button
+            disabled={reopening}
+            onClick={async () => {
+              setReopening(true);
+              await onKeepGoing();
+            }}
+          >
+            {reopening ? "Opening…" : "Keep improving my design"}
+          </Button>
+          <Link
+            href="/console/decks"
+            className="text-ink-700 hover:bg-cream-200 inline-flex items-center rounded-xl px-5 py-3 font-semibold"
+          >
+            Back to decks
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
@@ -153,29 +168,37 @@ function BuildGuides({ design, stack }: { design: CoachDesign; stack: Platform[]
             aria-selected={p.slug === platform.slug}
             onClick={() => setActive(p.slug)}
             className={`rounded-full border-2 px-3.5 py-1.5 text-sm font-bold ${
-              p.slug === platform.slug ? "border-green-600 bg-green-600 text-cream-50" : "border-cream-300 bg-cream-50 text-ink-700 hover:border-green-400"
+              p.slug === platform.slug
+                ? "text-cream-50 border-green-600 bg-green-600"
+                : "border-cream-300 bg-cream-50 text-ink-700 hover:border-green-400"
             }`}
           >
             {p.name}
           </button>
         ))}
       </div>
-      <div role="tabpanel" className="space-y-3 rounded-2xl border border-cream-300 bg-cream-50 p-4">
-        <p className="text-sm text-ink-500">
+      <div role="tabpanel" className="border-cream-300 bg-cream-50 space-y-3 rounded-2xl border p-4">
+        <p className="text-ink-500 text-sm">
           <strong className="text-ink-700">{platform.name}</strong> by {platform.vendor}: {platform.goodFor}
         </p>
         <ol className="space-y-2">
           {CANVAS_SLOTS.map((slot) => (
             <li key={slot} className="grid gap-1 rounded-xl bg-white p-3 sm:grid-cols-[9rem_1fr]">
-              <span className={`text-xs font-bold tracking-wide uppercase ${slot === "human" ? "text-amber-700" : "text-green-700"}`}>{SLOT_LABELS[slot].title}</span>
+              <span
+                className={`text-xs font-bold tracking-wide uppercase ${slot === "human" ? "text-amber-700" : "text-green-700"}`}
+              >
+                {SLOT_LABELS[slot].title}
+              </span>
               <div className="space-y-1 text-sm">
                 <p className="text-ink-900">{design[slot] || <em className="text-ink-500">You left this empty.</em>}</p>
-                <p className="text-ink-500">On {platform.name}: {platform.slots[slot]}</p>
+                <p className="text-ink-500">
+                  On {platform.name}: {platform.slots[slot]}
+                </p>
               </div>
             </li>
           ))}
         </ol>
-        <p className="text-xs text-ink-500">
+        <p className="text-ink-500 text-xs">
           {platform.export === "compiler"
             ? "A starter workflow file for this platform comes with the full export (coming soon)."
             : "This is a build guide, not a finished build. Check product names and features with your platform team."}

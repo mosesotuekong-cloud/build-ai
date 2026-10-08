@@ -33,7 +33,9 @@ export function createN8nClient({ baseUrl, secret, provider, fetchImpl = fetch, 
       const input = job.input.parse(rawInput);
 
       if (!baseUrl) {
-        return job.runLocally(provider, input) as Promise<N8nJobOutput<N>>;
+        // Each job checks its own input shape above; the union of jobs needs a cast here.
+        const run = job.runLocally as (p: AIProvider, i: unknown) => Promise<unknown>;
+        return run(provider, input) as Promise<N8nJobOutput<N>>;
       }
 
       const url = `${baseUrl.replace(/\/+$/, "")}/${job.webhookPath}`;

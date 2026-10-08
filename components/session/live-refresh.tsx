@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/browser";
 
-type Watch = "sessions" | "teams" | "players" | "designs" | "coach_messages" | "ideas" | "checks";
+type Watch = "sessions" | "teams" | "players" | "designs" | "coach_messages" | "ideas" | "checks" | "scores" | "commitments";
 
 // Listens for changes to a session and re-renders the page from the server.
 // Realtime applies the same row-level security as normal reads, so each
@@ -79,7 +79,10 @@ export function LiveRefresh({
     }
     // Designs and coach messages have no session column; RLS limits what we
     // receive, and we only react to the teams we were given.
-    for (const table of ["designs", "coach_messages"] as const) {
+    if (watching.has("commitments")) {
+      channel.on("postgres_changes", { event: "*", schema: "public", table: "commitments", filter: `session_id=eq.${sessionId}` }, refresh);
+    }
+    for (const table of ["designs", "coach_messages", "scores"] as const) {
       if (watching.has(table)) {
         channel.on("postgres_changes", { event: "*", schema: "public", table }, (p) => {
           if (mine(rowOf(p).team_id)) refresh();

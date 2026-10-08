@@ -133,13 +133,45 @@ test("facilitator runs a live session with two teams on phones", async ({ page, 
   // The team detail is still open from earlier; it updates live.
   await expect(page.getByLabel("The Fixers in detail").getByText("Quick win")).toBeVisible();
 
-  // Judging and reveal are later milestones; then the final round uses the
-  // other card of Ada's matched pair.
+  // Judging runs in the background; the projector drums, the console counts.
   await page.getByRole("button", { name: "Start: Judging" }).click();
+  await expect(presenter.getByText(/The judges are deliberating/)).toBeVisible();
+  await expect(page.getByText("2 of 2 teams judged")).toBeVisible({ timeout: 30_000 });
+
+  // The facilitator overrides one score; both are kept.
+  await page.getByLabel("Override for Night Owls").fill("95");
+  await page.getByLabel("Override for Night Owls").press("Enter");
+  await expect(page.getByLabel("Final score for Night Owls")).toHaveText("95");
+
+  // The reveal: leaderboard and awards on the projector; score, awards and the
+  // model answer on phones.
   await page.getByRole("button", { name: "Start: Reveal" }).click();
+  await expect(presenter.getByRole("list", { name: "Leaderboard" })).toBeVisible();
+  await expect(presenter.getByText("Top design")).toBeVisible();
+  await expect(tunde.getByText("Top design")).toBeVisible();
+  await expect(ada.getByRole("heading", { name: "Your score" })).toBeVisible();
+  await expect(ada.getByRole("heading", { name: "One strong answer" })).toBeVisible();
+  await expect(ada.getByText(/Model answer · Trigger/)).toBeVisible({ timeout: 30_000 });
+
+  // The final round uses the other card of Ada's matched pair.
   await page.getByRole("button", { name: "Start: Final round" }).click();
   await expect(ada.getByText(/Final round · just you/i)).toBeVisible();
   await expect(ada.getByRole("heading", { level: 1 })).not.toHaveText(warmUpTitle);
+  await ada.getByRole("button", { name: "Edit trigger" }).click();
+  await ada.getByRole("dialog").getByRole("textbox").fill("The request form is submitted");
+  await ada.getByRole("button", { name: "Snap it in" }).click();
+  await ada.getByRole("button", { name: "Lock it in" }).click();
+  await expect(ada.getByText(/Done\. Wait for your facilitator/)).toBeVisible();
+
+  // Commitments: Ada's team pledges a first step; the console and projector see it.
+  await page.getByRole("button", { name: "Start: Commitments" }).click();
+  await expect(ada.getByRole("heading", { name: "Make it real" })).toBeVisible();
+  await ada.getByLabel("The first step").fill("Ask IT who owns the onboarding checklist");
+  await ada.getByRole("button", { name: "Sign our pledge" }).click();
+  await expect(ada.getByText(/^Pledged\. You can still change it/)).toBeVisible();
+  await expect(page.getByText("Ask IT who owns the onboarding checklist")).toBeVisible();
+  await expect(presenter.getByText("Ask IT who owns the onboarding checklist")).toBeVisible();
+  await expect(page.getByText(/Warm-up average \d+ → final round average \d+/)).toBeVisible({ timeout: 30_000 });
 
   // End the session: phones show the closing screen.
   page.once("dialog", (d) => d.accept());

@@ -6,6 +6,10 @@ import { CheckView } from "@/components/play/check-view";
 import { LobbyView } from "@/components/play/lobby-view";
 import { RaiseIdeaButton } from "@/components/play/raise-idea";
 import { ScorecardView } from "@/components/play/scorecard-view";
+import { CommitmentsView } from "@/components/play/commitments-view";
+import { RevealView } from "@/components/play/reveal-view";
+import { RefreshWhile } from "@/components/session/refresh-while";
+import { loadSessionScores } from "@/lib/judging/load";
 import { getCheckCard } from "@/lib/checks/cards";
 import { ensureCheck } from "../discovery-actions";
 import { LiveRefresh } from "@/components/session/live-refresh";
@@ -93,6 +97,50 @@ export default async function PlayPage({ params }: PageProps<"/play/[teamId]">) 
     );
   }
 
+  // The reveal: score, awards, model answer and build guides.
+  if (live && phase === "reveal" && data.case) {
+    const [{ scores, awards }, { data: reference }] = await Promise.all([
+      loadSessionScores(data.session.id, admin),
+      admin.from("reference_solutions").select("trigger, steps, decision, action, human, explanation").eq("case_id", data.caseId!).maybeSingle(),
+    ]);
+    const mine = scores.find((sc) => sc.id === teamId);
+    const finished = mine && (mine.status === "done" || mine.override !== null);
+    return (
+      <>
+        {refresher}
+        <RefreshWhile waiting={!finished || !reference} />
+        <RevealView
+          teamName={data.team.name}
+          design={data.design}
+          score={finished ? { total: mine.final, breakdown: mine.breakdown, summary: mine.summary } : null}
+          scoring={!finished}
+          reference={reference ?? null}
+          platforms={data.session.target_platforms}
+          awards={awards.filter((a) => a.teamId === teamId)}
+          overridden={mine?.override !== null && mine?.override !== undefined}
+        />
+      </>
+    );
+  }
+
+  // Commitments: who takes it forward, the first step, and by when.
+  if (live && phase === "commitments") {
+    const { data: commitment } = await admin.from("commitments").select("owner_name, owner_email, first_step, due_date").eq("team_id", teamId).maybeSingle();
+    return (
+      <>
+        {refresher}
+        <CommitmentsView
+          teamId={teamId}
+          teamName={data.team.name}
+          designName={data.design.name || data.case?.title || "your automation"}
+          initial={commitment}
+          defaultOwner={data.playerName}
+          timer={timer}
+        />
+      </>
+    );
+  }
+
   if (live && phase === "lobby") {
     const [{ data: cases }, { data: teams }, { data: players }] = await Promise.all([
       admin
@@ -145,7 +193,7 @@ export default async function PlayPage({ params }: PageProps<"/play/[teamId]">) 
       admin.from("reference_solutions").select("trigger, steps, decision, action, human, explanation").eq("case_id", data.caseId!).maybeSingle(),
     ]);
     finished = {
-      score: score ? { total: score.total, breakdown: score.breakdown as ScoredCriterion[], summary: score.ai_summary } : null,
+      score: score && score.total !== null ? { total: score.total, breakdown: score.breakdown as ScoredCriterion[], summary: score.ai_summary } : null,
       reference: reference ?? null,
     };
   }

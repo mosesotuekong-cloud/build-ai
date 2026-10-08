@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { judgeSession, scoreChecks, writeReferenceSolutions } from "@/lib/judging/run";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireFacilitator } from "@/lib/auth/facilitator";
@@ -85,6 +87,13 @@ export async function advanceSession(sessionId: string, to: string): Promise<{ o
   const session = await staffSession(sessionId);
   const target = z.enum(PHASES).parse(to) as Phase;
   const result = await transitionSession(session.id, target);
+  // Slow AI work runs after the response, so the room moves on at once and
+  // screens update live as results land.
+  if (result.ok) {
+    if (target === "judging") after(() => Promise.all([judgeSession(session.id), scoreChecks(session.id, "baseline")]));
+    if (target === "reveal") after(() => writeReferenceSolutions(session.id));
+    if (target === "commitments") after(() => scoreChecks(session.id, "post"));
+  }
   revalidatePath(`/console/sessions/${session.id}`);
   return result.ok ? { ok: true } : { ok: false, message: result.message };
 }
@@ -129,5 +138,26 @@ export async function assignCase(sessionId: string, teamId: string, caseId: stri
     .maybeSingle();
   if (!c) throw new Error("That case isn't in this session's deck.");
   await admin.from("teams").update({ case_id: c.id }).eq("id", idSchema.parse(teamId)).eq("session_id", session.id);
+  revalidatePath(`/console/sessions/${session.id}`);
+}
+
+// The facilitator's override for a team's score. Both the AI's score and the
+// override are kept; the final score uses the override.
+export async function overrideScore(sessionId: string, teamId: string, value: number | null) {
+  const session = await staffSession(sessionId);
+  const override = value === null ? null : z.number().int().min(0).max(100).parse(value);
+  const admin = createAdminClient();
+  const { data: team } = await admin.from("teams").select("id").eq("id", idSchema.parse(teamId)).eq("session_id", session.id).maybeSingle();
+  if (!team) throw new Error("Team not found.");
+  const { data: existing } = await admin.from("scores").select("id").eq("team_id", team.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (existing) await admin.from("scores").update({ facilitator_override: override }).eq("id", existing.id);
+  else if (override !== null) await admin.from("scores").insert({ team_id: team.id, design_version: "before_twist", status: "done", facilitator_override: override, ai_summary: "Scored by the facilitator." });
+  revalidatePath(`/console/sessions/${session.id}`);
+}
+
+// Re-runs judging for teams the AI couldn't score.
+export async function retryJudging(sessionId: string) {
+  const session = await staffSession(sessionId);
+  after(() => judgeSession(session.id, { onlyUnscored: true }));
   revalidatePath(`/console/sessions/${session.id}`);
 }

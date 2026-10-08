@@ -12,7 +12,8 @@ export type AITask =
   | "judge"
   | "reference-solution"
   | "blueprint"
-  | "opportunity-map";
+  | "opportunity-map"
+  | "assessment";
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 

@@ -7,6 +7,8 @@ import { CANVAS_SLOTS } from "@/lib/ai/schemas/canvas";
 import { readSettings } from "@/lib/session/settings";
 import { createClient } from "@/lib/supabase/server";
 import { RunConsole, type RunTeam } from "./run-console";
+import { loadSessionScores } from "@/lib/judging/load";
+import type { CheckSummary } from "@/components/console/results-panel";
 
 export const metadata: Metadata = { title: "Run session" };
 
@@ -34,10 +36,23 @@ export default async function RunSessionPage({ params }: PageProps<"/console/ses
   ]);
 
   const teamIds = (teams ?? []).map((t) => t.id);
-  const [{ data: ideas }, { data: checks }] = await Promise.all([
+  const [{ data: ideas }, { data: checks }, results, { data: commitments }] = await Promise.all([
     supabase.from("ideas").select("id, title, what_happens, who_feels_it, frequency, status, team_id, created_at").eq("session_id", session.id).order("created_at"),
-    supabase.from("individual_checks").select("kind, submitted_at").eq("session_id", session.id),
+    supabase.from("individual_checks").select("kind, submitted_at, total, breakdown").eq("session_id", session.id),
+    loadSessionScores(session.id),
+    supabase.from("commitments").select("team_id, owner_name, owner_email, first_step, due_date").eq("session_id", session.id),
   ]);
+
+  // Before-and-after averages, overall and per rubric criterion.
+  const summarise = (kind: "baseline" | "post"): CheckSummary => {
+    const scored = (checks ?? []).filter((c) => c.kind === kind && c.total !== null);
+    const criteria: Record<string, number> = {};
+    for (const key of ["trigger", "steps", "decision", "action", "human"]) {
+      const values = scored.map((c) => (c.breakdown as { key: string; score: number }[] | null)?.find((b) => b.key === key)?.score).filter((v): v is number => v !== undefined);
+      if (values.length) criteria[key] = values.reduce((a, b) => a + b, 0) / values.length;
+    }
+    return { kind, count: scored.length, average: scored.length ? Math.round(scored.reduce((a, c) => a + (c.total ?? 0), 0) / scored.length) : null, criteria };
+  };
   const { data: messages } = teamIds.length
     ? await supabase.from("coach_messages").select("id, team_id, role, type, slot, content, created_at, trigger, token_earned_at").in("team_id", teamIds).order("created_at", { ascending: true }).limit(500)
     : { data: [] };
@@ -92,6 +107,20 @@ export default async function RunSessionPage({ params }: PageProps<"/console/ses
           settings: readSettings(session.settings),
         }}
         teams={runTeams}
+        results={{
+          scores: results.scores,
+          awards: results.awards,
+          pending: results.pending,
+          failed: results.failed,
+          checks: [summarise("baseline"), summarise("post")],
+          commitments: (commitments ?? []).map((c) => ({
+            teamName: (teams ?? []).find((t) => t.id === c.team_id)?.name ?? "A team",
+            owner_name: c.owner_name,
+            first_step: c.first_step,
+            due_date: c.due_date,
+            hasEmail: Boolean(c.owner_email),
+          })),
+        }}
         ideas={(ideas ?? []).map((i) => ({ ...i, teamName: (teams ?? []).find((t) => t.id === i.team_id)?.name ?? null }))}
         checks={{
           baseline: (checks ?? []).filter((c) => c.kind === "baseline" && c.submitted_at).length,

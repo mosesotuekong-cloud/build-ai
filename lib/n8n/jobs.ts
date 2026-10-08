@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import { z } from "zod";
 import { caseGeneratorInputSchema, generatedDeckSchema } from "@/lib/ai/schemas/cases";
 import { generateCases } from "@/lib/ai/tasks/generate-cases";
 import type { AIProvider } from "@/lib/ai/types";
@@ -23,6 +23,15 @@ export const N8N_JOBS = {
     input: caseGeneratorInputSchema,
     output: generatedDeckSchema,
     runLocally: (provider, input) => generateCases(provider, input),
+  }),
+  // Messages a commitment's owner on its due date. Queued when a team commits
+  // (see app/play/commitment-actions.ts); n8n reads the commitment by id and
+  // sends the reminder. Locally nothing is sent.
+  "commitment-follow-up": defineJob({
+    webhookPath: "builda/commitment-follow-up",
+    input: z.object({ commitment_id: z.uuid(), due_date: z.iso.date() }),
+    output: z.object({ scheduled: z.boolean() }),
+    runLocally: async () => ({ scheduled: false }),
   }),
   // "opportunity-map" is added in milestone 9.
 };

@@ -16,6 +16,9 @@ import { AI_KINDS, DATA_QUESTIONS, FREQUENCIES, RISKS, portfolioBucket, scorecar
 import { nextPhase, PHASE_LABELS, type Phase } from "@/lib/session/machine";
 import type { SessionSettings } from "@/lib/session/settings";
 import { addTime, advanceToNext, assignCase, deleteDraft, endSession } from "../actions";
+import { ResultsPanel, type CheckSummary, type CommitmentRow } from "@/components/console/results-panel";
+import type { Award } from "@/lib/judging/awards";
+import type { TeamScore } from "@/lib/judging/load";
 
 export type RunTeam = {
   id: string;
@@ -68,6 +71,7 @@ export function RunConsole({
   joinHost,
   ideas,
   checks,
+  results,
 }: {
   session: RunSession;
   teams: RunTeam[];
@@ -77,6 +81,7 @@ export function RunConsole({
   joinHost: string;
   ideas: RunIdea[];
   checks: { baseline: number; post: number };
+  results: { scores: TeamScore[]; awards: Award[]; pending: number; failed: number; checks: CheckSummary[]; commitments: CommitmentRow[] };
 }) {
   const phase = session.phase as Phase;
   const next = nextPhase(phase, session.settings);
@@ -97,7 +102,7 @@ export function RunConsole({
 
   return (
     <div className="space-y-6">
-      <LiveRefresh sessionId={session.id} teamIds={teams.map((t) => t.id)} watch={["sessions", "teams", "players", "designs", "coach_messages", "ideas", "checks"]} />
+      <LiveRefresh sessionId={session.id} teamIds={teams.map((t) => t.id)} watch={["sessions", "teams", "players", "designs", "coach_messages", "ideas", "checks", "scores", "commitments"]} />
 
       <Card className="space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -171,10 +176,8 @@ export function RunConsole({
             {phase === "baseline_check" ? "warm-up" : "final"} round.
           </p>
         )}
-        {["judging", "reveal", "commitments", "report"].includes(phase) && (
-          <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-700">
-            The {PHASE_LABELS[phase].title.toLowerCase()} screens arrive in a later milestone. For now, players see a holding screen; move on when you&apos;re ready.
-          </p>
+        {phase === "report" && (
+          <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-700">The opportunity map report arrives in a later milestone.</p>
         )}
       </Card>
 
@@ -237,6 +240,19 @@ export function RunConsole({
       </section>
 
       {selectedTeam && <TeamDetail team={selectedTeam} caseTitle={caseTitle(selectedTeam.caseId)} />}
+
+      {["judging", "reveal", "post_check", "commitments", "report", "closed"].includes(phase) && (
+        <ResultsPanel
+          sessionId={session.id}
+          scores={results.scores}
+          scorecards={Object.fromEntries(teams.map((t) => [t.id, t.scorecard]))}
+          awards={results.awards}
+          pending={results.pending}
+          failed={results.failed}
+          checks={results.checks}
+          commitments={results.commitments}
+        />
+      )}
 
       <IdeasList ideas={ideas} />
     </div>
