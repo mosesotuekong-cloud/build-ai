@@ -23,6 +23,9 @@ export default async function ConsoleLayout({ children }: LayoutProps<"/console"
             )}
           </div>
           <div className="flex items-center gap-4 text-sm">
+            <Link href="/console/sessions" className="font-semibold text-ink-700 hover:text-green-700">
+              Sessions
+            </Link>
             <Link href="/console/decks" className="font-semibold text-ink-700 hover:text-green-700">
               Decks
             </Link>

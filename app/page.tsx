@@ -3,6 +3,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { Wordmark } from "@/components/ui/wordmark";
 import { DemoGame } from "@/components/landing/demo-game";
 import { PopHeadline } from "@/components/landing/pop-headline";
+import { CodeForm } from "./join/code-form";
 
 const STEPS = [
   { title: "Draw a case", text: "AI writes six real problems from your own function. Teams draw one, like a card." },
@@ -28,9 +29,15 @@ export default function Home() {
             A workshop game where teams design automations for real problems in their own work, and the business leaves with
             a ranked list of what to automate first.
           </p>
-          <Link href="/login" className={buttonClasses("primary", "px-7 py-4 text-lg")}>
-            Run a session
-          </Link>
+          <div className="flex flex-wrap items-end gap-6">
+            <Link href="/login" className={buttonClasses("primary", "px-7 py-4 text-lg")}>
+              Run a session
+            </Link>
+            <div className="w-full max-w-xs space-y-1.5">
+              <p className="text-sm font-semibold text-ink-700">Got a game code?</p>
+              <CodeForm compact />
+            </div>
+          </div>
         </div>
 
         <DemoGame />

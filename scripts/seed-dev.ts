@@ -24,9 +24,13 @@ const superAdmins = (process.env.SUPER_ADMIN_EMAILS ?? "otumosesjobs@gmail.com")
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
 
-const DEMO_ORG = { name: "Demo Company Ltd", slug: "demo-company", session_credits: 10 };
+// Plenty of credits locally; every test run opens a lobby and uses one.
+const DEMO_ORG = { name: "Demo Company Ltd", slug: "demo-company", session_credits: 100 };
 const FACILITATOR_EMAIL = "facilitator@builda.test";
 const PENDING_EMAIL = "pending@builda.test"; // signed up but not in any org
+// One facilitator per end-to-end test file, so parallel sign-ins never cancel
+// each other's magic links.
+const E2E_EMAILS = ["e2e-decks@builda.test", "e2e-session@builda.test"];
 
 async function ensureUser(email: string): Promise<string> {
   const { data: list, error: listError } = await admin.auth.admin.listUsers({ perPage: 1000 });
@@ -50,6 +54,7 @@ async function main() {
   await ensureUser(PENDING_EMAIL);
 
   const members = [{ org_id: org.id, user_id: facilitatorId, role: "admin" as const }];
+  for (const email of E2E_EMAILS) members.push({ org_id: org.id, user_id: await ensureUser(email), role: "admin" });
 
   for (const email of superAdmins) {
     const id = await ensureUser(email);
@@ -68,6 +73,7 @@ async function main() {
   console.log(`  ${FACILITATOR_EMAIL}  admin of ${DEMO_ORG.name}`);
   for (const email of superAdmins) console.log(`  ${email}  super admin, admin of ${DEMO_ORG.name}`);
   console.log(`  ${PENDING_EMAIL}  no organisation (sees the waiting page)`);
+  console.log(`  ${E2E_EMAILS.join(", ")}  test accounts for Playwright`);
   console.log(`Library deck: ${HR_DEFAULT_DECK_NAME} (${HR_DEFAULT_CASES.length} HR cases)`);
 }
 

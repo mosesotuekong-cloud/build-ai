@@ -1,0 +1,105 @@
+"use client";
+
+import { AnimatePresence, motion } from "motion/react";
+import { SlotMeter } from "@/components/game/slot-meter";
+import { SPRINGS } from "@/components/game/springs";
+import { Stamp } from "@/components/game/stamp";
+import { LiveRefresh } from "@/components/session/live-refresh";
+import { PhaseTimer } from "@/components/session/phase-timer";
+import { Wordmark } from "@/components/ui/wordmark";
+import { PHASE_LABELS, type Phase } from "@/lib/session/machine";
+
+type PresenterTeam = { id: string; name: string; players: number; filled: Record<string, boolean> };
+
+export function PresenterScreen({
+  session,
+  teams,
+  joinHost,
+  serverNow,
+}: {
+  session: { id: string; name: string; phase: string; startedAt: string | null; duration: number | null; joinCode: string | null };
+  teams: PresenterTeam[];
+  joinHost: string;
+  serverNow: string;
+}) {
+  const phase = session.phase as Phase;
+  // The big code is for the lobby; once design starts, a small strip lets latecomers join.
+  const showCode = ["lobby", "baseline_check"].includes(phase) && session.joinCode;
+  const showCodeStrip = phase === "solving" && session.joinCode;
+  const showProgress = ["solving", "twist", "solving_after_twist", "prioritise"].includes(phase);
+
+  return (
+    <main className="relative flex min-h-screen flex-col gap-8 overflow-hidden bg-cream-100 px-10 py-8">
+      <LiveRefresh sessionId={session.id} teamIds={teams.map((t) => t.id)} watch={["sessions", "teams", "players", "designs"]} throttleMs={3000} />
+
+      <header className="flex items-center justify-between gap-6">
+        <Wordmark size="md" />
+        {showCodeStrip ? (
+          <p className="rounded-full bg-green-600 px-6 py-2 text-xl font-semibold text-cream-50">
+            Late? Join at {joinHost}/join with <span className="font-display font-bold tracking-[0.15em]">{session.joinCode}</span>
+          </p>
+        ) : (
+          <p className="font-display text-2xl font-bold text-ink-700">{session.name}</p>
+        )}
+      </header>
+
+      <AnimatePresence mode="wait">
+        <motion.section
+          key={phase}
+          className="flex flex-1 flex-col items-center justify-center gap-8 text-center"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -40 }}
+          transition={SPRINGS.gentle}
+        >
+          <div className="space-y-3">
+            <p className="text-2xl font-bold tracking-[0.3em] text-green-700 uppercase">{PHASE_LABELS[phase].title}</p>
+            <PhaseTimer startedAt={session.startedAt} durationSeconds={session.duration} serverNow={serverNow} size="xl" />
+          </div>
+
+          {showCode && (
+            <div className="rounded-[2.5rem] bg-green-600 px-16 py-10 text-cream-50 shadow-lift">
+              <p className="text-3xl font-semibold text-cream-100/90">Join at {joinHost}/join</p>
+              <p className="font-display text-[9rem] leading-none font-bold tracking-[0.15em]" aria-label="Join code">
+                {session.joinCode}
+              </p>
+            </div>
+          )}
+
+          {phase === "closed" && <p className="font-display text-6xl font-bold">Thanks for playing</p>}
+          {!showCode && !showProgress && phase !== "closed" && <p className="max-w-3xl text-4xl text-ink-700">{PHASE_LABELS[phase].player}</p>}
+        </motion.section>
+      </AnimatePresence>
+
+      {(phase === "lobby" || showProgress) && (
+        <ul className="grid grid-cols-2 gap-5 lg:grid-cols-4" aria-label="Teams">
+          <AnimatePresence initial={false}>
+            {teams.map((t) => (
+              <motion.li
+                key={t.id}
+                layout
+                initial={{ scale: 0, rotate: -8, opacity: 0 }}
+                animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                transition={SPRINGS.bouncy}
+                className="space-y-3 rounded-3xl border border-cream-300 bg-cream-50 p-5 shadow-card"
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="font-display text-3xl font-bold">{t.name}</p>
+                  <p className="text-lg text-ink-500">
+                    {t.players} {t.players === 1 ? "player" : "players"}
+                  </p>
+                </div>
+                {showProgress && <SlotMeter filled={t.filled} />}
+              </motion.li>
+            ))}
+          </AnimatePresence>
+          {phase === "lobby" && teams.length === 0 && <li className="col-span-full text-center text-3xl text-ink-500">Waiting for the first team…</li>}
+        </ul>
+      )}
+
+      <div className="pointer-events-none absolute inset-0 [&_span]:text-[10rem]">
+        <Stamp show={phase === "twist"} text="Twist" />
+      </div>
+    </main>
+  );
+}

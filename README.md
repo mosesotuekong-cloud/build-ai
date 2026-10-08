@@ -32,7 +32,7 @@ Put keys in `.env.local` (never commit it). The app uses Anthropic if `ANTHROPIC
 
 ```bash
 npm test              # Vitest unit tests
-npm run test:e2e      # Playwright (starts the dev server if needed)
+npm run test:e2e      # Playwright: builds the app and serves it on :3100 with mock AI
 npm run typecheck
 npm run lint
 ```

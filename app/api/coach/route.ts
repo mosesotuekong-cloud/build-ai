@@ -3,6 +3,7 @@ import { getAIProvider } from "@/lib/ai";
 import { COACH_COSTS, coachRequestSchema } from "@/lib/ai/schemas/coach";
 import { runCoachTurn } from "@/lib/coach/engine";
 import { loadCoachHistory, loadPlayerTeam } from "@/lib/play/load";
+import { readSettings } from "@/lib/session/settings";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const bodySchema = z.object({
@@ -31,6 +32,8 @@ export async function POST(request: Request) {
   if (!data.case) return Response.json({ error: "Your team hasn't picked a case yet." }, { status: 409 });
 
   const admin = createAdminClient();
+  const { data: sessionRow } = await admin.from("sessions").select("settings").eq("id", data.session.id).single();
+  if (!readSettings(sessionRow?.settings).coach_enabled) return Response.json({ error: "The coach is switched off for this session." }, { status: 409 });
   const history = await loadCoachHistory(teamId);
   // One coach turn at a time per team: if the last message is the team's and
   // is recent, a reply is still being written (perhaps for a teammate).

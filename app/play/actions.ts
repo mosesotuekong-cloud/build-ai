@@ -10,6 +10,9 @@ import { designPatchSchema, type DesignPatch } from "@/lib/play/design";
 import { loadPlayerTeam } from "@/lib/play/load";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { DESIGN_PHASES, type Phase } from "@/lib/session/machine";
+import { transitionSession } from "@/lib/session/server";
+import { readSettings } from "@/lib/session/settings";
 
 const idSchema = z.uuid();
 
@@ -69,17 +72,22 @@ export async function startPractice(caseId: string) {
   redirect(`/play/${team.id}`);
 }
 
-// Autosave. Goes through the player's own client, so RLS only lets team
-// players change their design.
-export async function saveDesign(teamId: string, patch: DesignPatch): Promise<{ ok: boolean; savedAt?: string }> {
+// Autosave. Only while the session is in a design phase, and always to the
+// current version (after the twist, the after-twist copy). Goes through the
+// player's own client, so RLS only lets team players change their design.
+export async function saveDesign(teamId: string, patch: DesignPatch): Promise<{ ok: boolean; savedAt?: string; locked?: boolean }> {
   const parsed = designPatchSchema.safeParse(patch);
   if (!parsed.success) return { ok: false };
+  const data_ = await loadPlayerTeam(idSchema.parse(teamId));
+  if (!data_) return { ok: false };
+  if (!DESIGN_PHASES.has(data_.session.phase as Phase)) return { ok: false, locked: true };
+  const version = data_.session.phase === "solving_after_twist" ? "after_twist" : "before_twist";
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("designs")
     .update(parsed.data)
-    .eq("team_id", idSchema.parse(teamId))
-    .eq("version", "before_twist")
+    .eq("team_id", data_.team.id)
+    .eq("version", version)
     .select("updated_at")
     .single();
   if (error || !data) return { ok: false };
@@ -133,7 +141,7 @@ export async function finishPractice(teamId: string): Promise<FinishResult> {
   });
 
   const [score, reference] = await Promise.all([scorePromise, referencePromise]);
-  await admin.from("sessions").update({ phase: "reveal", ended_at: new Date().toISOString() }).eq("id", data.session.id);
+  await transitionSession(data.session.id, "reveal", admin);
   return { ok: true, score, reference };
 }
 
@@ -141,5 +149,21 @@ export async function finishPractice(teamId: string): Promise<FinishResult> {
 export async function reopenPractice(teamId: string) {
   const data = await loadPlayerTeam(idSchema.parse(teamId));
   if (!data || data.session.mode !== "practice") return;
-  await createAdminClient().from("sessions").update({ phase: "solving", ended_at: null }).eq("id", data.session.id);
+  await transitionSession(data.session.id, "solving");
+}
+
+// A team picks its case in the lobby (or before design starts). With a
+// mixed-function deck in "pick a function" mode, the picker filters by
+// function first; any team member can pick, and can change it until design starts.
+export async function pickCase(teamId: string, caseId: string): Promise<{ ok: boolean; message?: string }> {
+  const data = await loadPlayerTeam(idSchema.parse(teamId));
+  if (!data) return { ok: false, message: "You're not on this team." };
+  if (!["lobby", "baseline_check"].includes(data.session.phase)) return { ok: false, message: "Cases are fixed once design starts." };
+  const admin = createAdminClient();
+  const { data: session } = await admin.from("sessions").select("settings, deck_id").eq("id", data.session.id).single();
+  if (readSettings(session?.settings).case_mode !== "teams_pick") return { ok: false, message: "Your facilitator is handing out the cases." };
+  const { data: c } = await admin.from("cases").select("id").eq("id", idSchema.parse(caseId)).eq("deck_id", session!.deck_id!).maybeSingle();
+  if (!c) return { ok: false, message: "That case isn't in this session's deck." };
+  await admin.from("teams").update({ case_id: c.id }).eq("id", data.team.id);
+  return { ok: true };
 }

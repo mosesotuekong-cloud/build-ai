@@ -259,13 +259,13 @@ isOneToOne: false
                   ]
                 },"sessions": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"deck_id": string | null,"ended_at": string | null,"id": string,"mode": Database["public"]['Enums']["session_mode"],"name": string,"org_id": string,"phase": Database["public"]['Enums']["session_phase"],"phase_duration_seconds": number | null,"phase_started_at": string | null,"settings": NonNullable<Json>,"started_at": string | null,"target_platforms": (string)[],"updated_at": string
+                    "created_at": string,"created_by": string | null,"deck_id": string | null,"ended_at": string | null,"id": string,"join_code": string | null,"mode": Database["public"]['Enums']["session_mode"],"name": string,"org_id": string,"phase": Database["public"]['Enums']["session_phase"],"phase_duration_seconds": number | null,"phase_started_at": string | null,"settings": NonNullable<Json>,"started_at": string | null,"target_platforms": (string)[],"updated_at": string
                   }
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"deck_id"?: string | null,"ended_at"?: string | null,"id"?: string,"mode"?: Database["public"]['Enums']["session_mode"],"name"?: string,"org_id": string,"phase"?: Database["public"]['Enums']["session_phase"],"phase_duration_seconds"?: number | null,"phase_started_at"?: string | null,"settings"?: NonNullable<Json>,"started_at"?: string | null,"target_platforms"?: (string)[],"updated_at"?: string
+                    "created_at"?: string,"created_by"?: string | null,"deck_id"?: string | null,"ended_at"?: string | null,"id"?: string,"join_code"?: string | null,"mode"?: Database["public"]['Enums']["session_mode"],"name"?: string,"org_id": string,"phase"?: Database["public"]['Enums']["session_phase"],"phase_duration_seconds"?: number | null,"phase_started_at"?: string | null,"settings"?: NonNullable<Json>,"started_at"?: string | null,"target_platforms"?: (string)[],"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"deck_id"?: string | null,"ended_at"?: string | null,"id"?: string,"mode"?: Database["public"]['Enums']["session_mode"],"name"?: string,"org_id"?: string,"phase"?: Database["public"]['Enums']["session_phase"],"phase_duration_seconds"?: number | null,"phase_started_at"?: string | null,"settings"?: NonNullable<Json>,"started_at"?: string | null,"target_platforms"?: (string)[],"updated_at"?: string
+                    "created_at"?: string,"created_by"?: string | null,"deck_id"?: string | null,"ended_at"?: string | null,"id"?: string,"join_code"?: string | null,"mode"?: Database["public"]['Enums']["session_mode"],"name"?: string,"org_id"?: string,"phase"?: Database["public"]['Enums']["session_phase"],"phase_duration_seconds"?: number | null,"phase_started_at"?: string | null,"settings"?: NonNullable<Json>,"started_at"?: string | null,"target_platforms"?: (string)[],"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -316,11 +316,17 @@ isOneToOne: false
             "add_hint_tokens":
 { Args: { "amount": number,"target_team": string }; Returns: number
                            },
+"add_session_tokens":
+{ Args: { "amount": number,"target_session": string }; Returns: undefined
+                           },
 "can_edit_deck":
 { Args: { "target_deck": string }; Returns: boolean
                            },
 "can_read_deck":
 { Args: { "target_deck": string }; Returns: boolean
+                           },
+"consume_session_credit":
+{ Args: { "target_org": string }; Returns: number
                            },
 "has_org_role":
 { Args: { "target_org": string,"wanted": Database["public"]['Enums']["org_role"] }; Returns: boolean
@@ -348,6 +354,9 @@ isOneToOne: false
                            },
 "set_org_ai_stack":
 { Args: { "stack": (string)[],"target_org": string }; Returns: undefined
+                           },
+"snapshot_designs_for_twist":
+{ Args: { "target_session": string }; Returns: undefined
                            },
 "spend_hint_tokens":
 { Args: { "amount": number,"target_team": string }; Returns: number

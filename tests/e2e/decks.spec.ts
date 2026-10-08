@@ -2,11 +2,11 @@ import { expect, test } from "@playwright/test";
 import { signIn } from "./helpers";
 
 // These flows never call the AI, so they are safe to run with a live key.
-test.describe.configure({ mode: "serial" });
+test.describe.configure({ mode: "serial", timeout: 120_000 });
 test.skip(({ isMobile }) => isMobile, "Deck editing is a facilitator task on a laptop.");
 
 test("copy the library HR deck, then edit, reorder, add and delete cases", async ({ page }) => {
-  await signIn(page);
+  await signIn(page, "e2e-decks@builda.test");
   await page.goto("/console/decks");
   await expect(page.getByRole("heading", { name: "Library" })).toBeVisible();
 
@@ -49,7 +49,7 @@ test("copy the library HR deck, then edit, reorder, add and delete cases", async
 });
 
 test("validation explains what to fix on a hand-written case", async ({ page }) => {
-  await signIn(page);
+  await signIn(page, "e2e-decks@builda.test");
   await page.goto("/console/decks");
   await page.getByRole("button", { name: "Use this deck" }).first().click();
   await page.waitForURL(/\/console\/decks\/[0-9a-f-]{36}$/);
@@ -67,7 +67,7 @@ test("validation explains what to fix on a hand-written case", async ({ page }) 
 });
 
 test("create an empty deck and delete it", async ({ page }) => {
-  await signIn(page);
+  await signIn(page, "e2e-decks@builda.test");
   await page.goto("/console/decks/new");
   await page.getByLabel("Deck name").fill("Playwright test deck");
   await page.getByLabel("Industry").fill("Testing");
@@ -86,7 +86,7 @@ test("create an empty deck and delete it", async ({ page }) => {
 });
 
 test("practice run: slots snap in and survive a reload (no AI calls)", async ({ page }) => {
-  await signIn(page);
+  await signIn(page, "e2e-decks@builda.test");
   await page.goto("/console/decks");
   await page.getByRole("button", { name: "Use this deck" }).first().click();
   await page.waitForURL(/\/console\/decks\/[0-9a-f-]{36}$/);

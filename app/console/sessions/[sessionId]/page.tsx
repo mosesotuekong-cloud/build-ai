@@ -1,0 +1,81 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
+import { requireFacilitator } from "@/lib/auth/facilitator";
+import { CANVAS_SLOTS } from "@/lib/ai/schemas/canvas";
+import { readSettings } from "@/lib/session/settings";
+import { createClient } from "@/lib/supabase/server";
+import { RunConsole, type RunTeam } from "./run-console";
+
+export const metadata: Metadata = { title: "Run session" };
+
+export default async function RunSessionPage({ params }: PageProps<"/console/sessions/[sessionId]">) {
+  const { sessionId } = await params;
+  const ctx = await requireFacilitator();
+  const supabase = await createClient();
+
+  const { data: session } = await supabase
+    .from("sessions")
+    .select("id, name, phase, phase_started_at, phase_duration_seconds, settings, join_code, deck_id, mode, decks (name)")
+    .eq("id", sessionId)
+    .maybeSingle();
+  if (!session || session.mode !== "live") notFound();
+
+  const [{ data: teams }, { data: cases }] = await Promise.all([
+    supabase
+      .from("teams")
+      .select("id, name, case_id, hint_tokens_remaining, created_at, players (id, display_name, left_at), designs (version, trigger, steps, decision, action, human, name, hours_saved_per_month, tools, systems, updated_at)")
+      .eq("session_id", session.id)
+      .order("created_at"),
+    session.deck_id
+      ? supabase.from("cases").select("id, title, function_slug").eq("deck_id", session.deck_id).order("position")
+      : Promise.resolve({ data: [] as { id: string; title: string; function_slug: string }[] }),
+  ]);
+
+  const teamIds = (teams ?? []).map((t) => t.id);
+  const { data: messages } = teamIds.length
+    ? await supabase.from("coach_messages").select("id, team_id, role, type, slot, content, created_at").in("team_id", teamIds).order("created_at", { ascending: true }).limit(500)
+    : { data: [] };
+
+  const runTeams: RunTeam[] = (teams ?? []).map((t) => {
+    const design = [...t.designs].sort((a, b) => (a.version === "after_twist" ? -1 : 1) - (b.version === "after_twist" ? -1 : 1))[0];
+    return {
+      id: t.id,
+      name: t.name,
+      caseId: t.case_id,
+      tokens: t.hint_tokens_remaining,
+      players: t.players.filter((p) => !p.left_at).map((p) => p.display_name),
+      design: design
+        ? { ...design, hours_saved_per_month: design.hours_saved_per_month === null ? null : Number(design.hours_saved_per_month) }
+        : null,
+      filled: Object.fromEntries(CANVAS_SLOTS.map((s) => [s, Boolean(design?.[s]?.trim())])),
+      messages: (messages ?? []).filter((m) => m.team_id === t.id).map((m) => ({ id: m.id, role: m.role, type: m.type, slot: m.slot, content: m.content })),
+    };
+  });
+
+  return (
+    <div className="space-y-6">
+      <Link href="/console/sessions" className="text-sm font-semibold text-green-700 hover:underline">
+        ← Sessions
+      </Link>
+      <RunConsole
+        session={{
+          id: session.id,
+          name: session.name,
+          phase: session.phase,
+          phaseStartedAt: session.phase_started_at,
+          phaseDuration: session.phase_duration_seconds,
+          joinCode: session.join_code,
+          deckName: session.decks?.name ?? "",
+          settings: readSettings(session.settings),
+        }}
+        teams={runTeams}
+        cases={cases ?? []}
+        credits={ctx.activeOrg?.sessionCredits ?? 0}
+        serverNow={new Date().toISOString()}
+        joinHost={(await headers()).get("host") ?? "localhost:3000"}
+      />
+    </div>
+  );
+}

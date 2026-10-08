@@ -35,10 +35,12 @@ export default async function ConsoleHome() {
             <p className="text-sm text-ink-500">Build and reuse case study decks for each function.</p>
           </Card>
         </Link>
-        <Card className="space-y-2">
-          <h2 className="font-display text-lg font-semibold">Sessions</h2>
-          <p className="text-sm text-ink-500">Create a session, share the code and run the game live. Coming in the next milestone.</p>
-        </Card>
+        <Link href="/console/sessions" className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-600">
+          <Card className="h-full space-y-2 transition-transform hover:-translate-y-0.5">
+            <h2 className="font-display text-lg font-semibold">Sessions</h2>
+            <p className="text-sm text-ink-500">Create a session, share the code and run the game live.</p>
+          </Card>
+        </Link>
         <Card className="space-y-2">
           <h2 className="font-display text-lg font-semibold">Session credits</h2>
           <p className="font-display text-4xl font-bold text-green-600">{org?.sessionCredits ?? 0}</p>

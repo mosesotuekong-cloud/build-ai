@@ -10,6 +10,8 @@ import { Connector } from "@/components/game/connector";
 import { SlotSocket } from "@/components/game/slot-socket";
 import { Stamp, useShake } from "@/components/game/stamp";
 import { TokenCoins } from "@/components/game/token-coins";
+import { PhaseTimer } from "@/components/session/phase-timer";
+import { useTeamDesignSync } from "@/components/play/use-team-design-sync";
 import { Button } from "@/components/ui/button";
 import { ChipSelect } from "@/components/ui/chip-select";
 import { Wordmark } from "@/components/ui/wordmark";
@@ -23,6 +25,10 @@ type Finished = { score: { total: number; breakdown: ScoredCriterion[]; summary:
 export function PlayBoard({
   teamId,
   mode,
+  phase,
+  teamName,
+  timer: phaseTimer,
+  coachEnabled,
   caseInfo,
   initialDesign,
   initialTokens,
@@ -34,6 +40,10 @@ export function PlayBoard({
 }: {
   teamId: string;
   mode: "live" | "practice";
+  phase: string;
+  teamName: string;
+  timer: { startedAt: string | null; duration: number | null; serverNow: string };
+  coachEnabled: boolean;
   caseInfo: CoachCase;
   initialDesign: CoachDesign;
   initialTokens: number;
@@ -56,6 +66,22 @@ export function PlayBoard({
   const [boardRef, shake] = useShake();
   const pending = useRef<Partial<CoachDesign>>({});
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [dirty, setDirty] = useState<ReadonlySet<string>>(new Set());
+  const readOnly = mode === "live" && phase === "twist";
+
+  // Teammates edit the same design on their own phones. When fresh data
+  // arrives from the server, take it, except for fields this phone is still
+  // saving. Tokens follow the server too (for example the twist bonus).
+  const [seen, setSeen] = useState({ design: initialDesign, tokens: initialTokens });
+  if (seen.design !== initialDesign || seen.tokens !== initialTokens) {
+    setSeen({ design: initialDesign, tokens: initialTokens });
+    setTokens(initialTokens);
+    setDesign((current) => {
+      const merged: CoachDesign = { ...initialDesign };
+      for (const key of dirty) (merged as Record<string, unknown>)[key] = current[key as keyof CoachDesign];
+      return merged;
+    });
+  }
 
   // Autosave: collect changes and send them after a short pause.
   const flush = useCallback(async () => {
@@ -65,12 +91,14 @@ export function PlayBoard({
     setSaveState("saving");
     const result = await saveDesign(teamId, patch);
     setSaveState(result.ok ? "saved" : "error");
+    setDirty((d) => new Set([...d].filter((k) => !(k in patch) || k in pending.current)));
   }, [teamId]);
 
   const update = useCallback(
     (patch: Partial<CoachDesign>) => {
       setDesign((d) => ({ ...d, ...patch }));
       pending.current = { ...pending.current, ...patch };
+      setDirty((d) => new Set([...d, ...Object.keys(patch)]));
       setSaveState("saving");
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(flush, 700);
@@ -79,6 +107,13 @@ export function PlayBoard({
   );
 
   useEffect(() => () => void flush(), [flush]);
+
+  // Teammates' edits arrive live; keep any field this phone hasn't saved yet.
+  const onRemoteDesign = useCallback((remote: Partial<CoachDesign>) => {
+    const keep = { ...pending.current };
+    setDesign((current) => ({ ...current, ...remote, ...Object.fromEntries(Object.keys(keep).map((k) => [k, current[k as keyof CoachDesign]])) }));
+  }, []);
+  useTeamDesignSync(teamId, phase === "solving_after_twist" ? "after_twist" : "before_twist", onRemoteDesign);
 
   const filled = CANVAS_SLOTS.filter((s) => design[s].trim()).length;
 
@@ -116,12 +151,13 @@ export function PlayBoard({
               <Wordmark size="sm" />
             )}
             <span className="hidden truncate rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700 uppercase sm:inline">
-              {mode === "practice" ? "Practice run" : "Live"}
+              {mode === "practice" ? "Practice run" : teamName}
             </span>
+            {mode === "live" && <PhaseTimer startedAt={phaseTimer.startedAt} durationSeconds={phaseTimer.duration} serverNow={phaseTimer.serverNow} size="sm" />}
           </div>
           <div className="flex items-center gap-3">
             <TokenCoins count={tokens} size="sm" label="Hint coins" />
-            {!finished && (
+            {mode === "practice" && !finished && (
               <Button onClick={finish} disabled={finishing || filled === 0} className="px-4 py-2 text-sm">
                 {finishing ? "Scoring…" : "Finish"}
               </Button>
@@ -150,6 +186,12 @@ export function PlayBoard({
               </motion.div>
             ) : (
               <motion.section key="canvas" ref={boardRef} className="relative space-y-6" exit={{ opacity: 0 }} aria-label="Your design">
+                {readOnly && (
+                  <p className="rounded-2xl bg-amber-100 p-4 font-semibold text-amber-700" role="status">
+                    Twist! Something has changed for your team. Listen to your facilitator, then adapt your design when the next round
+                    starts. You&apos;ve got a bonus coin.
+                  </p>
+                )}
                 <div className="flex items-baseline justify-between gap-3">
                   <h2 className="font-display text-2xl font-bold">Your design</h2>
                   <span className="text-sm text-ink-500" role="status">
@@ -167,6 +209,7 @@ export function PlayBoard({
                       )}
                       <button
                         type="button"
+                        disabled={readOnly}
                         onClick={() => setEditing(slot)}
                         className="block w-full rounded-2xl text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-600"
                         aria-label={`Edit ${slot === "human" ? "human in control" : slot}`}
@@ -177,8 +220,11 @@ export function PlayBoard({
                   ))}
                 </div>
 
-                <Extras design={design} onChange={update} toolSuggestions={toolSuggestions} systemSuggestions={systemSuggestions} />
+                <fieldset disabled={readOnly} className={readOnly ? "pointer-events-none opacity-60" : ""}>
+                  <Extras design={design} onChange={update} toolSuggestions={toolSuggestions} systemSuggestions={systemSuggestions} />
+                </fieldset>
                 <Stamp show={stamp} text="Locked in" tone="green" />
+                <Stamp show={readOnly} text="Twist" />
               </motion.section>
             )}
           </AnimatePresence>
@@ -190,7 +236,7 @@ export function PlayBoard({
               teamId={teamId}
               messages={messages}
               onMessages={setMessages}
-              disabled={Boolean(finished)}
+              disabled={Boolean(finished) || !coachEnabled}
               tokens={tokens}
               onTokens={setTokens}
               draft={coachDraft}
@@ -201,7 +247,7 @@ export function PlayBoard({
       </div>
 
       {/* Phone: the coach opens as a sheet. */}
-      {!finished && (
+      {!finished && coachEnabled && (
         <button
           type="button"
           onClick={() => setCoachOpen(true)}
@@ -230,7 +276,7 @@ export function PlayBoard({
                 teamId={teamId}
                 messages={messages}
                 onMessages={setMessages}
-                disabled={Boolean(finished)}
+                disabled={Boolean(finished) || !coachEnabled}
                 tokens={tokens}
                 onTokens={setTokens}
                 draft={coachDraft}
