@@ -147,8 +147,10 @@ export function CoachPanel({
                         {TYPE_LABEL[m.type] ?? m.type}
                       </span>
                     )}
-                    {m.slot && m.slot !== "general" && (
-                      <span className="rounded-full bg-cream-200 px-2 py-0.5 text-[11px] font-bold text-ink-700 uppercase">{SLOT_LABEL[m.slot] ?? m.slot}</span>
+                    {m.type && (
+                      <span className="rounded-full bg-cream-200 px-2 py-0.5 text-[11px] font-bold text-ink-700 uppercase">
+                        {m.slot && m.slot !== "general" ? (SLOT_LABEL[m.slot] ?? m.slot) : "General"}
+                      </span>
                     )}
                   </div>
                   <p className="text-sm leading-relaxed text-ink-900">{m.content || <span className="text-ink-500">Thinking…</span>}</p>
