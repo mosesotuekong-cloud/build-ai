@@ -1,6 +1,7 @@
 import type { AITask } from "../types";
 import type { CoachReply, LeakCheck } from "../schemas/coach";
 import type { JudgeOutput, ReferenceSolution } from "../schemas/judge";
+import type { DesignCheck, Twist } from "../schemas/check";
 import { caseFixtures } from "./cases";
 
 // Fixtures for the mock provider. Each task maps fixture keys to a value;
@@ -50,12 +51,26 @@ const referenceSolution: ReferenceSolution = {
     "A simple rule handles most requests, so AI isn't needed for the decision. The clash check is what stops three people being off at once. A person still decides the tricky cases, and sees the facts they need. A valid alternative is to send every request to the manager with the facts attached, trading speed for control.",
 };
 
+const designCheck: DesignCheck = {
+  flags: [
+    {
+      slot: "human",
+      kind: "no_human_control",
+      question: "This decides something that matters to people, but no one checks it. Where should a person look before it goes out?",
+    },
+  ],
+};
+
+const twist: Twist = { twist: "The line manager who approves these is on leave for the next two weeks.", affects: ["human", "decision"] };
+
 export const objectFixtures: Partial<Record<AITask, Record<string, unknown>>> = {
   "generate-cases": { default: caseFixtures.finance, ...caseFixtures },
   "coach-reply": { default: coachReplies.question, ...coachReplies },
   "leak-check": { default: leakCheck },
   judge: { default: judge },
   "reference-solution": { default: referenceSolution },
+  "design-check": { default: designCheck },
+  twist: { default: twist },
 };
 
 export const textFixtures: Partial<Record<AITask, Record<string, string>>> = {

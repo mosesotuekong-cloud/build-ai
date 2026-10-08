@@ -22,6 +22,8 @@ export type RunTeam = {
   name: string;
   caseId: string | null;
   tokens: number;
+  twist: string | null;
+  checks: { id: string; flags: { slot: string; kind: string; question: string }[]; created_at: string }[];
   players: string[];
   design: CoachDesign | null;
   filled: Record<string, boolean>;
@@ -206,6 +208,7 @@ export function RunConsole({
                     </div>
                     <p className="text-sm text-ink-500">{t.players.join(", ") || "No players yet"}</p>
                     <p className="text-sm font-semibold text-green-700">{caseTitle(t.caseId) ?? "No case yet"}</p>
+                    {t.twist && <p className="rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-700">Twist: {t.twist}</p>}
                     <SlotMeter filled={t.filled} size="sm" />
                     <p className="text-xs text-ink-500">
                       {t.messages.filter((m) => m.role === "team").length} coach questions · {t.messages.filter((m) => m.earned).length} coins earned · {selected === t.id ? "Hide details" : "View design and coach chat"}
@@ -334,6 +337,26 @@ function TeamDetail({ team, caseTitle }: { team: RunTeam; caseTitle: string | nu
           </div>
         ) : (
           <p className="text-ink-500">No design yet.</p>
+        )}
+        {team.checks.length > 0 && (
+          <div className="space-y-2 border-t border-cream-200 pt-4">
+            <h3 className="font-display text-lg font-bold">Design checks ({team.checks.length})</h3>
+            <ul className="space-y-1.5 text-sm">
+              {team.checks.flatMap((c) =>
+                c.flags.length
+                  ? c.flags.map((f, i) => (
+                      <li key={`${c.id}-${i}`} className="text-ink-700">
+                        <span className="font-bold text-amber-700 uppercase">{f.slot}</span> · {f.question}
+                      </li>
+                    ))
+                  : [
+                      <li key={c.id} className="text-ink-500">
+                        No hard errors found.
+                      </li>,
+                    ],
+              )}
+            </ul>
+          </div>
         )}
         {team.scorecard && (
           <div className="space-y-2 border-t border-cream-200 pt-4">

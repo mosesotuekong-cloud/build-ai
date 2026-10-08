@@ -25,7 +25,7 @@ export default async function RunSessionPage({ params }: PageProps<"/console/ses
   const [{ data: teams }, { data: cases }] = await Promise.all([
     supabase
       .from("teams")
-      .select("id, name, case_id, hint_tokens_remaining, created_at, players (id, display_name, left_at), designs (version, trigger, steps, decision, action, human, name, hours_saved_per_month, tools, systems, updated_at, impact, effort, frequency, volume_per_month, data_location, data_access, data_quality, personal_data, risks, ai_kind, platform_fit)")
+      .select("id, name, case_id, hint_tokens_remaining, created_at, players (id, display_name, left_at), twists (content), design_checks (id, flags, created_at), designs (version, trigger, steps, decision, action, human, name, hours_saved_per_month, tools, systems, updated_at, impact, effort, frequency, volume_per_month, data_location, data_access, data_quality, personal_data, risks, ai_kind, platform_fit)")
       .eq("session_id", session.id)
       .order("created_at"),
     session.deck_id
@@ -49,6 +49,8 @@ export default async function RunSessionPage({ params }: PageProps<"/console/ses
       name: t.name,
       caseId: t.case_id,
       tokens: t.hint_tokens_remaining,
+      twist: t.twists?.content ?? null,
+      checks: t.design_checks.map((c) => ({ id: c.id, flags: (c.flags as { slot: string; kind: string; question: string }[]) ?? [], created_at: c.created_at })),
       players: t.players.filter((p) => !p.left_at).map((p) => p.display_name),
       design: design
         ? { ...design, hours_saved_per_month: design.hours_saved_per_month === null ? null : Number(design.hours_saved_per_month) }

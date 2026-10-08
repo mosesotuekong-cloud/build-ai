@@ -21,6 +21,7 @@ import { CANVAS_SLOTS, type CanvasSlot } from "@/lib/ai/schemas/canvas";
 import type { ReferenceSolution, ScoredCriterion } from "@/lib/ai/schemas/judge";
 import type { CoachCase, CoachDesign } from "@/lib/coach/context";
 import { finishPractice, reopenPractice, saveDesign } from "../actions";
+import { checkDesign } from "../check-actions";
 
 type Finished = { score: { total: number; breakdown: ScoredCriterion[]; summary: string } | null; reference: ReferenceSolution | null };
 
@@ -31,6 +32,7 @@ export function PlayBoard({
   teamName,
   timer: phaseTimer,
   coachEnabled,
+  twist = null,
   inlineCoach = { enabled: false, idleMinutes: 4 },
   caseInfo,
   initialDesign,
@@ -47,6 +49,7 @@ export function PlayBoard({
   teamName: string;
   timer: { startedAt: string | null; duration: number | null; serverNow: string };
   coachEnabled: boolean;
+  twist?: string | null;
   inlineCoach?: { enabled: boolean; idleMinutes: number };
   caseInfo: CoachCase;
   initialDesign: CoachDesign;
@@ -69,6 +72,7 @@ export function PlayBoard({
   const [messages, setMessages] = useState<ChatMessage[]>(history);
   const [dismissed, setDismissed] = useState<ReadonlySet<string>>(new Set());
   const [coinToast, setCoinToast] = useState<string | null>(null);
+  const [checking, startCheck] = useTransition();
   const [serverOffsetMs] = useState(() => new Date(phaseTimer.serverNow).getTime() - Date.now());
   const [boardRef, shake] = useShake();
   const pending = useRef<Partial<CoachDesign>>({});
@@ -111,6 +115,12 @@ export function PlayBoard({
       setDesign((d) => ({ ...d, ...patch }));
       pending.current = { ...pending.current, ...patch };
       setDirty((d) => new Set([...d, ...Object.keys(patch)]));
+      const touched = Object.keys(patch);
+      setMessages((prev) => {
+        const cleared = prev.filter((m) => m.trigger === "inline_flag" && m.slot && touched.includes(m.slot)).map((m) => m.id);
+        if (cleared.length) setDismissed((d) => new Set([...d, ...cleared]));
+        return prev;
+      });
       setSaveState("saving");
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(flush, 700);
@@ -143,8 +153,37 @@ export function PlayBoard({
     onMessage: (m: InlineMessage) =>
       setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, { id: m.id, role: "coach", type: m.type, slot: m.slot, content: m.content, trigger: "inline_idle" }])),
   });
-  const bubbleFor = (slot: CanvasSlot) =>
-    designPhase && !design[slot].trim() ? (inlineMessages.find((m) => m.slot === slot && !dismissed.has(m.id)) ?? null) : null;
+  const flagMessages = messages.filter((m) => m.trigger === "inline_flag" && m.role === "coach");
+  // A design-check note wins over the idle question; both clear once the team acts.
+  const bubbleFor = (slot: CanvasSlot) => {
+    if (!designPhase) return null;
+    const flag = [...flagMessages].reverse().find((m) => m.slot === slot && !dismissed.has(m.id));
+    if (flag) return flag;
+    return !design[slot].trim() ? (inlineMessages.find((m) => m.slot === slot && !dismissed.has(m.id)) ?? null) : null;
+  };
+
+  const runCheck = () =>
+    startCheck(async () => {
+      if (timer.current) clearTimeout(timer.current);
+      await flush();
+      const result = await checkDesign(teamId);
+      if (typeof result.tokens === "number") setTokens(result.tokens);
+      if (!result.ok) {
+        setCoinToast(result.message);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { id: `check-${Date.now()}`, role: "team", type: null, slot: null, content: "We asked for a design check." },
+          ...result.messages.map((m) => ({ id: m.id, role: "coach" as const, type: m.type, slot: m.slot, content: m.content, trigger: m.trigger })),
+        ]);
+        setCoinToast(
+          result.clean
+            ? "No hard errors found. Ask the coach what could go wrong on a bad day."
+            : `${result.messages.length} ${result.messages.length === 1 ? "thing" : "things"} to look at. See the notes beside your slots.`,
+        );
+      }
+      setTimeout(() => setCoinToast(null), 5000);
+    });
 
   const finish = () => {
     startFinish(async () => {
@@ -217,12 +256,38 @@ export function PlayBoard({
               <motion.section key="canvas" ref={boardRef} className="relative space-y-6" exit={{ opacity: 0 }} aria-label="Your design">
                 {readOnly && (
                   <p className="rounded-2xl bg-amber-100 p-4 font-semibold text-amber-700" role="status">
-                    Twist! Something has changed for your team. Listen to your facilitator, then adapt your design when the next round
-                    starts. You&apos;ve got a bonus coin.
+                    {twist ? (
+                      <>
+                        <span className="block text-xs tracking-wider uppercase">Twist!</span>
+                        <span className="block text-lg text-ink-900">{twist}</span>
+                        <span className="mt-1 block text-sm">Adapt your design when the next round starts. You&apos;ve got a bonus coin.</span>
+                      </>
+                    ) : (
+                      <>
+                        Twist! Something has changed for your team. Listen to your facilitator, then adapt your design when the next round
+                        starts. You&apos;ve got a bonus coin.
+                      </>
+                    )}
                   </p>
                 )}
-                <div className="flex items-baseline justify-between gap-3">
+                {twist && (phase === "twist" || phase === "solving_after_twist") && !readOnly && (
+                  <div className="rounded-2xl border-2 border-amber-400 bg-amber-50 p-4">
+                    <p className="text-xs font-bold tracking-wider text-amber-700 uppercase">Your twist</p>
+                    <p className="font-semibold text-ink-900">{twist}</p>
+                  </div>
+                )}
+                <div className="flex flex-wrap items-baseline justify-between gap-3">
                   <h2 className="font-display text-2xl font-bold">Your design</h2>
+                  {designPhase && !finished && (
+                    <button
+                      type="button"
+                      onClick={runCheck}
+                      disabled={checking || tokens < 1 || filled === 0}
+                      className="rounded-full border-2 border-amber-400 bg-amber-50 px-3.5 py-1.5 text-sm font-bold text-ink-900 hover:bg-amber-100 disabled:opacity-50"
+                    >
+                      {checking ? "Checking…" : "Check our design · 1 coin"}
+                    </button>
+                  )}
                   <span className="text-sm text-ink-500" role="status">
                     {saveState === "saving" ? "Saving…" : saveState === "error" ? "Couldn't save. Check your connection." : `${filled} of 5 slots filled · Saved`}
                   </span>

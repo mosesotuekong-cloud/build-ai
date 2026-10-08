@@ -26,6 +26,7 @@ export type PlayerTeam = {
   case: CoachCase | null;
   design: CoachDesign & { id: string; updated_at: string };
   scorecard: Scorecard;
+  twist: { content: string; affects: string[] } | null;
 };
 
 // Loads everything a player needs for their team, after checking they really
@@ -47,7 +48,7 @@ export async function loadPlayerTeam(teamId: string): Promise<PlayerTeam | null>
     .maybeSingle();
   if (!player) return null;
 
-  const [{ data: team }, { data: session }, { data: design }] = await Promise.all([
+  const [{ data: team }, { data: session }, { data: design }, { data: twist }] = await Promise.all([
     admin.from("teams").select("id, name, hint_tokens_remaining, case_id").eq("id", teamId).single(),
     admin.from("sessions").select("id, mode, phase, org_id, deck_id, target_platforms, name, phase_started_at, phase_duration_seconds, settings").eq("id", player.session_id).single(),
     admin
@@ -59,6 +60,7 @@ export async function loadPlayerTeam(teamId: string): Promise<PlayerTeam | null>
       .order("version", { ascending: false })
       .limit(1)
       .single(),
+    admin.from("twists").select("content, affects").eq("team_id", teamId).maybeSingle(),
   ]);
   if (!team || !session || !design) return null;
 
@@ -89,6 +91,7 @@ export async function loadPlayerTeam(teamId: string): Promise<PlayerTeam | null>
       tools: design.tools,
       systems: design.systems,
     },
+    twist: twist ?? null,
     scorecard: {
       impact: design.impact,
       effort: design.effort,

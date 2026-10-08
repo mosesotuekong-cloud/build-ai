@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { generateTwistsForSession } from "@/lib/twists/generate";
 import { canTransition, phaseDurationSeconds, type Phase, type SessionMode } from "./machine";
 import { readSettings } from "./settings";
 
@@ -11,7 +12,7 @@ export type TransitionResult = { ok: true; phase: Phase } | { ok: false; message
 // session's phase. Checks the state machine, applies side effects, and uses
 // compare-and-set so two clicks can never advance a room twice.
 export async function transitionSession(sessionId: string, to: Phase, admin: Admin = createAdminClient()): Promise<TransitionResult> {
-  const { data: session } = await admin.from("sessions").select("id, org_id, deck_id, mode, phase, settings, started_at").eq("id", sessionId).single();
+  const { data: session } = await admin.from("sessions").select("id, org_id, deck_id, mode, phase, settings, started_at, target_platforms").eq("id", sessionId).single();
   if (!session) return { ok: false, message: "Session not found." };
 
   const from = session.phase as Phase;
@@ -32,7 +33,11 @@ export async function transitionSession(sessionId: string, to: Phase, admin: Adm
   // Teams that haven't picked a case get one dealt before design starts.
   if (mode === "live" && to === "solving") await dealRemainingCases(admin, session.id, session.deck_id);
   // The pre-twist design is saved as a version before the twist lands.
-  if (mode === "live" && to === "twist") await admin.rpc("snapshot_designs_for_twist", { target_session: session.id });
+  if (mode === "live" && to === "twist") {
+    await admin.rpc("snapshot_designs_for_twist", { target_session: session.id });
+    // Each team's own twist is ready before the phase changes, so phones show it straight away.
+    await generateTwistsForSession(admin, session.id, session.target_platforms);
+  }
 
   const now = new Date().toISOString();
   const { data: moved } = await admin

@@ -112,7 +112,9 @@ test("facilitator runs a live session with two teams on phones", async ({ page, 
 
   // The twist locks the canvas and drops a bonus coin.
   await page.getByRole("button", { name: "Start: Twist" }).click();
-  await expect(ada.getByText(/Twist! Something has changed/)).toBeVisible();
+  // Each team gets its own twist (the mock writes the same one for both).
+  await expect(ada.getByText(/line manager who approves these is on leave/)).toBeVisible();
+  await expect(presenter.getByText(/line manager who approves these is on leave/).first()).toBeVisible();
   await expect(ada.getByText("Hint coins: 4")).toBeAttached();
   await expect(ada.getByRole("button", { name: "Edit trigger" })).toBeDisabled();
 

@@ -9,7 +9,7 @@ import { PhaseTimer } from "@/components/session/phase-timer";
 import { Wordmark } from "@/components/ui/wordmark";
 import { PHASE_LABELS, type Phase } from "@/lib/session/machine";
 
-type PresenterTeam = { id: string; name: string; players: number; filled: Record<string, boolean> };
+type PresenterTeam = { id: string; name: string; players: number; filled: Record<string, boolean>; twist: string | null };
 
 export function PresenterScreen({
   session,
@@ -27,6 +27,7 @@ export function PresenterScreen({
   const showCode = ["lobby", "baseline_check"].includes(phase) && session.joinCode;
   const showCodeStrip = phase === "solving" && session.joinCode;
   const showProgress = ["solving", "twist", "solving_after_twist", "prioritise"].includes(phase);
+  const showTwists = phase === "twist" || phase === "solving_after_twist";
 
   return (
     <main className="relative flex min-h-screen flex-col gap-8 overflow-hidden bg-cream-100 px-10 py-8">
@@ -90,6 +91,7 @@ export function PresenterScreen({
                   </p>
                 </div>
                 {showProgress && <SlotMeter filled={t.filled} />}
+                {showTwists && t.twist && <p className="rounded-xl bg-amber-50 p-3 text-lg leading-snug text-ink-900">{t.twist}</p>}
               </motion.li>
             ))}
           </AnimatePresence>

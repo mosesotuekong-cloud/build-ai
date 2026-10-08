@@ -104,6 +104,25 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"design_checks": {
+                  Row: {
+                    "created_at": string,"design_version": Database["public"]['Enums']["design_version"],"flags": NonNullable<Json>,"id": string,"source": string,"team_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"design_version": Database["public"]['Enums']["design_version"],"flags"?: NonNullable<Json>,"id"?: string,"source"?: string,"team_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"design_version"?: Database["public"]['Enums']["design_version"],"flags"?: NonNullable<Json>,"id"?: string,"source"?: string,"team_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "design_checks_team_id_fkey"
+      columns: ["team_id"]
+isOneToOne: false
+      referencedRelation: "teams"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"designs": {
                   Row: {
                     "action": string,"ai_kind": string | null,"data_access": string | null,"data_location": string | null,"data_quality": string | null,"decision": string,"effort": number | null,"frequency": string | null,"hours_saved_per_month": number | null,"human": string,"id": string,"impact": number | null,"name": string,"personal_data": string | null,"platform_fit": string | null,"risks": (string)[],"steps": string,"systems": (string)[],"team_id": string,"tools": (string)[],"trigger": string,"updated_at": string,"version": Database["public"]['Enums']["design_version"],"volume_per_month": number | null
@@ -375,6 +394,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"twists": {
+                  Row: {
+                    "affects": (string)[],"content": string,"created_at": string,"id": string,"kind": Database["public"]['Enums']["twist_kind"],"session_id": string,"source": string,"team_id": string
+                  }
+                  Insert: {
+                    "affects"?: (string)[],"content": string,"created_at"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["twist_kind"],"session_id": string,"source"?: string,"team_id": string
+                  }
+                  Update: {
+                    "affects"?: (string)[],"content"?: string,"created_at"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["twist_kind"],"session_id"?: string,"source"?: string,"team_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "twists_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "sessions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "twists_team_id_fkey"
+      columns: ["team_id"]
+isOneToOne: true
+      referencedRelation: "teams"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -434,7 +478,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "case_source": "ai"|"manual"|"library"|"raised","check_kind": "baseline"|"post","coach_message_type": "question"|"nudge"|"analogy"|"flag","coach_role": "team"|"coach","coach_trigger": "asked"|"inline_idle"|"inline_flag","design_version": "before_twist"|"after_twist","idea_status": "raised"|"designed","job_status": "queued"|"running"|"succeeded"|"failed","org_role": "admin"|"facilitator","session_mode": "live"|"practice","session_phase": "draft"|"lobby"|"baseline_check"|"solving"|"twist"|"solving_after_twist"|"prioritise"|"judging"|"reveal"|"post_check"|"commitments"|"report"|"closed"
+            "case_source": "ai"|"manual"|"library"|"raised","check_kind": "baseline"|"post","coach_message_type": "question"|"nudge"|"analogy"|"flag","coach_role": "team"|"coach","coach_trigger": "asked"|"inline_idle"|"inline_flag","design_version": "before_twist"|"after_twist","idea_status": "raised"|"designed","job_status": "queued"|"running"|"succeeded"|"failed","org_role": "admin"|"facilitator","session_mode": "live"|"practice","session_phase": "draft"|"lobby"|"baseline_check"|"solving"|"twist"|"solving_after_twist"|"prioritise"|"judging"|"reveal"|"post_check"|"commitments"|"report"|"closed","twist_kind": "operational"|"risk"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -554,7 +598,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "case_source": ["ai", "manual", "library", "raised"],"check_kind": ["baseline", "post"],"coach_message_type": ["question", "nudge", "analogy", "flag"],"coach_role": ["team", "coach"],"coach_trigger": ["asked", "inline_idle", "inline_flag"],"design_version": ["before_twist", "after_twist"],"idea_status": ["raised", "designed"],"job_status": ["queued", "running", "succeeded", "failed"],"org_role": ["admin", "facilitator"],"session_mode": ["live", "practice"],"session_phase": ["draft", "lobby", "baseline_check", "solving", "twist", "solving_after_twist", "prioritise", "judging", "reveal", "post_check", "commitments", "report", "closed"]
+            "case_source": ["ai", "manual", "library", "raised"],"check_kind": ["baseline", "post"],"coach_message_type": ["question", "nudge", "analogy", "flag"],"coach_role": ["team", "coach"],"coach_trigger": ["asked", "inline_idle", "inline_flag"],"design_version": ["before_twist", "after_twist"],"idea_status": ["raised", "designed"],"job_status": ["queued", "running", "succeeded", "failed"],"org_role": ["admin", "facilitator"],"session_mode": ["live", "practice"],"session_phase": ["draft", "lobby", "baseline_check", "solving", "twist", "solving_after_twist", "prioritise", "judging", "reveal", "post_check", "commitments", "report", "closed"],"twist_kind": ["operational", "risk"]
           }
         }
 } as const

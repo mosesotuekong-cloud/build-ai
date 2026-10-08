@@ -71,6 +71,23 @@ test("inline coach, paid nudge and earning coins back", async ({ page, browser }
   // The facilitator sees the coins earned.
   await expect(page.getByText(/2 coins earned/)).toBeVisible();
 
+  // "Check our design" costs a coin and flags hard errors as questions beside
+  // the slot (the mock flags the human slot). Acting on it clears the note
+  // and earns the coin back.
+  await phone.getByRole("button", { name: /Check our design/ }).click();
+  await expect(phone.getByText(/1 thing to look at/)).toBeVisible();
+  await expect(phone.getByText("Hint coins: 3")).toBeAttached();
+  const note = phone.getByRole("note").filter({ hasText: "Design check" });
+  await expect(note).toContainText(/no one checks it/);
+  await phone.getByRole("button", { name: "Edit human in control" }).click();
+  await phone.getByRole("dialog").getByRole("textbox").fill("The line manager approves anything the rule can't settle");
+  await phone.getByRole("button", { name: "Snap it in" }).click();
+  await expect(note).toBeHidden();
+  await expect(phone.getByText("Hint coins: 4")).toBeAttached();
+  await expect(page.getByText(/3 coins earned/)).toBeVisible();
+  await page.getByRole("button", { name: /Coachables/ }).click();
+  await expect(page.getByRole("heading", { name: "Design checks (1)" })).toBeVisible();
+
   // Tidy up.
   page.once("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "End session" }).click();

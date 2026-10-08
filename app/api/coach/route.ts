@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 
   const result = await runCoachTurn(
     getAIProvider(),
-    { case: data.case, design: data.design, phase: data.session.phase, platforms: data.session.target_platforms, history },
+    { case: data.case, design: data.design, phase: data.session.phase, twist: data.twist?.content ?? null, platforms: data.session.target_platforms, history },
     kind,
     askedText,
   );

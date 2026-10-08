@@ -6,6 +6,7 @@ import { objectFixtures } from "@/lib/ai/fixtures";
 import { generatedDeckSchema } from "@/lib/ai/schemas/cases";
 import { coachReplySchema, leakCheckSchema } from "@/lib/ai/schemas/coach";
 import { judgeOutputSchema, referenceSolutionSchema } from "@/lib/ai/schemas/judge";
+import { designCheckSchema, twistSchema } from "@/lib/ai/schemas/check";
 import { generateCases } from "@/lib/ai/tasks/generate-cases";
 
 const provider = createMockProvider({ delayMs: 0 });
@@ -17,6 +18,8 @@ const fixtureSchemas: Record<string, z.ZodType> = {
   "leak-check": leakCheckSchema,
   judge: judgeOutputSchema,
   "reference-solution": referenceSolutionSchema,
+  "design-check": designCheckSchema,
+  twist: twistSchema,
 };
 
 describe("AI fixtures", () => {

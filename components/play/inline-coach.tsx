@@ -11,6 +11,7 @@ export type InlineMessage = { id: string; slot: string | null; content: string; 
 // Never a pop-up window; the team can answer it in the coach thread or just
 // get on with the slot.
 export function InlineCoachBubble({ message, onReply, onDismiss }: { message: InlineMessage | null; onReply: () => void; onDismiss: () => void }) {
+  const isFlag = message?.trigger === "inline_flag";
   return (
     <AnimatePresence>
       {message && (
@@ -18,13 +19,13 @@ export function InlineCoachBubble({ message, onReply, onDismiss }: { message: In
           key={message.id}
           role="note"
           aria-label="A question from the coach"
-          className="relative mt-2 ml-6 rounded-2xl rounded-tl-sm border-2 border-green-200 bg-green-50 px-4 py-3 shadow-card"
+          className={`relative mt-2 ml-6 rounded-2xl rounded-tl-sm border-2 px-4 py-3 shadow-card ${isFlag ? "border-amber-300 bg-amber-50" : "border-green-200 bg-green-50"}`}
           initial={{ opacity: 0, y: -8, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={SPRINGS.bouncy}
         >
-          <p className="text-[11px] font-bold tracking-wider text-green-700 uppercase">Coach</p>
+          <p className={`text-[11px] font-bold tracking-wider uppercase ${isFlag ? "text-amber-700" : "text-green-700"}`}>{isFlag ? "Design check" : "Coach"}</p>
           <p className="text-sm leading-snug text-ink-900">{message.content}</p>
           <div className="mt-2 flex gap-3 text-sm font-semibold">
             <button type="button" onClick={onReply} className="text-green-700 hover:underline">

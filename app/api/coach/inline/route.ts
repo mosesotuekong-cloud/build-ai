@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   const history = await loadCoachHistory(teamId);
   const result = await runCoachTurn(
     getAIProvider(),
-    { case: data.case, design: data.design, phase: data.session.phase, platforms: data.session.target_platforms, history },
+    { case: data.case, design: data.design, phase: data.session.phase, twist: data.twist?.content ?? null, platforms: data.session.target_platforms, history },
     "question",
     `(No message from the team. The ${SLOT_LABELS[slot].title} slot is still empty after a few minutes. Ask one short, friendly question, under 25 words, that helps them make a start on the ${SLOT_LABELS[slot].title} slot. Do not suggest an answer.)`,
   );

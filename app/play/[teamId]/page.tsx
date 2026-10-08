@@ -160,6 +160,7 @@ export default async function PlayPage({ params }: PageProps<"/play/[teamId]">) 
         teamName={data.team.name}
         timer={timer}
         coachEnabled={settings.coach_enabled}
+        twist={data.twist?.content ?? null}
         inlineCoach={{ enabled: settings.coach_enabled && settings.inline_coach, idleMinutes: settings.inline_idle_minutes }}
         caseInfo={data.case}
         initialDesign={data.design}

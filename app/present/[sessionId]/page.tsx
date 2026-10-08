@@ -23,7 +23,7 @@ export default async function PresentPage({ params }: PageProps<"/present/[sessi
 
   const { data: teams } = await supabase
     .from("teams")
-    .select("id, name, created_at, players (display_name, left_at), designs (version, trigger, steps, decision, action, human)")
+    .select("id, name, created_at, players (display_name, left_at), designs (version, trigger, steps, decision, action, human), twists (content)")
     .eq("session_id", session.id)
     .order("created_at");
 
@@ -45,6 +45,7 @@ export default async function PresentPage({ params }: PageProps<"/present/[sessi
           id: t.id,
           name: t.name,
           players: t.players.filter((p) => !p.left_at).length,
+          twist: t.twists?.content ?? null,
           filled: Object.fromEntries(CANVAS_SLOTS.map((s) => [s, Boolean(design?.[s]?.trim())])),
         };
       })}
