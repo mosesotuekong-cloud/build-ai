@@ -8,6 +8,8 @@ The product name lives in a single config constant (`lib/config/app.ts`) so it c
 
 Newest first. Add a line whenever Moses confirms a change.
 
+- 2026-10-09: Builda is also an AI discovery tool. Every designed use case gets a discovery scorecard (team-rated in the prioritise phase, AI-assessed at judging) and the opportunity map groups use cases into portfolio buckets. Staff can raise their own problems at any time ("Bring your own problem"); these join the backlog, and a team may design one instead of a deck case. See "AI discovery outputs".
+- 2026-10-09: Kinds of AI used to classify each use case: simple rule (no AI), classify or route, extract from documents, summarise, draft or generate, answer questions over data, forecast, chat or voice assistant (for example a WhatsApp bot), agent that takes actions.
 - 2026-10-09: Milestone 3 defaults. Mixed-function decks: teams draw from the whole pile by default; the facilitator can switch a session to "pick a function first". Teams draw their own case by default; the facilitator can assign instead, and any team without a case is dealt one when design starts. The twist phase locks the canvas and shows the stamp; teams adapt in the next phase, starting from a saved copy of their design. Leaving a switched-off optional phase is allowed, so changing settings mid-session never strands a room. The presenter screen is opened from the facilitator's signed-in laptop.
 - 2026-10-09: Tools and systems on the canvas are pick-or-type dropdowns (suggestions plus free entry).
 - 2026-10-08: Target platforms. Each organisation records its AI tool stack (several platforms, because clients use different stacks). Decks and sessions pick target platforms from it. Platforms steer case writing and coaching, and drive exports: a real compiler where we have one (n8n first), otherwise a deterministic build guide that maps each slot onto the platform's own concepts. The catalog lives in `lib/config/platforms.ts`. See "Target platforms".
@@ -140,12 +142,14 @@ Adjust as needed, but keep org isolation through RLS on every table.
 - functions (catalog), decks (plus target_platforms), cases (title, story, cost of the problem, who feels it, function, source: ai or manual, order)
 - sessions (org, deck, mode: live or practice, target_platforms, phase, phase_started_at, phase_duration, started_at, ended_at, settings: hint tokens, twist bonus tokens, coach strictness, coach on/off, inline coach on/off and idle delay, max tokens earned back, twist on/off, twist mix (operational, risk or mixed), before-and-after check on/off), session_code
 - teams (session, name, case, hint_tokens_remaining, hint_tokens_earned), players (anonymous user, team, display name, joined_at, left_at)
-- designs (team, version: before_twist or after_twist, the five slots, name, hours saved, tools, systems, updated_at, plus prioritise fields on the final version: impact 1–5, effort 1–5, frequency, data readiness)
+- designs (team, version: before_twist or after_twist, the five slots, name, hours saved, tools, systems, updated_at, plus the discovery scorecard on the current version: impact 1–5, effort 1–5, frequency, volume per month, data location, data access, data quality, personal data, risks, kind of AI, platform fit)
+- ideas (session, team, player, title, what happens, who feels it, frequency, status: raised or designed, case when designed). Raised problems; writes go through the server.
+- cases also carry an optional session (a team's own problem, used only in that session) and source raised
 - coach_messages (team, role, type: question, nudge, analogy, flag, content, slot, trigger: asked, inline_idle or inline_flag, tokens_spent, token_earned_at)
 - design_checks (team, design version, flags with slot, kind and question)
 - twists (team, kind: operational or risk, content)
 - scores (team, rubric breakdown, total, ai_reasoning, facilitator_override, final)
-- check_cards (a curated bank of short problem cards in matched pairs of equal difficulty, function, difficulty, pair id)
+- check cards: a curated bank of short problem cards in matched pairs of equal difficulty, kept in code (`lib/checks/cards.ts`) so they are versioned and reviewable; checks reference a card by id
 - individual_checks (player, session, kind: baseline or post, check card, the five slots, rubric breakdown, total, ai_reasoning)
 - commitments (team, session, owner name, owner email optional, first step, due date within 30 days of the session, follow-up status)
 - reference_solutions (case, the five slots, explanation), generated only at reveal
@@ -282,6 +286,23 @@ Do not let the AI write n8n JSON directly.
 
 The neutral plan is the source of truth. Later we will add Power Automate and Copilot Studio compilers, so keep the n8n compiler behind an interface. Write tests that compile every fixture plan and check the output is valid JSON with consistent node names and connections.
 
+## AI discovery outputs
+
+Builda is a game for learning and an AI discovery tool for the business. The rubric score teaches; the discovery assessment informs decisions. Both are kept.
+
+Discovery scorecard, per designed use case. Teams rate their own in the prioritise phase (about three minutes, game-like); the AI assesses the same things at judging, and both views are kept when they disagree.
+
+- Impact (low to high) by effort (low to high): the team drags its card onto a grid.
+- How often it happens (daily, weekly, monthly, rarely) and rough volume per month.
+- Data readiness, four quick taps: do we know where the data lives, can we get access, is it clean enough, does it contain personal data.
+- Risk: touches money, pay, decisions about people, customer-facing replies, health and safety, or legal and compliance.
+- Kind of AI needed (see the decisions log for the list), suggested from the Decision slot.
+- Best-fit platform from the session's stack.
+
+Bring your own problem. At any time in a session (lobby, design, prioritise) a player can raise a problem from their own work: what happens, who feels it, how often. Raised problems join the backlog marked "raised, not yet designed". In the lobby a team can choose to design its own problem instead of a deck card; it becomes a case for that session only and never changes the deck.
+
+Opportunity map in discovery language: use cases grouped into Quick wins (high value, low effort, data ready), Strategic bets (high value, needs work), Fix the data first (value is there, data is not ready) and Park (not worth it now). Each shows the kind of AI, risk level, platform fit and owner. Raised problems are listed too, and a one-page executive summary leads the report.
+
 ## Market research additions
 
 Approved 2026-10-07. Phase one items are built inside the existing milestones (see "Build order"). Phase one and a half items get their data model now; their screens come after the first paid pilot.
@@ -315,12 +336,12 @@ Work in milestones. At the end of each one, run the tests, run the app locally, 
 1. Project setup: Next.js, Tailwind, Supabase local, migrations, seed, `.env.example`, mock AI and mock n8n providers, basic layout and auth for facilitators.
 2. Decks: function catalog, seed HR deck, create and edit decks and cases, AI case generation through the n8n client (mocked locally).
 3. Session engine: create a session, join code, lobby, the state machine with all phases (including baseline_check, prioritise, post_check and commitments, and the optional-phase rules), tests for every allowed and disallowed transition under both check settings, session settings (before-and-after check, inline coach delay, earn-back cap, twist mix), player name at join with the privacy note, attendance timestamps, Realtime sync, server timers, presenter screen.
-4. Team canvas: phone view, five slots plus extras, autosave, live sync to facilitator view; the prioritise grid (impact by effort, frequency, data readiness); the solo check screens for baseline and post checks on the same slot sockets; the check card bank (matched pairs) as seed data.
+4. Team canvas: phone view, five slots plus extras, autosave, live sync to facilitator view; the discovery scorecard in the prioritise phase; Bring your own problem; the solo check screens for baseline and post checks on the same slot sockets; the check card bank (matched pairs).
 5. Coach: streamed chat, hint ladder, structured output, leak check, tokens, access and privacy questions, facilitator live view; the proactive inline coach on idle slots; token earn-back with its server-side rules.
 6. Design check and twist: inline coach also appears on flagged slots; twists carry a kind (operational only in phase one).
-7. Judging, facilitator overrides, leaderboard, reveal with reference solutions; scoring of baseline and post checks with the same rubric; the commitments phase screen and the commitments table; the `commitment-follow-up` job type, mocked locally.
+7. Judging, facilitator overrides, leaderboard, reveal with reference solutions; the AI discovery assessment beside the team's scorecard; scoring of baseline and post checks with the same rubric; the commitments phase screen and the commitments table; the `commitment-follow-up` job type, mocked locally.
 8. Blueprint and n8n export.
-9. Opportunity map report and PDF export, with the team's prioritise placement beside the AI's assessment, commitments, and before-and-after improvement per session and per criterion.
+9. Opportunity map report and PDF export, in discovery language (portfolio buckets, executive summary, raised problems), with the team's scorecard beside the AI's assessment, commitments, and before-and-after improvement per session and per criterion.
 10. Super admin: organizations, activation, session credits.
 11. Hardening: RLS tests (including names staying inside the org), Playwright happy path for a full session with two teams through every phase with the checks on, and a shorter run with them off, loading and error states, empty states, mobile checks.
 
