@@ -17,6 +17,7 @@ export default async function NewSessionPage({ searchParams }: PageProps<"/conso
     .from("decks")
     .select("id, name, function_slugs, cases (count)")
     .eq("org_id", ctx.activeOrg.orgId)
+    .is("cases.session_id", null)
     .order("updated_at", { ascending: false });
 
   const usable = (decks ?? []).filter((d) => (d.cases[0]?.count ?? 0) > 0);

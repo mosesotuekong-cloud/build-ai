@@ -171,7 +171,7 @@ export async function removeFunction(deckId: string, slug: string) {
   const valid = functionSlugSchema.parse(slug);
   const { data: deck } = await supabase.from("decks").select("function_slugs").eq("id", id).single();
   if (!deck) return;
-  await supabase.from("cases").delete().eq("deck_id", id).eq("function_slug", valid);
+  await supabase.from("cases").delete().eq("deck_id", id).eq("function_slug", valid).is("session_id", null);
   await supabase.from("decks").update({ function_slugs: deck.function_slugs.filter((s) => s !== valid) }).eq("id", id);
   revalidatePath(`/console/decks/${id}`);
 }
@@ -199,7 +199,7 @@ export async function saveCase(
     if (error) return { status: "error", message: "We couldn't save that case." };
   } else {
     const fn = functionSlugSchema.parse(slug);
-    const { data: siblings } = await supabase.from("cases").select("id, position").eq("deck_id", id).eq("function_slug", fn);
+    const { data: siblings } = await supabase.from("cases").select("id, position").eq("deck_id", id).eq("function_slug", fn).is("session_id", null);
     const { error } = await supabase
       .from("cases")
       .insert({ ...parsed.data, deck_id: id, function_slug: fn, source: "manual", position: nextPosition(siblings ?? []) });
@@ -220,7 +220,7 @@ export async function moveCase(deckId: string, caseId: string, direction: "up" |
   const id = idSchema.parse(deckId);
   const { data: target } = await supabase.from("cases").select("function_slug").eq("id", idSchema.parse(caseId)).single();
   if (!target) return;
-  const { data: siblings } = await supabase.from("cases").select("id, position").eq("deck_id", id).eq("function_slug", target.function_slug);
+  const { data: siblings } = await supabase.from("cases").select("id, position").eq("deck_id", id).eq("function_slug", target.function_slug).is("session_id", null);
   const updates = moveItem(siblings ?? [], caseId, direction);
   await Promise.all(updates.map((u) => supabase.from("cases").update({ position: u.position }).eq("id", u.id)));
   revalidatePath(`/console/decks/${id}`);

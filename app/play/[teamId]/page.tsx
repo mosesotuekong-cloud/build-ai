@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { HoldingView } from "@/components/play/holding-view";
+import { CheckView } from "@/components/play/check-view";
 import { LobbyView } from "@/components/play/lobby-view";
+import { RaiseIdeaButton } from "@/components/play/raise-idea";
+import { ScorecardView } from "@/components/play/scorecard-view";
+import { getCheckCard } from "@/lib/checks/cards";
+import { ensureCheck } from "../discovery-actions";
 import { LiveRefresh } from "@/components/session/live-refresh";
 import { Card } from "@/components/ui/card";
 import { Wordmark } from "@/components/ui/wordmark";
@@ -47,9 +52,55 @@ export default async function PlayPage({ params }: PageProps<"/play/[teamId]">) 
   const refresher = live ? <LiveRefresh sessionId={data.session.id} teamIds={[teamId]} watch={["sessions", "teams", "players"]} scope="team" /> : null;
 
   // Lobby: pick a case and see who's here.
-  if (live && ["lobby", "baseline_check"].includes(phase)) {
+  // The solo warm-up and final rounds.
+  if (live && (phase === "baseline_check" || phase === "post_check")) {
+    const kind = phase === "baseline_check" ? "baseline" : "post";
+    const check = await ensureCheck(teamId, kind);
+    const card = check ? getCheckCard(check.card_id) : undefined;
+    if (check && card) {
+      return (
+        <>
+          {refresher}
+          <CheckView
+            teamId={teamId}
+            kind={kind}
+            card={card}
+            initial={{ trigger: check.trigger, steps: check.steps, decision: check.decision, action: check.action, human: check.human }}
+            submitted={Boolean(check.submitted_at)}
+            timer={timer}
+          />
+        </>
+      );
+    }
+  }
+
+  // Prioritise: the team's discovery scorecard.
+  if (live && phase === "prioritise" && data.case) {
+    return (
+      <>
+        {refresher}
+        <ScorecardView
+          teamId={teamId}
+          teamName={data.team.name}
+          caseTitle={data.case.title}
+          design={data.design}
+          initial={data.scorecard}
+          platforms={data.session.target_platforms}
+          timer={timer}
+          extra={<RaiseIdeaButton teamId={teamId} />}
+        />
+      </>
+    );
+  }
+
+  if (live && phase === "lobby") {
     const [{ data: cases }, { data: teams }, { data: players }] = await Promise.all([
-      admin.from("cases").select("id, title, story, cost, who_feels_it, function_slug").eq("deck_id", data.session.deck_id!).order("position"),
+      admin
+        .from("cases")
+        .select("id, title, story, cost, who_feels_it, function_slug")
+        .eq("deck_id", data.session.deck_id!)
+        .or(`session_id.is.null,session_id.eq.${data.session.id}`)
+        .order("position"),
       admin.from("teams").select("name, case_id").eq("session_id", data.session.id),
       admin.from("players").select("display_name").eq("team_id", teamId).is("left_at", null).order("joined_at"),
     ]);
@@ -60,7 +111,7 @@ export default async function PlayPage({ params }: PageProps<"/play/[teamId]">) 
           teamId={teamId}
           teamName={data.team.name}
           teammates={(players ?? []).map((p) => p.display_name)}
-          phaseMessage={phase === "baseline_check" ? "The warm-up round arrives in a later update. Your facilitator will move on shortly." : PHASE_LABELS.lobby.player}
+          phaseMessage={PHASE_LABELS.lobby.player}
           canPick={settings.case_mode === "teams_pick"}
           pickByFunction={settings.function_mode === "pick_function"}
           cases={(cases ?? []).map((c) => ({ ...c, takenBy: (teams ?? []).filter((t) => t.case_id === c.id).map((t) => t.name) }))}

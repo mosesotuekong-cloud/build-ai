@@ -117,7 +117,13 @@ export async function assignCase(sessionId: string, teamId: string, caseId: stri
   const session = await staffSession(sessionId);
   if (!["draft", "lobby", "baseline_check"].includes(session.phase)) throw new Error("Cases are fixed once design starts.");
   const admin = createAdminClient();
-  const { data: c } = await admin.from("cases").select("id").eq("id", idSchema.parse(caseId)).eq("deck_id", session.deck_id!).maybeSingle();
+  const { data: c } = await admin
+    .from("cases")
+    .select("id")
+    .eq("id", idSchema.parse(caseId))
+    .eq("deck_id", session.deck_id!)
+    .or(`session_id.is.null,session_id.eq.${session.id}`)
+    .maybeSingle();
   if (!c) throw new Error("That case isn't in this session's deck.");
   await admin.from("teams").update({ case_id: c.id }).eq("id", idSchema.parse(teamId)).eq("session_id", session.id);
   revalidatePath(`/console/sessions/${session.id}`);

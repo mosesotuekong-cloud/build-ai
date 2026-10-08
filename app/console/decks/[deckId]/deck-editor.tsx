@@ -34,7 +34,7 @@ export type DeckCase = {
   story: string;
   cost: string;
   who_feels_it: string;
-  source: "ai" | "manual" | "library";
+  source: "ai" | "manual" | "library" | "raised";
   position: number;
 };
 

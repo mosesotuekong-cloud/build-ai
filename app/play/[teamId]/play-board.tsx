@@ -12,6 +12,7 @@ import { Stamp, useShake } from "@/components/game/stamp";
 import { TokenCoins } from "@/components/game/token-coins";
 import { PhaseTimer } from "@/components/session/phase-timer";
 import { useTeamDesignSync } from "@/components/play/use-team-design-sync";
+import { RaiseIdeaButton } from "@/components/play/raise-idea";
 import { Button } from "@/components/ui/button";
 import { ChipSelect } from "@/components/ui/chip-select";
 import { Wordmark } from "@/components/ui/wordmark";
@@ -245,6 +246,8 @@ export function PlayBoard({
           </div>
         </aside>
       </div>
+
+      {mode === "live" && <RaiseIdeaButton teamId={teamId} offsetForCoach={coachEnabled} />}
 
       {/* Phone: the coach opens as a sheet. */}
       {!finished && coachEnabled && (

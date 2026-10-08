@@ -18,6 +18,7 @@ export default async function DeckPage({ params, searchParams }: PageProps<"/con
     .from("decks")
     .select("id, org_id, name, industry, company_size, tools, country, pain_points, target_platforms, function_slugs, cases (id, function_slug, title, story, cost, who_feels_it, source, position)")
     .eq("id", deckId)
+    .is("cases.session_id", null)
     .maybeSingle();
   if (!deck) notFound();
 

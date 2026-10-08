@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canTransition, nextPhase, PHASES, phaseDurationSeconds, type Phase } from "@/lib/session/machine";
+import { canTransition, designSaveTargets, nextPhase, PHASES, phaseDurationSeconds, type Phase } from "@/lib/session/machine";
 import { readSettings, sessionSettingsSchema } from "@/lib/session/settings";
 
 const ALL = { before_after_check: true, twist_enabled: true };
@@ -159,5 +159,29 @@ describe("session settings", () => {
     expect(phaseDurationSeconds("baseline_check", s)).toBe(240);
     expect(phaseDurationSeconds("lobby", s)).toBeNull();
     expect(phaseDurationSeconds("judging", s)).toBeNull();
+  });
+});
+
+describe("design saves around phase changes", () => {
+  const started = "2026-10-09T10:00:00.000Z";
+  const at = (seconds: number) => new Date(started).getTime() + seconds * 1000;
+
+  it("writes the live version during design", () => {
+    expect(designSaveTargets("solving", started, at(600))).toEqual(["before_twist"]);
+    expect(designSaveTargets("solving_after_twist", started, at(600))).toEqual(["after_twist"]);
+  });
+
+  it("still lands a last-second edit just after the twist, in both versions", () => {
+    expect(designSaveTargets("twist", started, at(3))).toEqual(["before_twist", "after_twist"]);
+    expect(designSaveTargets("twist", started, at(16))).toEqual([]);
+  });
+
+  it("still lands a last-second edit just after design ends", () => {
+    expect(designSaveTargets("prioritise", started, at(10))).toEqual(["current"]);
+    expect(designSaveTargets("prioritise", started, at(60))).toEqual([]);
+  });
+
+  it("refuses saves in other phases", () => {
+    for (const phase of ["lobby", "judging", "reveal", "closed"] as const) expect(designSaveTargets(phase, started, at(1))).toEqual([]);
   });
 });

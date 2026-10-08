@@ -62,7 +62,7 @@ async function generateOne(
   try {
     const result = await n8n.run("generate-cases", payload);
 
-    const { data: existing } = await supabase.from("cases").select("position").eq("deck_id", deck.id).eq("function_slug", slug);
+    const { data: existing } = await supabase.from("cases").select("position").eq("deck_id", deck.id).eq("function_slug", slug).is("session_id", null);
     const start = (existing ?? []).reduce((max, c) => Math.max(max, c.position + 1), 0);
 
     const { error } = await supabase.from("cases").insert(

@@ -15,6 +15,7 @@ export default async function DecksPage() {
   const { data: decks } = await supabase
     .from("decks")
     .select("id, org_id, name, industry, function_slugs, updated_at, cases (count)")
+    .is("cases.session_id", null)
     .order("updated_at", { ascending: false });
 
   const own = (decks ?? []).filter((d) => d.org_id && d.org_id === ctx.activeOrg?.orgId);

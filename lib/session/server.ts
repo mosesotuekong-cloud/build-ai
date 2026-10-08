@@ -79,7 +79,7 @@ export async function dealRemainingCases(admin: Admin, sessionId: string, deckId
   if (!deckId) return;
   const [{ data: teams }, { data: cases }] = await Promise.all([
     admin.from("teams").select("id, case_id, created_at").eq("session_id", sessionId).order("created_at"),
-    admin.from("cases").select("id").eq("deck_id", deckId).order("position"),
+    admin.from("cases").select("id").eq("deck_id", deckId).is("session_id", null).order("position"),
   ]);
   if (!teams?.length || !cases?.length) return;
 

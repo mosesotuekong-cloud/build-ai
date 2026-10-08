@@ -8,6 +8,8 @@ import { PhaseTimer } from "@/components/session/phase-timer";
 import { Wordmark } from "@/components/ui/wordmark";
 import { functionName } from "@/lib/decks/schemas";
 import { pickCase } from "@/app/play/actions";
+import { OwnProblemCard } from "./own-problem";
+import { RaiseIdeaButton } from "./raise-idea";
 
 export type LobbyCase = { id: string; title: string; story: string; cost: string; who_feels_it: string; function_slug: string; takenBy: string[] };
 
@@ -42,7 +44,8 @@ export function LobbyView({
   const shown = pickByFunction ? cases.filter((c) => c.function_slug === fn) : cases;
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-6">
+    <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-6 pb-24">
+      <RaiseIdeaButton teamId={teamId} />
       <header className="flex items-center justify-between gap-3">
         <Wordmark size="sm" />
         <PhaseTimer startedAt={timer.startedAt} durationSeconds={timer.duration} serverNow={timer.serverNow} size="sm" />
@@ -126,6 +129,11 @@ export function LobbyView({
                 )}
               </li>
             ))}
+            {!pickByFunction || functions.length <= 1 || fn ? (
+              <li>
+                <OwnProblemCard teamId={teamId} />
+              </li>
+            ) : null}
           </ul>
         </section>
       ) : (

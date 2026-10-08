@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/browser";
 
-type Watch = "sessions" | "teams" | "players" | "designs" | "coach_messages";
+type Watch = "sessions" | "teams" | "players" | "designs" | "coach_messages" | "ideas" | "checks";
 
 // Listens for changes to a session and re-renders the page from the server.
 // Realtime applies the same row-level security as normal reads, so each
@@ -60,6 +60,12 @@ export function LiveRefresh({
     const channel = supabase.channel(`session-${sessionId}-${Math.random().toString(36).slice(2)}`);
     if (watching.has("sessions")) {
       channel.on("postgres_changes", { event: "*", schema: "public", table: "sessions", filter: `id=eq.${sessionId}` }, refreshNow);
+    }
+    if (watching.has("ideas")) {
+      channel.on("postgres_changes", { event: "*", schema: "public", table: "ideas", filter: `session_id=eq.${sessionId}` }, refresh);
+    }
+    if (watching.has("checks")) {
+      channel.on("postgres_changes", { event: "*", schema: "public", table: "individual_checks", filter: `session_id=eq.${sessionId}` }, refresh);
     }
     if (watching.has("teams")) {
       channel.on("postgres_changes", { event: "*", schema: "public", table: "teams", filter: `session_id=eq.${sessionId}` }, (p) => {

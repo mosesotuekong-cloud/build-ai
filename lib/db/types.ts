@@ -25,13 +25,13 @@ export type Database = {
           Tables: {
             "cases": {
                   Row: {
-                    "cost": string,"created_at": string,"deck_id": string,"function_slug": string,"id": string,"position": number,"source": Database["public"]['Enums']["case_source"],"story": string,"title": string,"updated_at": string,"who_feels_it": string
+                    "cost": string,"created_at": string,"deck_id": string,"function_slug": string,"id": string,"position": number,"session_id": string | null,"source": Database["public"]['Enums']["case_source"],"story": string,"title": string,"updated_at": string,"who_feels_it": string
                   }
                   Insert: {
-                    "cost"?: string,"created_at"?: string,"deck_id": string,"function_slug": string,"id"?: string,"position"?: number,"source"?: Database["public"]['Enums']["case_source"],"story": string,"title": string,"updated_at"?: string,"who_feels_it"?: string
+                    "cost"?: string,"created_at"?: string,"deck_id": string,"function_slug": string,"id"?: string,"position"?: number,"session_id"?: string | null,"source"?: Database["public"]['Enums']["case_source"],"story": string,"title": string,"updated_at"?: string,"who_feels_it"?: string
                   }
                   Update: {
-                    "cost"?: string,"created_at"?: string,"deck_id"?: string,"function_slug"?: string,"id"?: string,"position"?: number,"source"?: Database["public"]['Enums']["case_source"],"story"?: string,"title"?: string,"updated_at"?: string,"who_feels_it"?: string
+                    "cost"?: string,"created_at"?: string,"deck_id"?: string,"function_slug"?: string,"id"?: string,"position"?: number,"session_id"?: string | null,"source"?: Database["public"]['Enums']["case_source"],"story"?: string,"title"?: string,"updated_at"?: string,"who_feels_it"?: string
                   }
                   Relationships: [
                     {
@@ -46,6 +46,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "functions"
       referencedColumns: ["slug"]
+    },{
+      foreignKeyName: "cases_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "sessions"
+      referencedColumns: ["id"]
     }
                   ]
                 },"coach_messages": {
@@ -100,13 +106,13 @@ isOneToOne: false
                   ]
                 },"designs": {
                   Row: {
-                    "action": string,"decision": string,"hours_saved_per_month": number | null,"human": string,"id": string,"name": string,"steps": string,"systems": (string)[],"team_id": string,"tools": (string)[],"trigger": string,"updated_at": string,"version": Database["public"]['Enums']["design_version"]
+                    "action": string,"ai_kind": string | null,"data_access": string | null,"data_location": string | null,"data_quality": string | null,"decision": string,"effort": number | null,"frequency": string | null,"hours_saved_per_month": number | null,"human": string,"id": string,"impact": number | null,"name": string,"personal_data": string | null,"platform_fit": string | null,"risks": (string)[],"steps": string,"systems": (string)[],"team_id": string,"tools": (string)[],"trigger": string,"updated_at": string,"version": Database["public"]['Enums']["design_version"],"volume_per_month": number | null
                   }
                   Insert: {
-                    "action"?: string,"decision"?: string,"hours_saved_per_month"?: number | null,"human"?: string,"id"?: string,"name"?: string,"steps"?: string,"systems"?: (string)[],"team_id": string,"tools"?: (string)[],"trigger"?: string,"updated_at"?: string,"version"?: Database["public"]['Enums']["design_version"]
+                    "action"?: string,"ai_kind"?: string | null,"data_access"?: string | null,"data_location"?: string | null,"data_quality"?: string | null,"decision"?: string,"effort"?: number | null,"frequency"?: string | null,"hours_saved_per_month"?: number | null,"human"?: string,"id"?: string,"impact"?: number | null,"name"?: string,"personal_data"?: string | null,"platform_fit"?: string | null,"risks"?: (string)[],"steps"?: string,"systems"?: (string)[],"team_id": string,"tools"?: (string)[],"trigger"?: string,"updated_at"?: string,"version"?: Database["public"]['Enums']["design_version"],"volume_per_month"?: number | null
                   }
                   Update: {
-                    "action"?: string,"decision"?: string,"hours_saved_per_month"?: number | null,"human"?: string,"id"?: string,"name"?: string,"steps"?: string,"systems"?: (string)[],"team_id"?: string,"tools"?: (string)[],"trigger"?: string,"updated_at"?: string,"version"?: Database["public"]['Enums']["design_version"]
+                    "action"?: string,"ai_kind"?: string | null,"data_access"?: string | null,"data_location"?: string | null,"data_quality"?: string | null,"decision"?: string,"effort"?: number | null,"frequency"?: string | null,"hours_saved_per_month"?: number | null,"human"?: string,"id"?: string,"impact"?: number | null,"name"?: string,"personal_data"?: string | null,"platform_fit"?: string | null,"risks"?: (string)[],"steps"?: string,"systems"?: (string)[],"team_id"?: string,"tools"?: (string)[],"trigger"?: string,"updated_at"?: string,"version"?: Database["public"]['Enums']["design_version"],"volume_per_month"?: number | null
                   }
                   Relationships: [
                     {
@@ -129,6 +135,68 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"ideas": {
+                  Row: {
+                    "case_id": string | null,"created_at": string,"frequency": string | null,"id": string,"player_id": string | null,"session_id": string,"status": Database["public"]['Enums']["idea_status"],"team_id": string | null,"title": string,"what_happens": string,"who_feels_it": string
+                  }
+                  Insert: {
+                    "case_id"?: string | null,"created_at"?: string,"frequency"?: string | null,"id"?: string,"player_id"?: string | null,"session_id": string,"status"?: Database["public"]['Enums']["idea_status"],"team_id"?: string | null,"title": string,"what_happens": string,"who_feels_it"?: string
+                  }
+                  Update: {
+                    "case_id"?: string | null,"created_at"?: string,"frequency"?: string | null,"id"?: string,"player_id"?: string | null,"session_id"?: string,"status"?: Database["public"]['Enums']["idea_status"],"team_id"?: string | null,"title"?: string,"what_happens"?: string,"who_feels_it"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ideas_case_id_fkey"
+      columns: ["case_id"]
+isOneToOne: false
+      referencedRelation: "cases"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ideas_player_id_fkey"
+      columns: ["player_id"]
+isOneToOne: false
+      referencedRelation: "players"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ideas_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "sessions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ideas_team_id_fkey"
+      columns: ["team_id"]
+isOneToOne: false
+      referencedRelation: "teams"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"individual_checks": {
+                  Row: {
+                    "action": string,"ai_summary": string | null,"breakdown": Json | null,"card_id": string,"decision": string,"human": string,"id": string,"kind": Database["public"]['Enums']["check_kind"],"player_id": string,"session_id": string,"started_at": string,"steps": string,"submitted_at": string | null,"total": number | null,"trigger": string
+                  }
+                  Insert: {
+                    "action"?: string,"ai_summary"?: string | null,"breakdown"?: Json | null,"card_id": string,"decision"?: string,"human"?: string,"id"?: string,"kind": Database["public"]['Enums']["check_kind"],"player_id": string,"session_id": string,"started_at"?: string,"steps"?: string,"submitted_at"?: string | null,"total"?: number | null,"trigger"?: string
+                  }
+                  Update: {
+                    "action"?: string,"ai_summary"?: string | null,"breakdown"?: Json | null,"card_id"?: string,"decision"?: string,"human"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["check_kind"],"player_id"?: string,"session_id"?: string,"started_at"?: string,"steps"?: string,"submitted_at"?: string | null,"total"?: number | null,"trigger"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "individual_checks_player_id_fkey"
+      columns: ["player_id"]
+isOneToOne: false
+      referencedRelation: "players"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "individual_checks_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "sessions"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"jobs": {
                   Row: {
@@ -363,7 +431,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "case_source": "ai"|"manual"|"library","coach_message_type": "question"|"nudge"|"analogy"|"flag","coach_role": "team"|"coach","coach_trigger": "asked"|"inline_idle"|"inline_flag","design_version": "before_twist"|"after_twist","job_status": "queued"|"running"|"succeeded"|"failed","org_role": "admin"|"facilitator","session_mode": "live"|"practice","session_phase": "draft"|"lobby"|"baseline_check"|"solving"|"twist"|"solving_after_twist"|"prioritise"|"judging"|"reveal"|"post_check"|"commitments"|"report"|"closed"
+            "case_source": "ai"|"manual"|"library"|"raised","check_kind": "baseline"|"post","coach_message_type": "question"|"nudge"|"analogy"|"flag","coach_role": "team"|"coach","coach_trigger": "asked"|"inline_idle"|"inline_flag","design_version": "before_twist"|"after_twist","idea_status": "raised"|"designed","job_status": "queued"|"running"|"succeeded"|"failed","org_role": "admin"|"facilitator","session_mode": "live"|"practice","session_phase": "draft"|"lobby"|"baseline_check"|"solving"|"twist"|"solving_after_twist"|"prioritise"|"judging"|"reveal"|"post_check"|"commitments"|"report"|"closed"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -483,7 +551,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "case_source": ["ai", "manual", "library"],"coach_message_type": ["question", "nudge", "analogy", "flag"],"coach_role": ["team", "coach"],"coach_trigger": ["asked", "inline_idle", "inline_flag"],"design_version": ["before_twist", "after_twist"],"job_status": ["queued", "running", "succeeded", "failed"],"org_role": ["admin", "facilitator"],"session_mode": ["live", "practice"],"session_phase": ["draft", "lobby", "baseline_check", "solving", "twist", "solving_after_twist", "prioritise", "judging", "reveal", "post_check", "commitments", "report", "closed"]
+            "case_source": ["ai", "manual", "library", "raised"],"check_kind": ["baseline", "post"],"coach_message_type": ["question", "nudge", "analogy", "flag"],"coach_role": ["team", "coach"],"coach_trigger": ["asked", "inline_idle", "inline_flag"],"design_version": ["before_twist", "after_twist"],"idea_status": ["raised", "designed"],"job_status": ["queued", "running", "succeeded", "failed"],"org_role": ["admin", "facilitator"],"session_mode": ["live", "practice"],"session_phase": ["draft", "lobby", "baseline_check", "solving", "twist", "solving_after_twist", "prioritise", "judging", "reveal", "post_check", "commitments", "report", "closed"]
           }
         }
 } as const

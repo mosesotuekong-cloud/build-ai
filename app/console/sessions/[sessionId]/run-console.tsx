@@ -11,6 +11,8 @@ import { Card } from "@/components/ui/card";
 import { CANVAS_SLOTS } from "@/lib/ai/schemas/canvas";
 import type { CoachDesign } from "@/lib/coach/context";
 import { functionName } from "@/lib/decks/schemas";
+import { getPlatform } from "@/lib/config/platforms";
+import { AI_KINDS, DATA_QUESTIONS, FREQUENCIES, RISKS, portfolioBucket, scorecardProgress, type Scorecard } from "@/lib/discovery/scorecard";
 import { nextPhase, PHASE_LABELS, type Phase } from "@/lib/session/machine";
 import type { SessionSettings } from "@/lib/session/settings";
 import { addTime, advanceToNext, assignCase, deleteDraft, endSession } from "../actions";
@@ -23,7 +25,18 @@ export type RunTeam = {
   players: string[];
   design: CoachDesign | null;
   filled: Record<string, boolean>;
+  scorecard: Scorecard | null;
   messages: { id: string; role: "team" | "coach"; type: string | null; slot: string | null; content: string }[];
+};
+
+export type RunIdea = {
+  id: string;
+  title: string;
+  what_happens: string;
+  who_feels_it: string;
+  frequency: string | null;
+  status: "raised" | "designed";
+  teamName: string | null;
 };
 
 type RunSession = {
@@ -51,6 +64,8 @@ export function RunConsole({
   credits,
   serverNow,
   joinHost,
+  ideas,
+  checks,
 }: {
   session: RunSession;
   teams: RunTeam[];
@@ -58,6 +73,8 @@ export function RunConsole({
   credits: number;
   serverNow: string;
   joinHost: string;
+  ideas: RunIdea[];
+  checks: { baseline: number; post: number };
 }) {
   const phase = session.phase as Phase;
   const next = nextPhase(phase, session.settings);
@@ -78,7 +95,7 @@ export function RunConsole({
 
   return (
     <div className="space-y-6">
-      <LiveRefresh sessionId={session.id} teamIds={teams.map((t) => t.id)} watch={["sessions", "teams", "players", "designs", "coach_messages"]} />
+      <LiveRefresh sessionId={session.id} teamIds={teams.map((t) => t.id)} watch={["sessions", "teams", "players", "designs", "coach_messages", "ideas", "checks"]} />
 
       <Card className="space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -146,7 +163,13 @@ export function RunConsole({
             </span>
           )}
         </div>
-        {["judging", "reveal", "prioritise", "post_check", "commitments", "report", "baseline_check"].includes(phase) && (
+        {(phase === "baseline_check" || phase === "post_check") && (
+          <p className="rounded-xl bg-green-50 p-3 text-sm font-semibold text-green-700" role="status">
+            {phase === "baseline_check" ? checks.baseline : checks.post} of {teams.reduce((n, t) => n + t.players.length, 0)} players have locked in their{" "}
+            {phase === "baseline_check" ? "warm-up" : "final"} round.
+          </p>
+        )}
+        {["judging", "reveal", "commitments", "report"].includes(phase) && (
           <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-700">
             The {PHASE_LABELS[phase].title.toLowerCase()} screens arrive in a later milestone. For now, players see a holding screen; move on when you&apos;re ready.
           </p>
@@ -211,6 +234,80 @@ export function RunConsole({
       </section>
 
       {selectedTeam && <TeamDetail team={selectedTeam} caseTitle={caseTitle(selectedTeam.caseId)} />}
+
+      <IdeasList ideas={ideas} />
+    </div>
+  );
+}
+
+// Problems players raised from their own work: the start of the backlog.
+function IdeasList({ ideas }: { ideas: RunIdea[] }) {
+  return (
+    <section className="space-y-3">
+      <div className="space-y-0.5">
+        <h2 className="font-display text-2xl font-bold">Problems raised by staff</h2>
+        <p className="text-sm text-ink-500">Players can raise problems from their own work at any time. They all go into the opportunity map.</p>
+      </div>
+      {ideas.length === 0 ? (
+        <Card className="text-sm text-ink-500">Nothing raised yet.</Card>
+      ) : (
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {ideas.map((idea) => (
+            <li key={idea.id} className="space-y-1 rounded-2xl border border-cream-300 bg-cream-50 p-4 shadow-card">
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-display text-lg font-bold">{idea.title}</p>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${idea.status === "designed" ? "bg-green-600 text-cream-50" : "bg-amber-100 text-amber-700"}`}
+                >
+                  {idea.status === "designed" ? "Being designed" : "Raised"}
+                </span>
+              </div>
+              <p className="text-sm text-ink-700">{idea.what_happens}</p>
+              <p className="text-xs text-ink-500">
+                {[
+                  idea.teamName && `From ${idea.teamName}`,
+                  idea.who_feels_it && `Who feels it: ${idea.who_feels_it}`,
+                  idea.frequency && FREQUENCIES.find((f) => f.value === idea.frequency)?.label,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+const BUCKET_NAMES = { quick_win: "Quick win", strategic_bet: "Strategic bet", fix_data: "Fix the data first", park: "Park" } as const;
+
+// The team's own discovery scorecard, in plain words.
+function ScorecardSummary({ card }: { card: Scorecard }) {
+  const progress = scorecardProgress(card);
+  if (progress.done === 0) return <p className="text-sm text-ink-500">The team hasn&apos;t rated this yet.</p>;
+  const label = (list: readonly { value: string; label: string }[], v: string | null) => list.find((o) => o.value === v)?.label ?? "Not answered";
+  const bucket = portfolioBucket(card);
+  return (
+    <dl className="grid gap-x-4 gap-y-1.5 text-sm sm:grid-cols-2">
+      <Row term="Impact / effort" value={card.impact && card.effort ? `${card.impact} / ${card.effort} out of 5` : "Not placed"} />
+      <Row term="Portfolio" value={bucket ? BUCKET_NAMES[bucket] : "Not enough answers"} />
+      <Row term="How often" value={`${label(FREQUENCIES, card.frequency)}${card.volume_per_month ? `, about ${card.volume_per_month} a month` : ""}`} />
+      {DATA_QUESTIONS.map((q) => (
+        <Row key={q.key} term={q.question} value={label(q.options, card[q.key])} />
+      ))}
+      <Row term="Risks" value={card.risks.map((x) => RISKS.find((o) => o.value === x)?.label ?? x).join(", ") || "None picked"} />
+      <Row term="Kind of AI" value={label(AI_KINDS, card.ai_kind)} />
+      <Row term="Platform fit" value={card.platform_fit ? (getPlatform(card.platform_fit)?.name ?? "Not sure") : "Not answered"} />
+    </dl>
+  );
+}
+
+function Row({ term, value }: { term: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-3 border-b border-cream-200 py-1">
+      <dt className="text-ink-500">{term}</dt>
+      <dd className="text-right font-semibold text-ink-900">{value}</dd>
     </div>
   );
 }
@@ -237,6 +334,12 @@ function TeamDetail({ team, caseTitle }: { team: RunTeam; caseTitle: string | nu
           </div>
         ) : (
           <p className="text-ink-500">No design yet.</p>
+        )}
+        {team.scorecard && (
+          <div className="space-y-2 border-t border-cream-200 pt-4">
+            <h3 className="font-display text-lg font-bold">Their discovery scorecard</h3>
+            <ScorecardSummary card={team.scorecard} />
+          </div>
         )}
       </Card>
       <Card className="max-h-[36rem] space-y-3 overflow-y-auto">

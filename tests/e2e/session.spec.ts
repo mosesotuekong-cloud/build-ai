@@ -58,18 +58,41 @@ test("facilitator runs a live session with two teams on phones", async ({ page, 
   const tunde = await joinOnPhone(browser, code, "Tunde", { new: "Night Owls" });
   await expect(tunde.getByRole("heading", { name: "Night Owls" })).toBeVisible();
 
+  // Night Owls design their own problem instead of a deck card.
+  await tunde.getByRole("button", { name: /Our own problem/ }).click();
+  await tunde.getByLabel("Short name").fill("The visitor log book");
+  await tunde.getByLabel("What happens today?").fill("Visitors sign a paper book at reception and nobody knows who is still on site during a fire drill.");
+  await tunde.getByRole("button", { name: "Design this one" }).click();
+  await expect(tunde.getByText("The visitor log book").first()).toBeVisible();
+
+  // Ada raises a problem from her own work; the facilitator sees it.
+  await ada.getByRole("button", { name: /Raise a problem/ }).click();
+  await ada.getByLabel("Give it a short name").fill("Chasing signatures on paper");
+  await ada.getByLabel("What happens today?").fill("Contracts go round the office on paper for five signatures and get lost.");
+  await ada.getByRole("button", { name: "Add to the list" }).click();
+  await expect(ada.getByText(/on the business's list/)).toBeVisible();
+  await expect(page.getByText("Chasing signatures on paper")).toBeVisible();
+
   // The facilitator and the projector see both teams arrive, without reloading.
   await expect(page.getByRole("heading", { name: "The Fixers" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Night Owls" })).toBeVisible();
   await expect(presenter.getByText("Night Owls")).toBeVisible();
 
-  // Warm-up round, then design. Phones follow along live.
+  // Warm-up round: everyone on their own phone, with a practice card.
   await page.getByRole("button", { name: "Start: Warm-up round" }).click();
-  await expect(ada.getByText(/warm-up round/i)).toBeVisible();
+  await expect(ada.getByText(/Warm-up round · just you/i)).toBeVisible();
+  const warmUpTitle = await ada.getByRole("heading", { level: 1 }).innerText();
+  await ada.getByRole("button", { name: "Edit trigger" }).click();
+  await ada.getByRole("dialog").getByRole("textbox").fill("The request arrives");
+  await ada.getByRole("button", { name: "Snap it in" }).click();
+  await ada.getByRole("button", { name: "Lock it in" }).click();
+  await expect(ada.getByText(/Done. Wait for your facilitator/)).toBeVisible();
+  await expect(page.getByText(/1 of 2 players have locked in their warm-up round/)).toBeVisible();
+
+  // Design. Phones follow along live.
   await page.getByRole("button", { name: "Start: Design" }).click();
   await expect(ada.getByRole("heading", { level: 1, name: "The onboarding document chase" })).toBeVisible();
-  // Night Owls never picked, so they were dealt a case.
-  await expect(tunde.getByRole("button", { name: "Edit trigger" })).toBeVisible();
+  await expect(tunde.getByRole("heading", { level: 1, name: "The visitor log book" })).toBeVisible();
 
   // Ada designs; the facilitator watches it appear.
   await ada.getByRole("button", { name: "Edit trigger" }).click();
@@ -98,9 +121,25 @@ test("facilitator runs a live session with two teams on phones", async ({ page, 
   await expect(ada.getByRole("button", { name: "Edit trigger" })).toBeEnabled();
   await expect(ada.getByText("A new hire accepts the offer in the HRIS")).toBeVisible();
 
-  // Move on, then end the session: phones show holding and closing screens.
+  // Prioritise: Ada rates the use case on the discovery scorecard.
   await page.getByRole("button", { name: "Start: Prioritise" }).click();
-  await expect(tunde.getByRole("heading", { name: "Prioritise" })).toBeVisible();
+  await expect(ada.getByText("The Fixers · Prioritise")).toBeVisible();
+  await ada.getByRole("button", { name: "Impact 5, effort 2" }).click();
+  await ada.getByRole("radio", { name: "Daily" }).click();
+  await ada.getByRole("button", { name: /Extract from documents/ }).click();
+  await expect(ada.getByText(/Saved/)).toBeVisible();
+  // The team detail is still open from earlier; it updates live.
+  await expect(page.getByLabel("The Fixers in detail").getByText("Quick win")).toBeVisible();
+
+  // Judging and reveal are later milestones; then the final round uses the
+  // other card of Ada's matched pair.
+  await page.getByRole("button", { name: "Start: Judging" }).click();
+  await page.getByRole("button", { name: "Start: Reveal" }).click();
+  await page.getByRole("button", { name: "Start: Final round" }).click();
+  await expect(ada.getByText(/Final round · just you/i)).toBeVisible();
+  await expect(ada.getByRole("heading", { level: 1 })).not.toHaveText(warmUpTitle);
+
+  // End the session: phones show the closing screen.
   page.once("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "End session" }).click();
   await expect(ada.getByRole("heading", { name: "Closed" })).toBeVisible();

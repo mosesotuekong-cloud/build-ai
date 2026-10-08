@@ -25,15 +25,19 @@ export default async function RunSessionPage({ params }: PageProps<"/console/ses
   const [{ data: teams }, { data: cases }] = await Promise.all([
     supabase
       .from("teams")
-      .select("id, name, case_id, hint_tokens_remaining, created_at, players (id, display_name, left_at), designs (version, trigger, steps, decision, action, human, name, hours_saved_per_month, tools, systems, updated_at)")
+      .select("id, name, case_id, hint_tokens_remaining, created_at, players (id, display_name, left_at), designs (version, trigger, steps, decision, action, human, name, hours_saved_per_month, tools, systems, updated_at, impact, effort, frequency, volume_per_month, data_location, data_access, data_quality, personal_data, risks, ai_kind, platform_fit)")
       .eq("session_id", session.id)
       .order("created_at"),
     session.deck_id
-      ? supabase.from("cases").select("id, title, function_slug").eq("deck_id", session.deck_id).order("position")
+      ? supabase.from("cases").select("id, title, function_slug").eq("deck_id", session.deck_id).or(`session_id.is.null,session_id.eq.${session.id}`).order("position")
       : Promise.resolve({ data: [] as { id: string; title: string; function_slug: string }[] }),
   ]);
 
   const teamIds = (teams ?? []).map((t) => t.id);
+  const [{ data: ideas }, { data: checks }] = await Promise.all([
+    supabase.from("ideas").select("id, title, what_happens, who_feels_it, frequency, status, team_id, created_at").eq("session_id", session.id).order("created_at"),
+    supabase.from("individual_checks").select("kind, submitted_at").eq("session_id", session.id),
+  ]);
   const { data: messages } = teamIds.length
     ? await supabase.from("coach_messages").select("id, team_id, role, type, slot, content, created_at").in("team_id", teamIds).order("created_at", { ascending: true }).limit(500)
     : { data: [] };
@@ -48,6 +52,21 @@ export default async function RunSessionPage({ params }: PageProps<"/console/ses
       players: t.players.filter((p) => !p.left_at).map((p) => p.display_name),
       design: design
         ? { ...design, hours_saved_per_month: design.hours_saved_per_month === null ? null : Number(design.hours_saved_per_month) }
+        : null,
+      scorecard: design
+        ? {
+            impact: design.impact,
+            effort: design.effort,
+            frequency: design.frequency,
+            volume_per_month: design.volume_per_month,
+            data_location: design.data_location,
+            data_access: design.data_access,
+            data_quality: design.data_quality,
+            personal_data: design.personal_data,
+            risks: design.risks,
+            ai_kind: design.ai_kind,
+            platform_fit: design.platform_fit,
+          }
         : null,
       filled: Object.fromEntries(CANVAS_SLOTS.map((s) => [s, Boolean(design?.[s]?.trim())])),
       messages: (messages ?? []).filter((m) => m.team_id === t.id).map((m) => ({ id: m.id, role: m.role, type: m.type, slot: m.slot, content: m.content })),
@@ -71,6 +90,11 @@ export default async function RunSessionPage({ params }: PageProps<"/console/ses
           settings: readSettings(session.settings),
         }}
         teams={runTeams}
+        ideas={(ideas ?? []).map((i) => ({ ...i, teamName: (teams ?? []).find((t) => t.id === i.team_id)?.name ?? null }))}
+        checks={{
+          baseline: (checks ?? []).filter((c) => c.kind === "baseline" && c.submitted_at).length,
+          post: (checks ?? []).filter((c) => c.kind === "post" && c.submitted_at).length,
+        }}
         cases={cases ?? []}
         credits={ctx.activeOrg?.sessionCredits ?? 0}
         serverNow={new Date().toISOString()}

@@ -20,12 +20,14 @@ export function SlotEditor({
   onSave,
   onAskCoach,
   onClose,
+  hideCoach = false,
 }: {
   slot: CanvasSlot | null;
   value: string;
   onSave: (slot: CanvasSlot, value: string) => void;
   onAskCoach: (slot: CanvasSlot) => void;
   onClose: () => void;
+  hideCoach?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -42,7 +44,7 @@ export function SlotEditor({
       onClose={onClose}
       className="m-auto mb-0 w-full max-w-xl rounded-t-3xl border border-cream-300 bg-cream-50 p-0 shadow-lift backdrop:bg-ink-900/40 sm:mb-auto sm:rounded-3xl"
     >
-      {slot && <EditorBody key={slot} slot={slot} initial={value} onSave={onSave} onAskCoach={onAskCoach} onClose={onClose} />}
+      {slot && <EditorBody key={slot} slot={slot} initial={value} onSave={onSave} onAskCoach={hideCoach ? null : onAskCoach} onClose={onClose} />}
     </dialog>
   );
 }
@@ -57,7 +59,7 @@ function EditorBody({
   slot: CanvasSlot;
   initial: string;
   onSave: (slot: CanvasSlot, value: string) => void;
-  onAskCoach: (slot: CanvasSlot) => void;
+  onAskCoach: ((slot: CanvasSlot) => void) | null;
   onClose: () => void;
 }) {
   const [text, setText] = useState(initial);
@@ -88,9 +90,13 @@ function EditorBody({
         aria-label={title}
       />
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <button type="button" onClick={() => onAskCoach(slot)} className="text-sm font-semibold text-green-700 hover:underline">
-          Stuck? Ask the coach
-        </button>
+        {onAskCoach ? (
+          <button type="button" onClick={() => onAskCoach(slot)} className="text-sm font-semibold text-green-700 hover:underline">
+            Stuck? Ask the coach
+          </button>
+        ) : (
+          <span />
+        )}
         <div className="flex gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancel

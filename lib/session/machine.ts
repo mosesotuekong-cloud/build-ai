@@ -101,3 +101,26 @@ export const PHASE_LABELS: Record<Phase, { title: string; player: string }> = {
   report: { title: "Report", player: "Thanks for playing. Your facilitator has the report." },
   closed: { title: "Closed", player: "This session has ended. Thanks for playing." },
 };
+
+// Autosaves can arrive a moment after the canvas locks (someone typed just
+// before the facilitator moved on). Saves within this grace period still land,
+// so nobody loses their last edit.
+export const DESIGN_SAVE_GRACE_SECONDS = 15;
+
+// Which design version(s) a save should write, or none if the canvas is locked.
+// "current" means the team's latest version.
+export function designSaveTargets(
+  phase: Phase,
+  phaseStartedAt: string | null,
+  now: number = Date.now(),
+): ("before_twist" | "after_twist" | "current")[] {
+  if (phase === "solving") return ["before_twist"];
+  if (phase === "solving_after_twist") return ["after_twist"];
+  const withinGrace = phaseStartedAt !== null && now - new Date(phaseStartedAt).getTime() <= DESIGN_SAVE_GRACE_SECONDS * 1000;
+  if (!withinGrace) return [];
+  // The twist has just snapshotted the design; a late save belongs in both the
+  // saved pre-twist version and the copy the team carries on from.
+  if (phase === "twist") return ["before_twist", "after_twist"];
+  if (phase === "prioritise") return ["current"];
+  return [];
+}
