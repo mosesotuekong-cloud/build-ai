@@ -10,7 +10,7 @@ You need Node 22+ and Docker Desktop (running). No external accounts are needed:
 npm install
 npm run db:start      # Supabase local stack (Postgres, Auth, Realtime, Storage)
 npm run env:local     # writes the local Supabase keys into .env.local
-npm run db:reset      # migrations + seed + local users
+npm run db:reset      # migrations + seed + local users + library HR deck
 npm run dev           # http://localhost:3000
 ```
 
@@ -23,6 +23,10 @@ Local users (sign in with a magic link; emails land in the test inbox at http://
 | `pending@builda.test` | "Waiting for access" page |
 
 Supabase Studio: http://localhost:54323
+
+## AI keys
+
+Put keys in `.env.local` (never commit it). The app uses Anthropic if `ANTHROPIC_API_KEY` is set, otherwise OpenAI if `OPENAI_API_KEY` is set, otherwise sample data. Set `AI_PROVIDER=mock` to click around without spending credit. Model names: `lib/config/models.ts`. To try one real generation from the terminal: `npm run ai:try -- finance`.
 
 ## Tests
 

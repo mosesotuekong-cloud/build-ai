@@ -30,6 +30,7 @@ Rules:
 - Reflect local reality for the country: the tools people really use (WhatsApp, Excel, paper forms, email, Microsoft and Google tools, local software), local documents and practices.
 - Make the six cards varied: different triggers (messages, forms, dates, files, records), a mix of rule-based and judgement-based decisions, and different people affected.
 - Every card must be solvable with the five-slot canvas. Do not describe the solution in the card.
+- Give every title its own image. Do not reuse a stock phrase (such as "merry-go-round", "maze", "jungle" or "chase") in more than one title.
 - Do not name real companies or real people other than ordinary first names.`;
 
 export function caseGeneratorUserMessage(input: CaseGeneratorInput): string {

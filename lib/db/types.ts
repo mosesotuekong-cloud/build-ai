@@ -23,7 +23,57 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "functions": {
+            "cases": {
+                  Row: {
+                    "cost": string,"created_at": string,"deck_id": string,"function_slug": string,"id": string,"position": number,"source": Database["public"]['Enums']["case_source"],"story": string,"title": string,"updated_at": string,"who_feels_it": string
+                  }
+                  Insert: {
+                    "cost"?: string,"created_at"?: string,"deck_id": string,"function_slug": string,"id"?: string,"position"?: number,"source"?: Database["public"]['Enums']["case_source"],"story": string,"title": string,"updated_at"?: string,"who_feels_it"?: string
+                  }
+                  Update: {
+                    "cost"?: string,"created_at"?: string,"deck_id"?: string,"function_slug"?: string,"id"?: string,"position"?: number,"source"?: Database["public"]['Enums']["case_source"],"story"?: string,"title"?: string,"updated_at"?: string,"who_feels_it"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cases_deck_id_fkey"
+      columns: ["deck_id"]
+isOneToOne: false
+      referencedRelation: "decks"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cases_function_slug_fkey"
+      columns: ["function_slug"]
+isOneToOne: false
+      referencedRelation: "functions"
+      referencedColumns: ["slug"]
+    }
+                  ]
+                },"decks": {
+                  Row: {
+                    "company_size": string,"copied_from": string | null,"country": string,"created_at": string,"created_by": string | null,"function_slugs": (string)[],"id": string,"industry": string,"name": string,"org_id": string | null,"pain_points": string,"tools": (string)[],"updated_at": string
+                  }
+                  Insert: {
+                    "company_size"?: string,"copied_from"?: string | null,"country"?: string,"created_at"?: string,"created_by"?: string | null,"function_slugs"?: (string)[],"id"?: string,"industry"?: string,"name": string,"org_id"?: string | null,"pain_points"?: string,"tools"?: (string)[],"updated_at"?: string
+                  }
+                  Update: {
+                    "company_size"?: string,"copied_from"?: string | null,"country"?: string,"created_at"?: string,"created_by"?: string | null,"function_slugs"?: (string)[],"id"?: string,"industry"?: string,"name"?: string,"org_id"?: string | null,"pain_points"?: string,"tools"?: (string)[],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "decks_copied_from_fkey"
+      columns: ["copied_from"]
+isOneToOne: false
+      referencedRelation: "decks"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "decks_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"functions": {
                   Row: {
                     "name": string,"slug": string,"sort_order": number
                   }
@@ -35,6 +85,25 @@ export type Database = {
                   }
                   Relationships: [
                     
+                  ]
+                },"jobs": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"error": string | null,"id": string,"org_id": string | null,"payload": NonNullable<Json>,"result": Json | null,"status": Database["public"]['Enums']["job_status"],"type": string,"updated_at": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"error"?: string | null,"id"?: string,"org_id"?: string | null,"payload"?: NonNullable<Json>,"result"?: Json | null,"status"?: Database["public"]['Enums']["job_status"],"type": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"error"?: string | null,"id"?: string,"org_id"?: string | null,"payload"?: NonNullable<Json>,"result"?: Json | null,"status"?: Database["public"]['Enums']["job_status"],"type"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "jobs_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"org_members": {
                   Row: {
@@ -87,7 +156,13 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "has_org_role":
+            "can_edit_deck":
+{ Args: { "target_deck": string }; Returns: boolean
+                           },
+"can_read_deck":
+{ Args: { "target_deck": string }; Returns: boolean
+                           },
+"has_org_role":
 { Args: { "target_org": string,"wanted": Database["public"]['Enums']["org_role"] }; Returns: boolean
                            },
 "is_org_member":
@@ -95,10 +170,13 @@ isOneToOne: false
                            },
 "is_platform_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"is_signed_in_staff":
+{ Args: Record<PropertyKey, never>; Returns: boolean
                            }
           }
           Enums: {
-            "org_role": "admin"|"facilitator"
+            "case_source": "ai"|"manual"|"library","job_status": "queued"|"running"|"succeeded"|"failed","org_role": "admin"|"facilitator"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -218,7 +296,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "org_role": ["admin", "facilitator"]
+            "case_source": ["ai", "manual", "library"],"job_status": ["queued", "running", "succeeded", "failed"],"org_role": ["admin", "facilitator"]
           }
         }
 } as const

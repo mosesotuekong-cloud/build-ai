@@ -4,6 +4,9 @@ export default defineConfig({
   testDir: "tests/e2e",
   fullyParallel: true,
   reporter: "list",
+  // The dev server compiles pages on first use, so allow more than the 5s default.
+  expect: { timeout: 15_000 },
+  timeout: 60_000,
   use: {
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",

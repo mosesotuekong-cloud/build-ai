@@ -1,5 +1,5 @@
 -- Static seed data. Runs after migrations on `supabase db reset`.
--- Users, the demo org and memberships are created by scripts/seed-users.ts,
+-- Users, the demo org and memberships are created by scripts/seed-dev.ts,
 -- because auth users must be created through the Auth admin API.
 
 insert into public.functions (slug, name, sort_order) values

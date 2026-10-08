@@ -1,0 +1,242 @@
+{
+  "sales": {
+    "cases": [
+      {
+        "title": "The WhatsApp truckload scramble",
+        "story": "Dealer orders come in through WhatsApp, calls and the odd Gmail message, especially early in the morning. Sales reps copy quantities, delivery address and product grade into Excel, then later try to update Zoho CRM when there is time. Last month, Amina’s order for 600 bags was typed as 900, so production held stock that another dealer needed urgently.",
+        "cost": "It costs around ₦1.2 million a month in delayed sales, wrong allocations and staff time spent correcting orders.",
+        "who_feels_it": "sales reps, sales admin, dealers, production planner, dispatch team"
+      },
+      {
+        "title": "The price list ping-pong",
+        "story": "Prices for cement boards, roofing sheets and fittings change when raw material costs or exchange rates move. Sales managers email a new price list, but older Excel files stay on laptops and in WhatsApp chats. In March, Tunde sent a pro forma invoice using last week’s price and the customer refused to pay the extra ₦180,000 later.",
+        "cost": "The business loses margin and goodwill each time a customer is quoted from an old list.",
+        "who_feels_it": "sales managers, sales reps, finance team, dealers, key account customers"
+      },
+      {
+        "title": "Proof of payment hide and seek",
+        "story": "Customers send bank transfer screenshots by WhatsApp or Gmail after receiving a pro forma invoice. Sales admin checks the screenshot, asks finance to confirm the credit, then marks the order as ready in Zoho CRM or Excel. One Friday, a fake-looking screenshot was treated as paid until finance checked the bank statement after the truck had already been loaded.",
+        "cost": "A single mistaken release can tie up ₦3 million to ₦5 million in unpaid goods and emergency recovery work.",
+        "who_feels_it": "sales admin, finance officers, warehouse team, sales reps, customers"
+      },
+      {
+        "title": "The credit limit guessing game",
+        "story": "Some long-standing dealers buy on credit, but their limits and overdue balances live in separate Excel sheets and Gmail threads. Reps promise supply before checking the latest balance, then sales admin has to chase approvals from the sales manager and finance. Last quarter, a dealer already 45 days overdue was allowed another full truckload because the old credit sheet showed space.",
+        "cost": "Late checks add hours to every credit order and increase the risk of bad debt by millions of naira.",
+        "who_feels_it": "sales reps, sales manager, finance manager, credit customers, managing director"
+      },
+      {
+        "title": "Site visit requests in the dust",
+        "story": "Contractors and architects ask for site visits by WhatsApp, especially when they are choosing between products. Reps write the details in notebooks, forward photos to the technical sales person, and hope someone remembers the agreed date. In Lekki, a project manager waited all morning for a visit that had been promised in a chat but never entered in Zoho CRM.",
+        "cost": "Missed visits can lose specifications worth ₦2 million to ₦10 million on one building project.",
+        "who_feels_it": "technical sales team, field sales reps, contractors, architects, sales manager"
+      },
+      {
+        "title": "The month-end dealer rebate maze",
+        "story": "At month end, sales admin pulls dealer volumes from Zoho CRM, Excel order logs and dispatch records to work out rebates. Returns, part-payments and split deliveries are checked by hand before any credit note is raised. In June, one dealer complained because 120 sheets delivered on the last day were missed from the calculation.",
+        "cost": "The team spends three to four working days each month on rebate checks, and mistakes quickly damage trust with top dealers.",
+        "who_feels_it": "sales admin, sales manager, finance team, dealers, dispatch team"
+      }
+    ]
+  },
+  "procurement": {
+    "cases": [
+      {
+        "title": "The paper requisition relay",
+        "story": "Department heads fill paper requisition forms for valves, PPE and workshop consumables, then walk them around for signatures. Procurement only enters the request in SAP after the signed form lands on the buyer's desk, so urgent jobs sit in a tray while people are at the yard or offshore. Last month, Amina's pump seal request waited four days because one approver was in Port Harcourt with the only signed copy in his bag.",
+        "cost": "One late critical spare can keep a service crew idle for a day, costing about ₦1.2m in standby time and lost goodwill.",
+        "who_feels_it": "procurement officers, requesters, department heads, operations supervisors, finance team"
+      },
+      {
+        "title": "The Outlook quote swamp",
+        "story": "Suppliers send quotations by Outlook as PDFs, Excel sheets and short email replies. Buyers download each one, copy prices into a comparison sheet, and check delivery dates, VAT and payment terms by hand. In March, a quote with free delivery was missed because it was buried in a reply chain, and the team chose a supplier that looked ₦450,000 cheaper but was not.",
+        "cost": "Bad comparisons and rework can add ₦500,000 to ₦2m a month in avoidable spend and wasted buyer time.",
+        "who_feels_it": "buyers, procurement manager, suppliers, finance team, internal requesters"
+      },
+      {
+        "title": "Vendor files in three folders",
+        "story": "New vendors email CAC papers, tax clearance, insurance, bank details and oil and gas compliance documents to different procurement staff. Someone updates an Excel vendor list, another person attaches files in SAP, and expired documents are spotted only when a client asks. During a tender support visit, Chinedu could not find a vendor's current insurance certificate and the team spent half a day calling the supplier.",
+        "cost": "Missing or expired vendor documents risk audit findings, tender delays and at least ₦300,000 a month in chasing and duplicate work.",
+        "who_feels_it": "vendor management officer, buyers, compliance officer, suppliers, internal audit"
+      },
+      {
+        "title": "The expiry date ambush",
+        "story": "Framework agreements, service orders and blanket POs have end dates in SAP, but reminders live in personal Outlook calendars and Excel trackers. When a buyer is on leave, nobody notices that a rate contract is about to expire until a new job needs the same service. In July, a crane support contract expired two days before mobilisation and procurement had to raise a rushed one-off PO at a higher rate.",
+        "cost": "Last-minute extensions and spot buying can add ₦1.5m to a single mobilisation and damage trust with operations.",
+        "who_feels_it": "procurement manager, buyers, operations planners, finance approvers, suppliers"
+      },
+      {
+        "title": "The delivery note detective story",
+        "story": "Stores receive items with paper delivery notes, while suppliers send invoices and copies of POs by Outlook. Procurement checks the PO in SAP, asks stores whether the goods arrived, and then tells finance why the invoice should or should not be paid. One generator parts invoice was held for three weeks because the delivery note had a wrong item code and nobody matched it to the SAP receipt.",
+        "cost": "Blocked invoices waste several hours each week and can lead to late payment charges or suppliers refusing urgent supply.",
+        "who_feels_it": "procurement officers, stores team, accounts payable, suppliers, maintenance team"
+      },
+      {
+        "title": "The emergency buying afterthought",
+        "story": "Field supervisors call or email procurement when a job needs hoses, fittings or diesel-related consumables the same day. Buyers source quickly, then chase the paper requisition, approval and SAP PO after the item has already been collected. Last quarter, an urgent purchase for a client site could not be charged back easily because the job number was missing from the handwritten request.",
+        "cost": "Emergency purchases without clean details can hide ₦800,000 a month in unapproved spend and billing disputes.",
+        "who_feels_it": "field supervisors, buyers, project accountants, finance approvers, clients"
+      }
+    ]
+  },
+  "operations": {
+    "cases": [
+      {
+        "title": "The WhatsApp dispatch scramble",
+        "story": "Job requests land in several WhatsApp chats, with pickup points, tonnage and delivery dates written in different ways. The dispatch officer copies details into Google Sheets, calls drivers one by one, and checks the GPS portal to guess which truck is close enough. Last month, a truck still unloading in Kano was assigned to a Lagos pickup because the sheet had not been updated.",
+        "cost": "One missed pickup can cost about ₦450,000 in waiting charges, lost diesel planning and an unhappy customer.",
+        "who_feels_it": "dispatch officers, drivers, fleet supervisors, customer service team"
+      },
+      {
+        "title": "The waybill photo puzzle",
+        "story": "Drivers carry paper waybills and send proof of delivery photos on WhatsApp when they finish a trip. Operations staff download the photos, zoom in to read stamps and signatures, then update Google Sheets by hand. One Friday, a blurry waybill was marked delivered, but the customer later said two cartons were short and nobody could read the receiver's name.",
+        "cost": "The team loses around 25 staff hours a week checking waybill photos, and payment can be delayed by weeks when proof is unclear.",
+        "who_feels_it": "operations clerks, drivers, billing team, customer service team"
+      },
+      {
+        "title": "The red dot watch",
+        "story": "A fleet supervisor keeps the GPS tracker portal open and watches for long stops, route changes and night movement. When work gets busy, the screen is checked late and drivers are called after the problem has already grown. In March, a loaded truck sat near Lokoja for four hours before anyone noticed the stop was not planned.",
+        "cost": "A single late intervention can add about ₦180,000 in extra fuel, recovery costs and customer penalties.",
+        "who_feels_it": "fleet supervisors, control room staff, drivers, operations manager"
+      },
+      {
+        "title": "The diesel advance merry-go-round",
+        "story": "Drivers ask for diesel and road expense advances through WhatsApp, phone calls and handwritten notes at the yard. Operations checks the route, the last advance and the balance in Google Sheets before sending the request to finance. One driver received two advances for the same Port Harcourt trip because the night shift and day shift both approved it.",
+        "cost": "Duplicate and wrong advances can leak ₦300,000 to ₦600,000 in a busy month before anyone spots the pattern.",
+        "who_feels_it": "drivers, operations officers, finance team, fleet supervisors"
+      },
+      {
+        "title": "Service due by memory",
+        "story": "Truck service dates, tyre changes and last odometer readings sit in Google Sheets and in a paper file at the workshop desk. The operations coordinator checks them when there is time, then reminds supervisors by WhatsApp. Last quarter, a truck was loaded for Ibadan even though its brake service was overdue, and it broke down before Sagamu.",
+        "cost": "One preventable breakdown can cost about ₦750,000 in towing, repairs, driver waiting time and late delivery penalties.",
+        "who_feels_it": "maintenance planner, fleet supervisors, drivers, operations manager"
+      },
+      {
+        "title": "The empty return gamble",
+        "story": "After a delivery is confirmed, planners look for a return load by checking WhatsApp groups, calling contacts and scanning their Google Sheet of open jobs. If the delivery update comes late, the truck may start coming back empty before anyone matches it to a nearby load. Last month, two trucks left Abuja empty while a Kaduna pickup request was sitting unread in another chat.",
+        "cost": "An empty return trip from Abuja to Lagos can waste about ₦900,000 in diesel, tolls and lost earning time.",
+        "who_feels_it": "load planners, dispatch officers, drivers, operations manager"
+      }
+    ]
+  },
+  "hr": {
+    "cases": [
+      {
+        "title": "The branch leave blind spot",
+        "story": "Leave requests arrive by WhatsApp, Outlook and sometimes SeamlessHR. HR exports balances to Excel, while branch managers keep their own notes on who can cover cash, customer service and operations. In March, two cash officers in the same Abuja branch were approved for the same week, and the branch had to borrow staff at short notice.",
+        "cost": "It costs about ₦650,000 a quarter in relief cover, overtime and HR time, before counting the frustration for staff whose leave is moved.",
+        "who_feels_it": "HR officers, branch managers, operations managers, cash officers, customer service staff"
+      },
+      {
+        "title": "The guarantor form merry-go-round",
+        "story": "New hires send BVN, NIN, NYSC certificate, pension details and guarantor forms by Outlook and WhatsApp. HR checks each file by hand, renames attachments, and chases missing signatures or unclear scans. Last year, Amaka started work in a branch before one guarantor address was verified, and internal audit picked it up two months later.",
+        "cost": "HR loses around 55 hours a month to chasing and checking documents, and late starts can waste up to ₦900,000 in salary and training time each quarter.",
+        "who_feels_it": "HR onboarding team, new hires, branch managers, internal audit, compliance team"
+      },
+      {
+        "title": "The AML certificate countdown",
+        "story": "Every employee must refresh AML/CFT and conduct training within the bank's deadlines. HR keeps expiry dates in Excel and checks certificates that staff email after completing courses. In June, a relationship manager's certificate had expired before a CBN review, and HR had to pull evidence together over a weekend.",
+        "cost": "Missed training deadlines cost roughly ₦400,000 a quarter in rush sessions, weekend work and audit follow-up.",
+        "who_feels_it": "HR learning team, compliance officers, relationship managers, branch managers, internal audit"
+      },
+      {
+        "title": "The payroll change last bus",
+        "story": "Promotions, transfers, acting allowances and unpaid leave notes sit in SeamlessHR, Outlook threads and Excel files. HR payroll staff compare the lists by hand before sending final changes to Finance. In April, Sola's transfer allowance to Port Harcourt was missed, and the correction took another payroll cycle.",
+        "cost": "Payroll corrections and back-pay queries take about 80 staff hours a month and can tie up over ₦1.5 million in late adjustments.",
+        "who_feels_it": "HR payroll team, Finance, transferred staff, line managers, employees raising pay queries"
+      },
+      {
+        "title": "The probation puddle",
+        "story": "Confirmation dates are tracked in SeamlessHR and an Excel diary. HR emails line managers for probation feedback, then follows up by WhatsApp when the forms do not come back. One operations analyst waited five months after probation ended, then left after another bank offered a confirmed role.",
+        "cost": "One delayed confirmation can cost about ₦1.2 million in replacement hiring, training time and lost branch cover.",
+        "who_feels_it": "HR business partners, line managers, new employees, branch operations heads"
+      },
+      {
+        "title": "The exit clearance traffic jam",
+        "story": "Resignations arrive through Outlook, letters and updates in SeamlessHR. HR emails IT, Admin, Finance and the staff loan desk for clearance, then tracks replies in Excel. In February, a former staff member's email stayed active for eleven days after their last working day, and their final pay was also delayed.",
+        "cost": "Each messy exit can burn 10 to 15 hours across teams and damage goodwill with former staff owed terminal benefits.",
+        "who_feels_it": "HR exit team, IT, Admin, Finance, staff loan desk, departing employees"
+      }
+    ]
+  },
+  "customer-service": {
+    "cases": [
+      {
+        "title": "The double-ticket merry-go-round",
+        "story": "A customer with a failed transfer often writes on WhatsApp Business, sends an email to support, and opens a Freshdesk ticket. Agents do not always see that it is the same person, so three people ask for the same screenshot and reference number. The team lead then checks Excel at the end of the day to merge notes by hand. Last month, Blessing was promised a reversal by two agents and finance processed a duplicate ₦24,000 goodwill refund before anyone spotted it.",
+        "cost": "Duplicate handling wastes around 30 agent-hours a week and causes about ₦200,000 a month in avoidable reversals and goodwill credits.",
+        "who_feels_it": "customer service agents, team leads, finance officers, customers"
+      },
+      {
+        "title": "The failed transfer receipt relay",
+        "story": "When a transfer fails, customers send screenshots, bank names and angry voice notes through WhatsApp Business. An agent copies the details into Freshdesk, updates an Excel tracker, then emails operations for the real status. If one field is missing, the ticket sits until the customer complains again. In March, a POS merchant waited four days for a ₦57,800 reversal because the session ID was pasted into the wrong column.",
+        "cost": "The relay takes about 15 minutes per case, adding up to roughly 45 agent-hours a week and a lot of public complaints.",
+        "who_feels_it": "frontline agents, operations team, POS merchants, retail customers"
+      },
+      {
+        "title": "The morning settlement panic",
+        "story": "Every morning, merchant support agents open the settlement Excel sheet and compare it with Freshdesk tickets and WhatsApp messages from shop owners. They type out the same answers about pending, paid or held settlements one merchant at a time. Supervisors only hear about a pattern after the calls have already filled the queue. One Monday, agents told a pharmacy that ₦312,400 had settled, but it had gone to the old bank account on file.",
+        "cost": "It burns about ₦300,000 a month in support time and pushes busy merchants towards other payment providers.",
+        "who_feels_it": "merchant support agents, supervisors, settlement team, shop owners"
+      },
+      {
+        "title": "Chargeback evidence hide-and-seek",
+        "story": "Dispute notices arrive in Gmail with different subjects and short deadlines. Agents download receipts, chat screenshots and merchant explanations, then attach them to Freshdesk and an Excel chargeback log. The strongest evidence is often buried in WhatsApp Business conversations or named as “receipt2.jpg”. A ₦146,000 card dispute was lost last quarter because the proof of delivery was found one day after the deadline.",
+        "cost": "Missed or weak responses cost around ₦500,000 a month in lost disputes and write-offs.",
+        "who_feels_it": "chargeback agents, merchant support, finance officers, merchants"
+      },
+      {
+        "title": "The KYC name-match limbo",
+        "story": "New merchants contact support when their account is stuck after uploading ID, selfie, bank letter or CAC documents. Agents compare names and dates by eye, then send a Gmail template asking for a clearer file or a correction. Small differences, such as “Mohammed” and “Muhammed”, are handled differently depending on who is on shift. One food vendor was blocked for nine days because her CAC page was accepted in Freshdesk but not marked in the Excel tracker.",
+        "cost": "Each blocked merchant means delayed transactions, and the team loses about 25 agent-hours a week chasing documents that have already been sent.",
+        "who_feels_it": "onboarding agents, compliance officers, new merchants, sales team"
+      },
+      {
+        "title": "The complaint clock nobody hears",
+        "story": "Formal complaints come in through the website form, Freshdesk and Gmail, especially failed reversals and unauthorised debits. An agent types the complaint category, customer details and due date into Excel so a supervisor can chase updates before the deadline. During busy weeks, the due date is missed or the reply goes out without the full investigation notes. In February, a customer escalated to the regulator after receiving three “we are checking” replies on the same ₦83,000 debit.",
+        "cost": "Late formal complaints take about 20 supervisor-hours a month and have led to roughly ₦350,000 in refunds, apology credits and extra reporting work.",
+        "who_feels_it": "customer service leads, compliance officer, operations team, customers"
+      }
+    ]
+  },
+  "it": {
+    "cases": [
+      {
+        "title": "The WhatsApp password chorus",
+        "story": "Staff who are locked out of Microsoft 365 or Jira send WhatsApp messages to whichever IT person they know. The service desk asks for a staff number, checks with a manager, resets the password, then creates a Jira ticket afterwards if there is time. On a busy Monday, Tunde in claims waited four hours because the engineer with the WhatsApp thread was in a meeting. Another engineer nearly reset the wrong Adeola's account because two staff had the same surname.",
+        "cost": "The lockouts, chasing and duplicate tickets cost about ₦650,000 a month in lost working time and service desk effort.",
+        "who_feels_it": "service desk analysts, claims officers, branch staff, line managers"
+      },
+      {
+        "title": "The access request merry-go-round",
+        "story": "Managers use a Microsoft Form for new access, but many still add extra notes by email or WhatsApp. IT opens Jira, checks old Excel role lists, asks the manager again for the exact permissions, and copies access from someone in a similar job. Last month a new underwriter was given claims approval rights for two days because IT copied the wrong profile. Finance only spotted it when an approval alert reached the wrong team.",
+        "cost": "Slow set-up and clean-up of wrong permissions cost about ₦1.2 million a month in idle time and rework.",
+        "who_feels_it": "service desk analysts, IT security officer, line managers, underwriters, claims supervisors"
+      },
+      {
+        "title": "The leaver account leftovers",
+        "story": "HR updates a shared Excel leaver tracker, and IT checks it when someone remembers near month end. Accounts in Microsoft 365, Jira, shared folders and the core insurance system are closed one by one, with screenshots saved for audit. When Chika left a broker support team, her mailbox stayed open for 11 days and client renewal emails kept going there. The team only noticed after a broker complained that nobody had replied.",
+        "cost": "The audit clean-up and missed client messages cost about ₦2.4 million a year in staff time and goodwill.",
+        "who_feels_it": "IT security officer, HR officer, internal audit, broker support team, relationship managers"
+      },
+      {
+        "title": "The licence renewal ambush",
+        "story": "IT keeps renewal dates for Microsoft 365, antivirus, Jira, firewall support and branch internet links in an Excel sheet. The IT manager checks it by hand and then chases Procurement and Finance for quotes, invoices and approvals. In April, a branch internet link in Ibadan was suspended for a morning because the renewal email was buried in one person's Outlook. Staff could not upload scanned claims documents until after lunch.",
+        "cost": "Late renewals and emergency payments cost about ₦1.8 million last year in fees, courier runs and lost branch time.",
+        "who_feels_it": "IT manager, procurement officer, finance team, branch staff, claims officers"
+      },
+      {
+        "title": "The broker spreadsheet lottery",
+        "story": "Brokers and branch teams send Excel bordereaux for policy uploads, often with different column names and date formats. The IT data support team cleans each file by hand, checks totals against emails, and loads it into the core insurance system after underwriting confirms. One Friday, a file from Abuja used the US date format and 126 motor policies were loaded with the wrong start date. IT and underwriting spent the weekend correcting the records before certificates were sent out.",
+        "cost": "Manual checking and weekend fixes cost about ₦950,000 a month, before any broker embarrassment is counted.",
+        "who_feels_it": "IT data support team, underwriting officers, broker relationship managers, branch operations, finance team"
+      },
+      {
+        "title": "The quiet Jira fire",
+        "story": "Staff log Jira tickets for slow systems, failed logins and printer faults, but the descriptions are often just 'not working'. The service desk reads each ticket, checks WhatsApp groups for similar complaints, and decides by hand whether it is a small issue or a wider outage. During a heavy rain morning in Lagos, six branches logged 'system slow' tickets before anyone joined the dots. Customer service kept promising call-backs while the policy system was unavailable.",
+        "cost": "Slow spotting of wider incidents costs about ₦1.3 million a quarter in wasted staff time and overtime.",
+        "who_feels_it": "service desk analysts, infrastructure team, branch staff, customer service officers, IT manager"
+      }
+    ]
+  }
+}

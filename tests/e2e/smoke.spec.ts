@@ -14,9 +14,10 @@ test("the console sends signed-out visitors to sign in", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Facilitator sign in" })).toBeVisible();
 });
 
-test("asking for a magic link confirms it was sent", async ({ page }) => {
+test("asking for a magic link confirms it was sent", async ({ page }, testInfo) => {
   await page.goto("/login");
-  await page.getByLabel("Work email").fill("facilitator@builda.test");
+  // Its own address, so it never cancels another test's sign-in link.
+  await page.getByLabel("Work email").fill(`smoke-${testInfo.project.name}@builda.test`);
   await page.getByRole("button", { name: "Email me a sign-in link" }).click();
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
 });

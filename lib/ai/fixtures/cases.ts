@@ -1,8 +1,11 @@
 import type { GeneratedDeck } from "../schemas/cases";
+import generated from "./cases.generated.json";
 
-// Mock case-generator output, keyed by function slug. Written in the voice of
-// the seed HR cards. More functions are added in milestone 2.
-export const caseFixtures: Record<string, GeneratedDeck> = {
+// Mock case-generator output, keyed by function slug. Finance was written by
+// hand; the other functions were generated once with the live provider by
+// scripts/build-case-fixtures.ts and reviewed. Every deck is schema-checked in
+// tests/unit/ai-mock.test.ts.
+const financeFixture: Record<string, GeneratedDeck> = {
   finance: {
     cases: [
       {
@@ -50,3 +53,5 @@ export const caseFixtures: Record<string, GeneratedDeck> = {
     ],
   },
 };
+
+export const caseFixtures: Record<string, GeneratedDeck> = { ...financeFixture, ...(generated as Record<string, GeneratedDeck>) };

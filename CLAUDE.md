@@ -8,7 +8,7 @@
 
 - `npm run dev`: Next.js dev server on http://localhost:3000
 - `npm run db:start` / `npm run db:stop`: Supabase local stack (needs Docker Desktop running)
-- `npm run db:reset`: re-run every migration and `supabase/seed.sql`, then `npm run db:seed-users`
+- `npm run db:reset`: re-run every migration and `supabase/seed.sql`, then `npm run db:seed`
 - `npm run db:types`: regenerate `lib/db/types.ts` from the local database
 - `npm test`: Vitest unit tests; `npm run test:e2e`: Playwright
 - `npm run typecheck`, `npm run lint`

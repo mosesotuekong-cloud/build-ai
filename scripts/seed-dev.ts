@@ -1,7 +1,8 @@
-// Creates local users, the demo organisation and memberships.
-// Runs after `supabase db reset` (see `npm run db:reset`). Safe to re-run.
+// Creates local users, the demo organisation, memberships and the library
+// HR deck. Runs after `supabase db reset` (see `npm run db:reset`). Safe to re-run.
 import { config } from "dotenv";
 import { createClient } from "@supabase/supabase-js";
+import { HR_DEFAULT_CASES, HR_DEFAULT_DECK_NAME } from "@/lib/decks/hr-default";
 
 config({ path: ".env.local" });
 
@@ -61,10 +62,40 @@ async function main() {
   const { error: memberError } = await admin.from("org_members").upsert(members, { onConflict: "org_id,user_id" });
   if (memberError) throw memberError;
 
+  await seedLibraryHrDeck();
+
   console.log("Seeded local users:");
   console.log(`  ${FACILITATOR_EMAIL}  admin of ${DEMO_ORG.name}`);
   for (const email of superAdmins) console.log(`  ${email}  super admin, admin of ${DEMO_ORG.name}`);
   console.log(`  ${PENDING_EMAIL}  no organisation (sees the waiting page)`);
+  console.log(`Library deck: ${HR_DEFAULT_DECK_NAME} (${HR_DEFAULT_CASES.length} HR cases)`);
+}
+
+// The default HR deck lives in the shared library (org_id is null), so every
+// organisation can copy it. Rebuilt from lib/decks/hr-default.ts on each run.
+async function seedLibraryHrDeck() {
+  const { data: existing } = await admin.from("decks").select("id").is("org_id", null).eq("name", HR_DEFAULT_DECK_NAME);
+  if (existing?.length) {
+    const { error } = await admin.from("decks").delete().in("id", existing.map((d) => d.id));
+    if (error) throw error;
+  }
+  const { data: deck, error } = await admin
+    .from("decks")
+    .insert({
+      org_id: null,
+      name: HR_DEFAULT_DECK_NAME,
+      industry: "Any",
+      company_size: "Any",
+      tools: ["WhatsApp", "Excel", "Email", "Paper forms"],
+      function_slugs: ["hr"],
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  const { error: casesError } = await admin.from("cases").insert(
+    HR_DEFAULT_CASES.map((c, i) => ({ deck_id: deck.id, function_slug: "hr", source: "library" as const, position: i, ...c })),
+  );
+  if (casesError) throw casesError;
 }
 
 main().catch((error) => {

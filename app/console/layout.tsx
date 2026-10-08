@@ -23,7 +23,10 @@ export default async function ConsoleLayout({ children }: LayoutProps<"/console"
             )}
           </div>
           <div className="flex items-center gap-4 text-sm">
-            <Link href="/console/kit" className="font-semibold text-ink-700 hover:text-green-700">
+            <Link href="/console/decks" className="font-semibold text-ink-700 hover:text-green-700">
+              Decks
+            </Link>
+            <Link href="/console/kit" className="hidden font-semibold text-ink-700 hover:text-green-700 sm:inline">
               Game kit
             </Link>
             {ctx.isPlatformAdmin && (
