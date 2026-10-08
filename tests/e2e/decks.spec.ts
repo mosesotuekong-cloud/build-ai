@@ -84,3 +84,28 @@ test("create an empty deck and delete it", async ({ page }) => {
   await page.waitForURL(/\/console\/decks$/);
   await expect(page.getByText("Playwright test deck")).toHaveCount(0);
 });
+
+test("practice run: slots snap in and survive a reload (no AI calls)", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/console/decks");
+  await page.getByRole("button", { name: "Use this deck" }).first().click();
+  await page.waitForURL(/\/console\/decks\/[0-9a-f-]{36}$/);
+  const deckUrl = page.url();
+  await page.getByRole("button", { name: /Play this case/ }).first().click();
+  await page.waitForURL(/\/play\/[0-9a-f-]{36}$/);
+
+  await expect(page.getByRole("heading", { level: 1, name: "The WhatsApp leave jungle" })).toBeVisible();
+  await page.getByRole("button", { name: "Edit trigger" }).click();
+  await page.getByRole("dialog").getByRole("textbox").fill("An employee submits the leave form");
+  await page.getByRole("button", { name: "Snap it in" }).click();
+  await expect(page.getByText("1 of 5 slots filled · Saved")).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByText("An employee submits the leave form")).toBeVisible();
+
+  // Tidy up the copied deck (and its practice run with it).
+  await page.goto(deckUrl);
+  page.once("dialog", (d) => d.accept());
+  await page.getByRole("button", { name: "Delete deck" }).click();
+  await page.waitForURL(/\/console\/decks$/);
+});

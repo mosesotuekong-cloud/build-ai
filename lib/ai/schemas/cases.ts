@@ -23,5 +23,7 @@ export const caseGeneratorInputSchema = z.object({
   tools: z.array(z.string()).default([]),
   country: z.string().default("Nigeria"),
   pain_points: z.string().optional(),
+  // Platforms the company uses, as "Name: what it is good for" lines.
+  platforms: z.array(z.string()).default([]),
 });
 export type CaseGeneratorInput = z.input<typeof caseGeneratorInputSchema>;

@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/types";
+import { getPlatform } from "@/lib/config/platforms";
 import type { N8nClient } from "@/lib/n8n";
 import { functionName } from "./schemas";
 
@@ -14,6 +15,7 @@ type DeckContext = {
   tools: string[];
   country: string;
   pain_points: string;
+  target_platforms: string[];
 };
 
 // Generates six cases for each function through the n8n client (or its local
@@ -45,6 +47,10 @@ async function generateOne(
     tools: deck.tools,
     country: deck.country || "Nigeria",
     pain_points: deck.pain_points || undefined,
+    platforms: deck.target_platforms.flatMap((slug) => {
+      const p = getPlatform(slug);
+      return p ? [`${p.name} (${p.vendor}): ${p.goodFor}`] : [];
+    }),
   };
 
   const { data: job } = await supabase

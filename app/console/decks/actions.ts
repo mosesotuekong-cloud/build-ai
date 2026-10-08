@@ -15,6 +15,7 @@ import {
   newDeckSchema,
   parseTools,
 } from "@/lib/decks/schemas";
+import { cleanPlatformSlugs } from "@/lib/config/platforms";
 import { getN8nClient } from "@/lib/n8n";
 import { createClient } from "@/lib/supabase/server";
 
@@ -38,6 +39,7 @@ function readDetails(formData: FormData) {
     tools: parseTools(String(formData.get("tools") ?? "")),
     country: String(formData.get("country") ?? "Nigeria"),
     pain_points: String(formData.get("pain_points") ?? ""),
+    target_platforms: cleanPlatformSlugs(formData.getAll("target_platforms").map(String)),
   };
 }
 
@@ -59,7 +61,7 @@ export async function createDeck(_prev: FormState, formData: FormData): Promise<
   const { data: deck, error } = await supabase
     .from("decks")
     .insert({ ...details, function_slugs, org_id: org.orgId, created_by: ctx.userId })
-    .select("id, org_id, industry, company_size, tools, country, pain_points")
+    .select("id, org_id, industry, company_size, tools, country, pain_points, target_platforms")
     .single();
   if (error || !deck) return { status: "error", message: "We couldn't create the deck. Please try again." };
 
@@ -111,6 +113,7 @@ export async function copyLibraryDeck(libraryDeckId: string) {
       country: source.country,
       pain_points: source.pain_points,
       function_slugs: source.function_slugs,
+      target_platforms: org.aiStack,
       copied_from: source.id,
       created_by: ctx.userId,
     })
@@ -131,7 +134,7 @@ export async function addFunctions(deckId: string, slugs: string[], generate: bo
   const { ctx, org, supabase } = await context();
   const { data: deck } = await supabase
     .from("decks")
-    .select("id, org_id, industry, company_size, tools, country, pain_points, function_slugs")
+    .select("id, org_id, industry, company_size, tools, country, pain_points, target_platforms, function_slugs")
     .eq("id", idSchema.parse(deckId))
     .single();
   if (!deck) throw new Error("Deck not found.");
@@ -153,7 +156,7 @@ export async function dealMoreCases(deckId: string, slug: string): Promise<{ ok:
   const { ctx, org, supabase } = await context();
   const { data: deck } = await supabase
     .from("decks")
-    .select("id, org_id, industry, company_size, tools, country, pain_points")
+    .select("id, org_id, industry, company_size, tools, country, pain_points, target_platforms")
     .eq("id", idSchema.parse(deckId))
     .single();
   if (!deck) return { ok: false, message: "Deck not found." };

@@ -8,6 +8,8 @@ The product name lives in a single config constant (`lib/config/app.ts`) so it c
 
 Newest first. Add a line whenever Moses confirms a change.
 
+- 2026-10-08: Target platforms. Each organisation records its AI tool stack (several platforms, because clients use different stacks). Decks and sessions pick target platforms from it. Platforms steer case writing and coaching, and drive exports: a real compiler where we have one (n8n first), otherwise a deterministic build guide that maps each slot onto the platform's own concepts. The catalog lives in `lib/config/platforms.ts`. See "Target platforms".
+- 2026-10-08: "Try it as a player" (practice mode) is built before milestone 3: a facilitator plays any case alone on the real canvas with the live coach, then finishes to see a score, a model answer and build guides for their stack. It is a single-player, facilitator-less session (mode `practice`), so it uses the same tables and rules as live sessions and costs no session credit.
 - 2026-10-07: OpenAI added as a second AI provider (Moses has an OpenAI key). Provider order: Anthropic if `ANTHROPIC_API_KEY` is set, otherwise OpenAI if `OPENAI_API_KEY` is set, otherwise the mock. Model names for both providers live in `lib/config/models.ts`. Every guardrail and zod check applies to both.
 - 2026-10-07: The "A day in the office" intro (office simulation) is proposed but not approved; not in the plan yet.
 - 2026-10-07: Market research additions approved. Phase one gains a proactive inline coach with token earn-back, a prioritise phase, a commitments phase and optional before-and-after checks with player names at join. Phase one and a half designs the data model now (compliance and funding pack, certificates, AI risk twists, extra opportunity map exports) but builds the screens after the first paid pilot. See "Market research additions".
@@ -132,9 +134,9 @@ Optional phases: when the before-and-after check is off, `lobby → solving` and
 
 Adjust as needed, but keep org isolation through RLS on every table.
 
-- organizations, org_members (role: admin, facilitator)
-- functions (catalog), decks, cases (title, story, cost of the problem, who feels it, function, source: ai or manual, order)
-- sessions (org, deck, phase, phase_started_at, phase_duration, started_at, ended_at, settings: hint tokens, twist bonus tokens, coach strictness, coach on/off, inline coach on/off and idle delay, max tokens earned back, twist on/off, twist mix (operational, risk or mixed), before-and-after check on/off), session_code
+- organizations (plus ai_stack: platform slugs), org_members (role: admin, facilitator)
+- functions (catalog), decks (plus target_platforms), cases (title, story, cost of the problem, who feels it, function, source: ai or manual, order)
+- sessions (org, deck, mode: live or practice, target_platforms, phase, phase_started_at, phase_duration, started_at, ended_at, settings: hint tokens, twist bonus tokens, coach strictness, coach on/off, inline coach on/off and idle delay, max tokens earned back, twist on/off, twist mix (operational, risk or mixed), before-and-after check on/off), session_code
 - teams (session, name, case, hint_tokens_remaining, hint_tokens_earned), players (anonymous user, team, display name, joined_at, left_at)
 - designs (team, version: before_twist or after_twist, the five slots, name, hours saved, tools, systems, updated_at, plus prioritise fields on the final version: impact 1–5, effort 1–5, frequency, data readiness)
 - coach_messages (team, role, type: question, nudge, analogy, flag, content, slot, trigger: asked, inline_idle or inline_flag, tokens_spent, token_earned_at)
@@ -249,6 +251,21 @@ Generated per case only when the session reaches reveal, with a short explanatio
 ### Opportunity map (n8n, after the session)
 
 Ranked automation backlog for the company: each case and the team's design, estimated hours saved, rule versus AI, effort, and whether IT access or approval is needed first. The ranking uses the team's own prioritise placement alongside the AI's assessment, and shows both when they disagree. Then the commitments (owner, first step, due date). Then the before-and-after improvement, if the check was on. Plus a learning section built from coach threads and design-check flags, for example "6 of 8 teams left out a human checkpoint until prompted". Written in plain, human prose, not heavy tables. Exportable as PDF (phase one), then CSV, Jira and UiPath Automation Hub formats (phase one and a half).
+
+## Target platforms
+
+Clients run different AI tool stacks, so Builda is platform-aware without being tied to one vendor.
+
+- The catalog (`lib/config/platforms.ts`) lists automation tools (n8n, Power Automate, Zapier, Make, Workato), agent and copilot builders (Copilot Studio, Microsoft 365 Copilot, Agentforce, Gemini Enterprise, ChatGPT Enterprise, Claude, watsonx Orchestrate, Amazon Q), data and analytics AI (Databricks Genie, Databricks agents, Snowflake Cortex, Microsoft Fabric, Power BI Copilot, Looker with Gemini), RPA (UiPath, Automation Anywhere) and business suites (ServiceNow, SAP, Zoho). Each entry has a category, what it is good for, and how each of the five slots is built on it. Product names change often; they live in one file so they are easy to update.
+- An organisation records its AI tool stack in console settings. A new deck starts with the organisation's stack and can narrow it. Sessions will carry the deck's platforms.
+- Case writing: the generator favours problems the stack can actually solve. For example, data-question cases for Genie or Cortex, and agent cases for Copilot or Agentforce. Cases still describe today's problem, never the solution.
+- Coaching: the coach may use the stack's vocabulary in questions ("Where would this agent find its knowledge?"), never to hand over a design.
+- Exports: the neutral plan stays the source of truth. n8n has a real compiler (milestone 8). Every other platform gets a build guide that maps the team's five slots onto that platform's concepts. Real compilers for Power Automate, Copilot Studio and others come later, built from exported templates as with n8n.
+- Partner use: the opportunity map can group use cases by platform, so a technology partner (Microsoft, Databricks, Salesforce and so on) sees which opportunities fit which product.
+
+## Practice mode ("Try it as a player")
+
+From any case card, a facilitator can play the case alone: the real phone canvas, autosave, the live coach with the hint ladder, coins, and the leak check. "Finish" judges the design with the rubric, shows a model answer for the case, and shows build guides for the organisation's stack. Practice is a session with mode `practice`, one team and one player, no lobby and no credit. It proves the architecture rule (no facilitator, single player) and is the base for solo mode in phase two.
 
 ## Blueprint and n8n export
 

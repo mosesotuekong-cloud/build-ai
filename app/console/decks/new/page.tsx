@@ -21,7 +21,7 @@ export default async function NewDeckPage() {
           Tell us a little about the company. The AI writes six real-feeling cases for each function you pick, and you can edit every one.
         </p>
       </div>
-      <NewDeckForm />
+      <NewDeckForm orgStack={ctx.activeOrg.aiStack} />
     </div>
   );
 }

@@ -4,7 +4,8 @@ import { createMockProvider } from "@/lib/ai/mock";
 import { AIOutputError } from "@/lib/ai/types";
 import { objectFixtures } from "@/lib/ai/fixtures";
 import { generatedDeckSchema } from "@/lib/ai/schemas/cases";
-import { coachReplySchema } from "@/lib/ai/schemas/coach";
+import { coachReplySchema, leakCheckSchema } from "@/lib/ai/schemas/coach";
+import { judgeOutputSchema, referenceSolutionSchema } from "@/lib/ai/schemas/judge";
 import { generateCases } from "@/lib/ai/tasks/generate-cases";
 
 const provider = createMockProvider({ delayMs: 0 });
@@ -13,6 +14,9 @@ const provider = createMockProvider({ delayMs: 0 });
 const fixtureSchemas: Record<string, z.ZodType> = {
   "generate-cases": generatedDeckSchema,
   "coach-reply": coachReplySchema,
+  "leak-check": leakCheckSchema,
+  judge: judgeOutputSchema,
+  "reference-solution": referenceSolutionSchema,
 };
 
 describe("AI fixtures", () => {
@@ -54,8 +58,8 @@ describe("mock provider", () => {
   it("fails clearly when a task has no fixture", async () => {
     await expect(
       provider.generateObject({
-        task: "judge",
-        model: "judge",
+        task: "blueprint",
+        model: "blueprint",
         system: "",
         messages: [{ role: "user", content: "hi" }],
         schema: z.object({}),

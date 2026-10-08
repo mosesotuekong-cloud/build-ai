@@ -31,6 +31,7 @@ export const deckDetailsSchema = z.object({
   tools: z.array(z.string()).max(20),
   country: z.string().trim().min(2).max(60).default("Nigeria"),
   pain_points: z.string().trim().max(1000, "Keep pain points under 1,000 characters.").default(""),
+  target_platforms: z.array(z.string()).max(30).default([]),
 });
 export type DeckDetails = z.infer<typeof deckDetailsSchema>;
 

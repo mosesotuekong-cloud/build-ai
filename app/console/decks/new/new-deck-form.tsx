@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { DealingOverlay } from "@/components/decks/dealing-overlay";
 import { FunctionPicker } from "@/components/decks/function-picker";
+import { PlatformPicker } from "@/components/decks/platform-picker";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, TextArea, TextInput } from "@/components/ui/field";
@@ -14,10 +15,11 @@ function listNames(slugs: string[]) {
   return names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
 }
 
-export function NewDeckForm() {
+export function NewDeckForm({ orgStack }: { orgStack: string[] }) {
   const [state, action, pending] = useActionState<FormState, FormData>(createDeck, { status: "idle" });
   const [functions, setFunctions] = useState<string[]>(["hr"]);
   const [mode, setMode] = useState<"generate" | "empty">("generate");
+  const [platforms, setPlatforms] = useState<string[]>(orgStack);
   const e = state.errors ?? {};
 
   return (
@@ -74,6 +76,18 @@ export function NewDeckForm() {
             {e.function_slugs}
           </p>
         )}
+      </Card>
+
+      <Card className="space-y-4">
+        <div className="space-y-1">
+          <h2 className="font-display text-xl font-bold">AI tool stack</h2>
+          <p className="text-sm text-ink-500">
+            {orgStack.length
+              ? "Starts with your organisation's stack. The AI favours problems these platforms can solve, and teams get build guides for them."
+              : "Pick the platforms this company uses or is considering. Set a default for every deck in Settings."}
+          </p>
+        </div>
+        <PlatformPicker name="target_platforms" selected={platforms} onChange={setPlatforms} />
       </Card>
 
       {state.status === "error" && state.message && (

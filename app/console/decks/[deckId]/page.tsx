@@ -16,7 +16,7 @@ export default async function DeckPage({ params, searchParams }: PageProps<"/con
 
   const { data: deck } = await supabase
     .from("decks")
-    .select("id, org_id, name, industry, company_size, tools, country, pain_points, function_slugs, cases (id, function_slug, title, story, cost, who_feels_it, source, position)")
+    .select("id, org_id, name, industry, company_size, tools, country, pain_points, target_platforms, function_slugs, cases (id, function_slug, title, story, cost, who_feels_it, source, position)")
     .eq("id", deckId)
     .maybeSingle();
   if (!deck) notFound();
@@ -38,6 +38,7 @@ export default async function DeckPage({ params, searchParams }: PageProps<"/con
       <DeckEditor
         deck={{ ...deck, cases: [...deck.cases].sort((a, b) => a.position - b.position) }}
         editable={editable}
+        canPlay={Boolean(ctx.activeOrg)}
       />
     </div>
   );

@@ -29,6 +29,9 @@ export default async function ConsoleLayout({ children }: LayoutProps<"/console"
             <Link href="/console/kit" className="hidden font-semibold text-ink-700 hover:text-green-700 sm:inline">
               Game kit
             </Link>
+            <Link href="/console/settings" className="font-semibold text-ink-700 hover:text-green-700">
+              Settings
+            </Link>
             {ctx.isPlatformAdmin && (
               <span className="rounded-full bg-green-100 px-3 py-1 font-semibold text-green-700">Super admin</span>
             )}

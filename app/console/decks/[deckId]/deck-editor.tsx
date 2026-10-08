@@ -4,11 +4,13 @@ import { AnimatePresence, motion } from "motion/react";
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { DealingOverlay } from "@/components/decks/dealing-overlay";
 import { FunctionPicker } from "@/components/decks/function-picker";
+import { PlatformPicker } from "@/components/decks/platform-picker";
 import { GameCard } from "@/components/game/game-card";
 import { SPRINGS, seededTilt } from "@/components/game/springs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, TextArea, TextInput } from "@/components/ui/field";
+import { platformNames } from "@/lib/config/platforms";
 import { COMPANY_SIZES, functionName } from "@/lib/decks/schemas";
 import {
   addFunctions,
@@ -21,6 +23,7 @@ import {
   updateDeckDetails,
   type FormState,
 } from "../actions";
+import { startPractice } from "@/app/play/actions";
 
 export type DeckCase = {
   id: string;
@@ -41,13 +44,14 @@ export type Deck = {
   tools: string[];
   country: string;
   pain_points: string;
+  target_platforms: string[];
   function_slugs: string[];
   cases: DeckCase[];
 };
 
 type Editing = { slug: string; existing: DeckCase | null } | null;
 
-export function DeckEditor({ deck, editable }: { deck: Deck; editable: boolean }) {
+export function DeckEditor({ deck, editable, canPlay }: { deck: Deck; editable: boolean; canPlay: boolean }) {
   const [editing, setEditing] = useState<Editing>(null);
   const [dealing, setDealing] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -115,6 +119,7 @@ export function DeckEditor({ deck, editable }: { deck: Deck; editable: boolean }
                       tilt={seededTilt(i + slug.length, 1.5)}
                       onSelect={editable ? () => setEditing({ slug, existing: c }) : undefined}
                     />
+                    {canPlay && <PlayButton caseId={c.id} />}
                     {editable && (
                       <CaseControls deckId={deck.id} item={c} first={i === 0} last={i === cases.length - 1} onEdit={() => setEditing({ slug, existing: c })} />
                     )}
@@ -153,6 +158,7 @@ function DeckHeader({ deck, editable }: { deck: Deck; editable: boolean }) {
     return result;
   }, { status: "idle" });
   const [deleting, startDelete] = useTransition();
+  const [platforms, setPlatforms] = useState(deck.target_platforms);
   const e = state.errors ?? {};
 
   return (
@@ -164,6 +170,15 @@ function DeckHeader({ deck, editable }: { deck: Deck; editable: boolean }) {
             {[deck.industry, deck.company_size, deck.country].filter(Boolean).join(" · ")}
             {deck.tools.length > 0 && ` · Tools: ${deck.tools.join(", ")}`}
           </p>
+          {deck.target_platforms.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {platformNames(deck.target_platforms).map((name) => (
+                <span key={name} className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-700">
+                  {name}
+                </span>
+              ))}
+            </div>
+          )}
           {!editable && <p className="text-sm font-semibold text-amber-700">Library deck. Use it from the Decks page to make your own editable copy.</p>}
         </div>
         {editable && (
@@ -213,6 +228,10 @@ function DeckHeader({ deck, editable }: { deck: Deck; editable: boolean }) {
           <Field label="Pain points (optional)" error={e.pain_points}>
             <TextArea name="pain_points" defaultValue={deck.pain_points} rows={2} maxLength={1000} />
           </Field>
+          <div className="space-y-2 sm:col-span-2">
+            <span className="text-sm font-semibold text-ink-700">AI tool stack</span>
+            <PlatformPicker name="target_platforms" selected={platforms} onChange={setPlatforms} />
+          </div>
           <div className="flex items-center gap-3 sm:col-span-2">
             <Button type="submit" disabled={pending}>
               {pending ? "Saving…" : "Save details"}
@@ -223,6 +242,20 @@ function DeckHeader({ deck, editable }: { deck: Deck; editable: boolean }) {
         </form>
       )}
     </Card>
+  );
+}
+
+function PlayButton({ caseId }: { caseId: string }) {
+  const [pending, start] = useTransition();
+  return (
+    <button
+      type="button"
+      onClick={() => start(() => startPractice(caseId))}
+      disabled={pending}
+      className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-3 py-2 text-sm font-bold text-ink-900 shadow-sm transition-colors hover:bg-amber-300 disabled:opacity-60"
+    >
+      {pending ? "Setting up…" : "▶ Play this case"}
+    </button>
   );
 }
 

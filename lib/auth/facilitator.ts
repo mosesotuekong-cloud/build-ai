@@ -11,6 +11,7 @@ export type Membership = {
   orgSlug: string;
   orgActive: boolean;
   sessionCredits: number;
+  aiStack: string[];
   role: "admin" | "facilitator";
 };
 
@@ -32,7 +33,7 @@ export const getFacilitatorContext = cache(async (): Promise<FacilitatorContext 
   const [{ data: rows }, { data: adminRow }] = await Promise.all([
     supabase
       .from("org_members")
-      .select("role, organizations (id, name, slug, is_active, session_credits)")
+      .select("role, organizations (id, name, slug, is_active, session_credits, ai_stack)")
       .eq("user_id", user.id),
     supabase.from("platform_admins").select("user_id").eq("user_id", user.id).maybeSingle(),
   ]);
@@ -47,6 +48,7 @@ export const getFacilitatorContext = cache(async (): Promise<FacilitatorContext 
         orgSlug: org.slug,
         orgActive: org.is_active,
         sessionCredits: org.session_credits,
+        aiStack: org.ai_stack,
         role: row.role,
       },
     ];

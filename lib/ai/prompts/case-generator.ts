@@ -42,5 +42,12 @@ export function caseGeneratorUserMessage(input: CaseGeneratorInput): string {
     `Tools staff use: ${input.tools && input.tools.length ? input.tools.join(", ") : "not specified"}`,
   ];
   if (input.pain_points) lines.push(`Pain points staff have mentioned: ${input.pain_points}`);
+  if (input.platforms && input.platforms.length) {
+    lines.push(
+      "AI and automation platforms the company uses or is considering:",
+      ...input.platforms.map((p) => `- ${p}`),
+      "Favour problems these platforms could realistically solve, and include at least one case suited to each kind of platform listed. Still describe only today's problem, never the platform or the solution.",
+    );
+  }
   return `${lines.join("\n")}\n\nWrite the six cards.`;
 }
