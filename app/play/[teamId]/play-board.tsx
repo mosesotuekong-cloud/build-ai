@@ -11,11 +11,11 @@ import { SlotSocket } from "@/components/game/slot-socket";
 import { Stamp, useShake } from "@/components/game/stamp";
 import { TokenCoins } from "@/components/game/token-coins";
 import { Button } from "@/components/ui/button";
+import { ChipSelect } from "@/components/ui/chip-select";
 import { Wordmark } from "@/components/ui/wordmark";
 import { CANVAS_SLOTS, type CanvasSlot } from "@/lib/ai/schemas/canvas";
 import type { ReferenceSolution, ScoredCriterion } from "@/lib/ai/schemas/judge";
 import type { CoachCase, CoachDesign } from "@/lib/coach/context";
-import { parseTools } from "@/lib/decks/schemas";
 import { finishPractice, reopenPractice, saveDesign } from "../actions";
 
 type Finished = { score: { total: number; breakdown: ScoredCriterion[]; summary: string } | null; reference: ReferenceSolution | null };
@@ -29,6 +29,8 @@ export function PlayBoard({
   platforms,
   history,
   initialFinished,
+  toolSuggestions,
+  systemSuggestions,
 }: {
   teamId: string;
   mode: "live" | "practice";
@@ -38,6 +40,8 @@ export function PlayBoard({
   platforms: string[];
   history: ChatMessage[];
   initialFinished: Finished | null;
+  toolSuggestions: string[];
+  systemSuggestions: string[];
 }) {
   const [design, setDesign] = useState<CoachDesign>(initialDesign);
   const [tokens, setTokens] = useState(initialTokens);
@@ -173,7 +177,7 @@ export function PlayBoard({
                   ))}
                 </div>
 
-                <Extras design={design} onChange={update} />
+                <Extras design={design} onChange={update} toolSuggestions={toolSuggestions} systemSuggestions={systemSuggestions} />
                 <Stamp show={stamp} text="Locked in" tone="green" />
               </motion.section>
             )}
@@ -274,7 +278,17 @@ function CaseStrip({ caseInfo }: { caseInfo: CoachCase }) {
   );
 }
 
-function Extras({ design, onChange }: { design: CoachDesign; onChange: (patch: Partial<CoachDesign>) => void }) {
+function Extras({
+  design,
+  onChange,
+  toolSuggestions,
+  systemSuggestions,
+}: {
+  design: CoachDesign;
+  onChange: (patch: Partial<CoachDesign>) => void;
+  toolSuggestions: string[];
+  systemSuggestions: string[];
+}) {
   const input =
     "w-full rounded-xl border border-cream-300 bg-white px-3 py-2.5 text-base outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100";
   return (
@@ -295,41 +309,25 @@ function Extras({ design, onChange }: { design: CoachDesign; onChange: (patch: P
           onChange={(e) => onChange({ hours_saved_per_month: e.target.value === "" ? null : Math.max(0, Number(e.target.value)) })}
         />
       </label>
-      <ListField label="Tools you'd use" hint="Separate with commas" value={design.tools} onChange={(tools) => onChange({ tools })} className={input} />
-      <ListField
-        label="Systems involved"
-        hint="Where the data lives: Excel, HRIS, email… The coach will ask about access and privacy."
-        value={design.systems}
-        onChange={(systems) => onChange({ systems })}
-        className={`${input}`}
-        wide
-      />
+      <div className="sm:col-span-2">
+        <ChipSelect
+          label="Tools you'd build it with"
+          hint="The automation or AI platforms you'd use. Pick from the list or type your own."
+          value={design.tools}
+          onChange={(tools) => onChange({ tools })}
+          suggestions={toolSuggestions}
+          maxLength={40}
+        />
+      </div>
+      <div className="sm:col-span-2">
+        <ChipSelect
+          label="Systems involved"
+          hint="Where the data lives or the work happens today. The coach will ask about access and privacy for each."
+          value={design.systems}
+          onChange={(systems) => onChange({ systems })}
+          suggestions={systemSuggestions}
+        />
+      </div>
     </div>
-  );
-}
-
-// A comma-separated list that only tidies itself up when you leave the field.
-function ListField({
-  label,
-  hint,
-  value,
-  onChange,
-  className,
-  wide = false,
-}: {
-  label: string;
-  hint: string;
-  value: string[];
-  onChange: (v: string[]) => void;
-  className: string;
-  wide?: boolean;
-}) {
-  const [text, setText] = useState(value.join(", "));
-  return (
-    <label className={`space-y-1.5 ${wide ? "sm:col-span-2" : ""}`}>
-      <span className="text-sm font-semibold text-ink-700">{label}</span>
-      <input className={className} value={text} onChange={(e) => setText(e.target.value)} onBlur={() => onChange(parseTools(text))} />
-      <span className="block text-sm text-ink-500">{hint}</span>
-    </label>
   );
 }

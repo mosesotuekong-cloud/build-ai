@@ -9,7 +9,9 @@ import { GameCard } from "@/components/game/game-card";
 import { SPRINGS, seededTilt } from "@/components/game/springs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ChipSelect } from "@/components/ui/chip-select";
 import { Field, TextArea, TextInput } from "@/components/ui/field";
+import { STAFF_TOOL_SUGGESTIONS } from "@/lib/config/systems";
 import { platformNames } from "@/lib/config/platforms";
 import { COMPANY_SIZES, functionName } from "@/lib/decks/schemas";
 import {
@@ -159,6 +161,7 @@ function DeckHeader({ deck, editable }: { deck: Deck; editable: boolean }) {
   }, { status: "idle" });
   const [deleting, startDelete] = useTransition();
   const [platforms, setPlatforms] = useState(deck.target_platforms);
+  const [tools, setTools] = useState(deck.tools);
   const e = state.errors ?? {};
 
   return (
@@ -222,9 +225,10 @@ function DeckHeader({ deck, editable }: { deck: Deck; editable: boolean }) {
           <Field label="Country" error={e.country}>
             <TextInput name="country" defaultValue={deck.country} maxLength={60} />
           </Field>
-          <Field label="Tools staff use" hint="Separate with commas.">
-            <TextInput name="tools" defaultValue={deck.tools.join(", ")} />
-          </Field>
+          <div>
+            <input type="hidden" name="tools" value={tools.join(",")} />
+            <ChipSelect label="Tools staff use" value={tools} onChange={setTools} suggestions={STAFF_TOOL_SUGGESTIONS} maxLength={40} />
+          </div>
           <Field label="Pain points (optional)" error={e.pain_points}>
             <TextArea name="pain_points" defaultValue={deck.pain_points} rows={2} maxLength={1000} />
           </Field>

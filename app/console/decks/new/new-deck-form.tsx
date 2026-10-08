@@ -5,6 +5,8 @@ import { DealingOverlay } from "@/components/decks/dealing-overlay";
 import { FunctionPicker } from "@/components/decks/function-picker";
 import { PlatformPicker } from "@/components/decks/platform-picker";
 import { Button } from "@/components/ui/button";
+import { ChipSelect } from "@/components/ui/chip-select";
+import { STAFF_TOOL_SUGGESTIONS } from "@/lib/config/systems";
 import { Card } from "@/components/ui/card";
 import { Field, TextArea, TextInput } from "@/components/ui/field";
 import { COMPANY_SIZES, functionName } from "@/lib/decks/schemas";
@@ -20,6 +22,7 @@ export function NewDeckForm({ orgStack }: { orgStack: string[] }) {
   const [functions, setFunctions] = useState<string[]>(["hr"]);
   const [mode, setMode] = useState<"generate" | "empty">("generate");
   const [platforms, setPlatforms] = useState<string[]>(orgStack);
+  const [tools, setTools] = useState<string[]>([]);
   const e = state.errors ?? {};
 
   return (
@@ -52,9 +55,15 @@ export function NewDeckForm({ orgStack }: { orgStack: string[] }) {
             </select>
           </Field>
         </div>
-        <Field label="Tools staff use" hint="Separate with commas: Excel, WhatsApp, Sage, Microsoft 365" error={e.tools}>
-          <TextInput name="tools" placeholder="Excel, WhatsApp, Gmail" />
-        </Field>
+        <input type="hidden" name="tools" value={tools.join(",")} />
+        <ChipSelect
+          label="Tools staff use"
+          hint="Pick from the list or type your own: the tools people use day to day."
+          value={tools}
+          onChange={setTools}
+          suggestions={STAFF_TOOL_SUGGESTIONS}
+          maxLength={40}
+        />
         <div className="grid gap-5 sm:grid-cols-[1fr_2fr]">
           <Field label="Country" error={e.country}>
             <TextInput name="country" defaultValue="Nigeria" maxLength={60} />

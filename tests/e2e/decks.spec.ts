@@ -100,8 +100,19 @@ test("practice run: slots snap in and survive a reload (no AI calls)", async ({ 
   await page.getByRole("button", { name: "Snap it in" }).click();
   await expect(page.getByText("1 of 5 slots filled · Saved")).toBeVisible();
 
+  // Systems: pick a suggestion, then type one that isn't listed.
+  const systems = page.getByRole("combobox", { name: "Systems involved" });
+  await systems.fill("Exc");
+  await page.getByRole("option", { name: "Excel", exact: true }).click();
+  await systems.fill("Our leave app");
+  await systems.press("Enter");
+  await expect(page.getByRole("button", { name: "Remove Our leave app" })).toBeVisible();
+  await expect(page.getByText("1 of 5 slots filled · Saved")).toBeVisible();
+
   await page.reload();
   await expect(page.getByText("An employee submits the leave form")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Remove Excel" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Remove Our leave app" })).toBeVisible();
 
   // Tidy up the copied deck (and its practice run with it).
   await page.goto(deckUrl);

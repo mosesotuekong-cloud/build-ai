@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Wordmark } from "@/components/ui/wordmark";
 import type { ReferenceSolution, ScoredCriterion } from "@/lib/ai/schemas/judge";
 import { loadCoachHistory, loadPlayerTeam } from "@/lib/play/load";
+import { PLATFORMS, platformNames } from "@/lib/config/platforms";
+import { COMMON_SYSTEMS, mergeSuggestions } from "@/lib/config/systems";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { PlayBoard } from "./play-board";
@@ -33,6 +35,11 @@ export default async function PlayPage({ params }: PageProps<"/play/[teamId]">) 
   }
 
   const history = await loadCoachHistory(teamId);
+  const { data: deck } = data.session.deck_id
+    ? await createAdminClient().from("decks").select("tools").eq("id", data.session.deck_id).maybeSingle()
+    : { data: null };
+  const toolSuggestions = mergeSuggestions(platformNames(data.session.target_platforms), PLATFORMS.map((p) => p.name));
+  const systemSuggestions = mergeSuggestions(deck?.tools ?? [], COMMON_SYSTEMS);
   let finished: { score: { total: number; breakdown: ScoredCriterion[]; summary: string } | null; reference: ReferenceSolution | null } | null = null;
   if (data.session.phase === "reveal") {
     const admin = createAdminClient();
@@ -56,6 +63,8 @@ export default async function PlayPage({ params }: PageProps<"/play/[teamId]">) 
       platforms={data.session.target_platforms}
       history={history.map((m) => ({ id: m.id, role: m.role, type: m.type, slot: m.slot, content: m.content }))}
       initialFinished={finished}
+      toolSuggestions={toolSuggestions}
+      systemSuggestions={systemSuggestions}
     />
   );
 }

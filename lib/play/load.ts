@@ -8,7 +8,7 @@ export type PlayerTeam = {
   userId: string;
   playerId: string;
   playerName: string;
-  session: { id: string; mode: "live" | "practice"; phase: string; org_id: string; target_platforms: string[]; name: string };
+  session: { id: string; mode: "live" | "practice"; phase: string; org_id: string; deck_id: string | null; target_platforms: string[]; name: string };
   team: { id: string; name: string; hint_tokens_remaining: number };
   caseId: string | null;
   case: CoachCase | null;
@@ -36,7 +36,7 @@ export async function loadPlayerTeam(teamId: string): Promise<PlayerTeam | null>
 
   const [{ data: team }, { data: session }, { data: design }] = await Promise.all([
     admin.from("teams").select("id, name, hint_tokens_remaining, case_id").eq("id", teamId).single(),
-    admin.from("sessions").select("id, mode, phase, org_id, target_platforms, name").eq("id", player.session_id).single(),
+    admin.from("sessions").select("id, mode, phase, org_id, deck_id, target_platforms, name").eq("id", player.session_id).single(),
     admin
       .from("designs")
       .select("id, trigger, steps, decision, action, human, name, hours_saved_per_month, tools, systems, updated_at")
