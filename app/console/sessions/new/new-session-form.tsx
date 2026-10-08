@@ -62,9 +62,16 @@ export function NewSessionForm({ decks, defaultDeck }: { decks: DeckOption[]; de
           <Field label="Bonus coins when the twist lands">
             <TextInput name="twist_bonus_tokens" type="number" min={0} max={5} defaultValue={1} />
           </Field>
+          <Field label="Coins a team can earn back" hint="For improving a slot after the coach asks about it.">
+            <TextInput name="earn_back_cap" type="number" min={0} max={10} defaultValue={3} />
+          </Field>
+          <Field label="Inline coach waits (minutes)" hint="Before asking about a slot that's still empty.">
+            <TextInput name="inline_idle_minutes" type="number" min={1} max={30} defaultValue={4} />
+          </Field>
         </div>
         <div className="space-y-3">
           <Toggle name="coach_enabled" label="AI coach" hint="Asks teams questions. Never gives the answer." />
+          <Toggle name="inline_coach" label="Inline coach" hint="Pops up beside a slot that's still empty after a few minutes, with one short question." />
           <Toggle name="twist_enabled" label="Twist" hint="Halfway through, something changes and teams adapt." />
           <Toggle name="before_after_check" label="Before-and-after check" hint="A 4-minute solo round at the start and end, to show what people learned." />
         </div>

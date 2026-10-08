@@ -39,7 +39,7 @@ export default async function RunSessionPage({ params }: PageProps<"/console/ses
     supabase.from("individual_checks").select("kind, submitted_at").eq("session_id", session.id),
   ]);
   const { data: messages } = teamIds.length
-    ? await supabase.from("coach_messages").select("id, team_id, role, type, slot, content, created_at").in("team_id", teamIds).order("created_at", { ascending: true }).limit(500)
+    ? await supabase.from("coach_messages").select("id, team_id, role, type, slot, content, created_at, trigger, token_earned_at").in("team_id", teamIds).order("created_at", { ascending: true }).limit(500)
     : { data: [] };
 
   const runTeams: RunTeam[] = (teams ?? []).map((t) => {
@@ -69,7 +69,7 @@ export default async function RunSessionPage({ params }: PageProps<"/console/ses
           }
         : null,
       filled: Object.fromEntries(CANVAS_SLOTS.map((s) => [s, Boolean(design?.[s]?.trim())])),
-      messages: (messages ?? []).filter((m) => m.team_id === t.id).map((m) => ({ id: m.id, role: m.role, type: m.type, slot: m.slot, content: m.content })),
+      messages: (messages ?? []).filter((m) => m.team_id === t.id).map((m) => ({ id: m.id, role: m.role, type: m.type, slot: m.slot, content: m.content, inline: m.trigger === "inline_idle", earned: Boolean(m.token_earned_at) })),
     };
   });
 

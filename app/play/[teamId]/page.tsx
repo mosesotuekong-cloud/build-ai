@@ -160,11 +160,12 @@ export default async function PlayPage({ params }: PageProps<"/play/[teamId]">) 
         teamName={data.team.name}
         timer={timer}
         coachEnabled={settings.coach_enabled}
+        inlineCoach={{ enabled: settings.coach_enabled && settings.inline_coach, idleMinutes: settings.inline_idle_minutes }}
         caseInfo={data.case}
         initialDesign={data.design}
         initialTokens={data.team.hint_tokens_remaining}
         platforms={data.session.target_platforms}
-        history={history.map((m) => ({ id: m.id, role: m.role, type: m.type, slot: m.slot, content: m.content }))}
+        history={history.map((m) => ({ id: m.id, role: m.role, type: m.type, slot: m.slot, content: m.content, trigger: m.trigger }))}
         initialFinished={finished}
         toolSuggestions={toolSuggestions}
         systemSuggestions={systemSuggestions}

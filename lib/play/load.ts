@@ -105,11 +105,13 @@ export async function loadPlayerTeam(teamId: string): Promise<PlayerTeam | null>
   };
 }
 
-export async function loadCoachHistory(teamId: string): Promise<(CoachHistoryItem & { id: string; type: string | null; slot: string | null; created_at: string })[]> {
+export async function loadCoachHistory(
+  teamId: string,
+): Promise<(CoachHistoryItem & { id: string; type: string | null; slot: string | null; created_at: string; trigger: string })[]> {
   const admin = createAdminClient();
   const { data } = await admin
     .from("coach_messages")
-    .select("id, role, type, slot, content, created_at")
+    .select("id, role, type, slot, content, created_at, trigger")
     .eq("team_id", teamId)
     .order("created_at", { ascending: true })
     .limit(200);

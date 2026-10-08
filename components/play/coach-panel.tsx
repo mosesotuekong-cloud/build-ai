@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { SPRINGS } from "@/components/game/springs";
 import { COACH_COSTS, type CoachRequest } from "@/lib/ai/schemas/coach";
 
-export type ChatMessage = { id: string; role: "team" | "coach"; type: string | null; slot: string | null; content: string };
+export type ChatMessage = { id: string; role: "team" | "coach"; type: string | null; slot: string | null; content: string; trigger?: string | null };
 
 const TYPE_LABEL: Record<string, string> = { question: "Question", nudge: "Nudge", analogy: "Analogy", flag: "Check" };
 const SLOT_LABEL: Record<string, string> = {
@@ -146,6 +146,9 @@ export function CoachPanel({
                       >
                         {TYPE_LABEL[m.type] ?? m.type}
                       </span>
+                    )}
+                    {m.trigger === "inline_idle" && (
+                      <span className="rounded-full bg-green-600 px-2 py-0.5 text-[11px] font-bold text-cream-50 uppercase">Beside your slot</span>
                     )}
                     {m.type && (
                       <span className="rounded-full bg-cream-200 px-2 py-0.5 text-[11px] font-bold text-ink-700 uppercase">

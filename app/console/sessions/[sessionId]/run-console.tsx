@@ -26,7 +26,7 @@ export type RunTeam = {
   design: CoachDesign | null;
   filled: Record<string, boolean>;
   scorecard: Scorecard | null;
-  messages: { id: string; role: "team" | "coach"; type: string | null; slot: string | null; content: string }[];
+  messages: { id: string; role: "team" | "coach"; type: string | null; slot: string | null; content: string; inline: boolean; earned: boolean }[];
 };
 
 export type RunIdea = {
@@ -208,7 +208,7 @@ export function RunConsole({
                     <p className="text-sm font-semibold text-green-700">{caseTitle(t.caseId) ?? "No case yet"}</p>
                     <SlotMeter filled={t.filled} size="sm" />
                     <p className="text-xs text-ink-500">
-                      {t.messages.filter((m) => m.role === "team").length} coach questions · {selected === t.id ? "Hide details" : "View design and coach chat"}
+                      {t.messages.filter((m) => m.role === "team").length} coach questions · {t.messages.filter((m) => m.earned).length} coins earned · {selected === t.id ? "Hide details" : "View design and coach chat"}
                     </p>
                   </button>
                   {canAssign && (
@@ -347,7 +347,8 @@ function TeamDetail({ team, caseTitle }: { team: RunTeam; caseTitle: string | nu
         {team.messages.length === 0 && <p className="text-sm text-ink-500">This team hasn&apos;t asked the coach anything yet.</p>}
         {team.messages.map((m) => (
           <div key={m.id} className={m.role === "team" ? "ml-6 rounded-2xl bg-green-600 px-3 py-2 text-sm text-cream-50" : "mr-6 rounded-2xl border border-cream-300 bg-white px-3 py-2 text-sm"}>
-            {m.role === "coach" && m.type && <span className="mr-1.5 text-[11px] font-bold text-amber-700 uppercase">{m.type}</span>}
+            {m.role === "coach" && m.type && <span className="mr-1.5 text-[11px] font-bold text-amber-700 uppercase">{m.inline ? "inline" : m.type}</span>}
+            {m.earned && <span className="mr-1.5 rounded-full bg-amber-400 px-1.5 text-[11px] font-bold text-ink-900">coin earned</span>}
             {m.content}
           </div>
         ))}

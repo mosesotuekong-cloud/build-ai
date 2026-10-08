@@ -13,6 +13,7 @@ import { TokenCoins } from "@/components/game/token-coins";
 import { PhaseTimer } from "@/components/session/phase-timer";
 import { useTeamDesignSync } from "@/components/play/use-team-design-sync";
 import { RaiseIdeaButton } from "@/components/play/raise-idea";
+import { InlineCoachBubble, useInlineCoach, type InlineMessage } from "@/components/play/inline-coach";
 import { Button } from "@/components/ui/button";
 import { ChipSelect } from "@/components/ui/chip-select";
 import { Wordmark } from "@/components/ui/wordmark";
@@ -30,6 +31,7 @@ export function PlayBoard({
   teamName,
   timer: phaseTimer,
   coachEnabled,
+  inlineCoach = { enabled: false, idleMinutes: 4 },
   caseInfo,
   initialDesign,
   initialTokens,
@@ -45,6 +47,7 @@ export function PlayBoard({
   teamName: string;
   timer: { startedAt: string | null; duration: number | null; serverNow: string };
   coachEnabled: boolean;
+  inlineCoach?: { enabled: boolean; idleMinutes: number };
   caseInfo: CoachCase;
   initialDesign: CoachDesign;
   initialTokens: number;
@@ -64,6 +67,9 @@ export function PlayBoard({
   const [coachOpen, setCoachOpen] = useState(false);
   const [coachDraft, setCoachDraft] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>(history);
+  const [dismissed, setDismissed] = useState<ReadonlySet<string>>(new Set());
+  const [coinToast, setCoinToast] = useState<string | null>(null);
+  const [serverOffsetMs] = useState(() => new Date(phaseTimer.serverNow).getTime() - Date.now());
   const [boardRef, shake] = useShake();
   const pending = useRef<Partial<CoachDesign>>({});
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -92,6 +98,11 @@ export function PlayBoard({
     setSaveState("saving");
     const result = await saveDesign(teamId, patch);
     setSaveState(result.ok ? "saved" : "error");
+    if (result.earned && typeof result.tokens === "number") {
+      setTokens(result.tokens);
+      setCoinToast(result.earned === 1 ? "You earned a coin back for acting on the coach's question." : `You earned ${result.earned} coins back for acting on the coach.`);
+      setTimeout(() => setCoinToast(null), 4000);
+    }
     setDirty((d) => new Set([...d].filter((k) => !(k in patch) || k in pending.current)));
   }, [teamId]);
 
@@ -117,6 +128,23 @@ export function PlayBoard({
   useTeamDesignSync(teamId, phase === "solving_after_twist" ? "after_twist" : "before_twist", onRemoteDesign);
 
   const filled = CANVAS_SLOTS.filter((s) => design[s].trim()).length;
+
+  // The proactive inline coach: one question beside a slot left empty too long.
+  const inlineMessages = messages.filter((m) => m.trigger === "inline_idle" && m.role === "coach");
+  const designPhase = phase === "solving" || phase === "solving_after_twist";
+  useInlineCoach({
+    teamId,
+    enabled: inlineCoach.enabled && designPhase && !finished,
+    design,
+    existing: inlineMessages,
+    startedAt: phaseTimer.startedAt,
+    serverOffsetMs,
+    idleMinutes: inlineCoach.idleMinutes,
+    onMessage: (m: InlineMessage) =>
+      setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, { id: m.id, role: "coach", type: m.type, slot: m.slot, content: m.content, trigger: "inline_idle" }])),
+  });
+  const bubbleFor = (slot: CanvasSlot) =>
+    designPhase && !design[slot].trim() ? (inlineMessages.find((m) => m.slot === slot && !dismissed.has(m.id)) ?? null) : null;
 
   const finish = () => {
     startFinish(async () => {
@@ -217,6 +245,17 @@ export function PlayBoard({
                       >
                         <SlotSocket slot={slot} value={design[slot]} compact active={editing === slot} />
                       </button>
+                      <InlineCoachBubble
+                        message={bubbleFor(slot)}
+                        onReply={() => {
+                          setCoachDraft(`About our ${slot === "human" ? "human in control" : slot} slot: `);
+                          setCoachOpen(true);
+                        }}
+                        onDismiss={() => {
+                          const m = bubbleFor(slot);
+                          if (m) setDismissed((d) => new Set([...d, m.id]));
+                        }}
+                      />
                     </Fragment>
                   ))}
                 </div>
@@ -248,6 +287,20 @@ export function PlayBoard({
       </div>
 
       {mode === "live" && <RaiseIdeaButton teamId={teamId} offsetForCoach={coachEnabled} />}
+
+      <AnimatePresence>
+        {coinToast && (
+          <motion.p
+            role="status"
+            className="fixed inset-x-4 top-20 z-50 mx-auto max-w-sm rounded-2xl border-2 border-amber-500 bg-amber-400 p-4 text-center font-semibold text-ink-900 shadow-lift"
+            initial={{ y: -30, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: -30, opacity: 0 }}
+          >
+            {coinToast}
+          </motion.p>
+        )}
+      </AnimatePresence>
 
       {/* Phone: the coach opens as a sheet. */}
       {!finished && coachEnabled && (

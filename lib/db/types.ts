@@ -396,6 +396,9 @@ isOneToOne: false
 "consume_session_credit":
 { Args: { "target_org": string }; Returns: number
                            },
+"earn_hint_token":
+{ Args: { "cap": number,"target_message": string,"target_team": string }; Returns: number
+                           },
 "has_org_role":
 { Args: { "target_org": string,"wanted": Database["public"]['Enums']["org_role"] }; Returns: boolean
                            },
