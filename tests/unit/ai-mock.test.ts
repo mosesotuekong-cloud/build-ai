@@ -9,6 +9,7 @@ import { judgeOutputSchema, referenceSolutionSchema } from "@/lib/ai/schemas/jud
 import { designCheckSchema, twistSchema } from "@/lib/ai/schemas/check";
 import { assessmentSchema } from "@/lib/ai/schemas/assessment";
 import { planSchema } from "@/lib/export/plan";
+import { reportProseSchema } from "@/lib/ai/schemas/report";
 import { generateCases } from "@/lib/ai/tasks/generate-cases";
 
 const provider = createMockProvider({ delayMs: 0 });
@@ -24,6 +25,7 @@ const fixtureSchemas: Record<string, z.ZodType> = {
   twist: twistSchema,
   assessment: assessmentSchema,
   blueprint: planSchema,
+  "opportunity-map": reportProseSchema,
 };
 
 describe("AI fixtures", () => {
@@ -65,7 +67,7 @@ describe("mock provider", () => {
   it("fails clearly when a task has no fixture", async () => {
     await expect(
       provider.generateObject({
-        task: "opportunity-map",
+        task: "nonexistent-task" as never,
         model: "opportunityMap",
         system: "",
         messages: [{ role: "user", content: "hi" }],

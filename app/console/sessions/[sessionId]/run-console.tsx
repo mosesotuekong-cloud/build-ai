@@ -176,8 +176,14 @@ export function RunConsole({
             {phase === "baseline_check" ? "warm-up" : "final"} round.
           </p>
         )}
-        {phase === "report" && (
-          <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-700">The opportunity map report arrives in a later milestone.</p>
+        {(phase === "report" || phase === "closed") && (
+          <a
+            href={`/console/sessions/${session.id}/report`}
+            className="flex items-center justify-between gap-3 rounded-xl border-2 border-green-600 bg-green-50 p-3 font-semibold text-green-700 hover:bg-green-100"
+          >
+            <span>Open the opportunity map: read it here or download it as a PDF.</span>
+            <span aria-hidden>→</span>
+          </a>
         )}
       </Card>
 

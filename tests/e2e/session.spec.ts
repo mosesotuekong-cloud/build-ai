@@ -183,6 +183,20 @@ test("facilitator runs a live session with two teams on phones", async ({ page, 
   await expect(presenter.getByText("Ask IT who owns the onboarding checklist")).toBeVisible();
   await expect(page.getByText(/Warm-up average \d+ → final round average \d+/)).toBeVisible({ timeout: 30_000 });
 
+  // The report: the opportunity map is written in the background, then opens
+  // in the console and downloads as a PDF.
+  await page.getByRole("button", { name: "Start: Report" }).click();
+  await page.getByRole("link", { name: /Open the opportunity map/ }).click();
+  await expect(page.getByRole("heading", { name: "Executive summary" })).toBeVisible({ timeout: 45_000 });
+  await expect(page.getByRole("heading", { name: "The portfolio" })).toBeVisible();
+  await expect(page.getByText("Ask IT who owns the onboarding checklist")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Before and after" })).toBeVisible();
+  const [pdf] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: "Download PDF" }).click()]);
+  expect(pdf.suggestedFilename()).toMatch(/-opportunity-map\.pdf$/);
+  const pdfBytes = Buffer.concat(await (await pdf.createReadStream()).toArray());
+  expect(pdfBytes.subarray(0, 5).toString()).toBe("%PDF-");
+  await page.getByRole("link", { name: "← Back to the session" }).click();
+
   // End the session: phones show the closing screen.
   page.once("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "End session" }).click();

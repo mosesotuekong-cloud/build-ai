@@ -19,11 +19,13 @@
     "env:local": "tsx scripts/write-env.ts",
     "ai:try": "tsx --conditions=react-server scripts/try-ai.ts",
     "ai:blueprint": "tsx --conditions=react-server scripts/try-blueprint.ts",
+    "ai:report": "tsx --conditions=react-server scripts/try-report.mts",
     "db:seed": "tsx scripts/seed-dev.ts",
     "preview": "next build && next start"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
+    "@react-pdf/renderer": "4.8",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
     "motion": "^14.0.0",

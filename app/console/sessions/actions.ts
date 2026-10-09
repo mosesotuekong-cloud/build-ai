@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { judgeSession, scoreChecks, writeReferenceSolutions } from "@/lib/judging/run";
 import { generateBlueprints } from "@/lib/export/run";
+import { generateReport } from "@/lib/report/run";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireFacilitator } from "@/lib/auth/facilitator";
@@ -94,6 +95,10 @@ export async function advanceSession(sessionId: string, to: string): Promise<{ o
     if (target === "judging") after(() => Promise.all([judgeSession(session.id), scoreChecks(session.id, "baseline")]));
     if (target === "reveal") after(() => Promise.all([writeReferenceSolutions(session.id), generateBlueprints(session.id)]));
     if (target === "commitments") after(() => scoreChecks(session.id, "post"));
+    // The opportunity map is written when the report phase starts, or at the
+    // close if the facilitator skipped straight to the end.
+    if (target === "report") after(() => generateReport(session.id));
+    if (target === "closed") after(() => ensureReport(session.id));
   }
   revalidatePath(`/console/sessions/${session.id}`);
   return result.ok ? { ok: true } : { ok: false, message: result.message };
@@ -161,4 +166,17 @@ export async function retryJudging(sessionId: string) {
   const session = await staffSession(sessionId);
   after(() => judgeSession(session.id, { onlyUnscored: true }));
   revalidatePath(`/console/sessions/${session.id}`);
+}
+
+async function ensureReport(sessionId: string) {
+  const { data } = await createAdminClient().from("reports").select("id").eq("session_id", sessionId).maybeSingle();
+  if (!data) await generateReport(sessionId);
+}
+
+// Writes the opportunity map again, for example after an override or late commitment.
+export async function regenerateReport(sessionId: string) {
+  const session = await staffSession(sessionId);
+  await createAdminClient().from("reports").upsert({ session_id: session.id, org_id: session.org_id, status: "pending" }, { onConflict: "session_id" });
+  after(() => generateReport(session.id));
+  revalidatePath(`/console/sessions/${session.id}/report`);
 }

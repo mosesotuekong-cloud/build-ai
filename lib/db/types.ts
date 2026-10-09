@@ -375,6 +375,50 @@ isOneToOne: true
       referencedColumns: ["id"]
     }
                   ]
+                },"report_exports": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"format": string,"id": string,"report_id": string,"storage_path": string | null
+                  }
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"format": string,"id"?: string,"report_id": string,"storage_path"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"format"?: string,"id"?: string,"report_id"?: string,"storage_path"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "report_exports_report_id_fkey"
+      columns: ["report_id"]
+isOneToOne: false
+      referencedRelation: "reports"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"reports": {
+                  Row: {
+                    "created_at": string,"generated_at": string | null,"id": string,"map": Json | null,"org_id": string,"prose": Json | null,"prose_source": string | null,"session_id": string,"status": string,"updated_at": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"generated_at"?: string | null,"id"?: string,"map"?: Json | null,"org_id": string,"prose"?: Json | null,"prose_source"?: string | null,"session_id": string,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"generated_at"?: string | null,"id"?: string,"map"?: Json | null,"org_id"?: string,"prose"?: Json | null,"prose_source"?: string | null,"session_id"?: string,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "reports_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "reports_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: true
+      referencedRelation: "sessions"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"scores": {
                   Row: {
                     "ai_summary": string,"assessment": Json | null,"breakdown": Json | null,"created_at": string,"design_version": Database["public"]['Enums']["design_version"],"facilitator_override": number | null,"final": number | null,"id": string,"status": string,"team_id": string,"total": number | null
