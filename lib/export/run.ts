@@ -1,5 +1,5 @@
 import "server-only";
-import { getAIProvider } from "@/lib/ai";
+import { aiForSession } from "@/lib/ai/for-org";
 import { writeBlueprint } from "@/lib/ai/tasks/blueprint";
 import type { CoachDesign } from "@/lib/coach/context";
 import { functionName } from "@/lib/decks/schemas";
@@ -32,7 +32,7 @@ export async function generateBlueprints(sessionId: string, { teamId }: { teamId
     .eq("session_id", sessionId);
   if (teamId) query = query.eq("id", teamId);
   const { data: teams } = await query;
-  const provider = getAIProvider();
+  const provider = await aiForSession(sessionId, teams?.length ?? 0, admin);
 
   await Promise.all(
     (teams ?? []).map(async (team) => {

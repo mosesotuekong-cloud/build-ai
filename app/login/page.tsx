@@ -11,7 +11,9 @@ export const metadata: Metadata = { title: "Sign in" };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { next, error } = await searchParams;
-  if (await getFacilitatorContext()) redirect(typeof next === "string" ? next : "/console");
+  // Demo visitors can sign in for real from here; everyone else signed in goes on.
+  const ctx = await getFacilitatorContext();
+  if (ctx && !ctx.isDemo) redirect(typeof next === "string" ? next : "/console");
 
   const isLocal = readServerEnv().NEXT_PUBLIC_SUPABASE_URL.includes("127.0.0.1");
 

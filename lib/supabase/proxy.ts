@@ -32,8 +32,9 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const needsFacilitator = PROTECTED_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
-  // Anonymous players never get into the console.
-  if (needsFacilitator && (!claims || claims.is_anonymous)) {
+  // Signed-out visitors go to sign in. Anonymous users pass through: the
+  // console itself (requireFacilitator) lets in demo visitors only.
+  if (needsFacilitator && !claims) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.search = `?next=${encodeURIComponent(path)}`;

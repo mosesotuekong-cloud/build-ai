@@ -1,5 +1,5 @@
 import "server-only";
-import { getAIProvider } from "@/lib/ai";
+import { aiForSession } from "@/lib/ai/for-org";
 import { writeTwist } from "@/lib/ai/tasks/check-and-twist";
 import { functionName } from "@/lib/decks/schemas";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -16,7 +16,7 @@ export async function generateTwistsForSession(admin: Admin, sessionId: string, 
     .eq("session_id", sessionId);
   if (!teams?.length) return;
 
-  const provider = getAIProvider();
+  const provider = await aiForSession(sessionId, teams.length, admin);
   await Promise.all(
     teams
       .filter((t) => !t.twists && t.cases)

@@ -3,7 +3,7 @@
 import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getAIProvider } from "@/lib/ai";
+import { aiForOrg } from "@/lib/ai/for-org";
 import { judgeDesign, writeReferenceSolution } from "@/lib/ai/tasks/judge-design";
 import { generateBlueprints } from "@/lib/export/run";
 import type { ScoredCriterion, ReferenceSolution } from "@/lib/ai/schemas/judge";
@@ -142,8 +142,9 @@ export async function finishPractice(teamId: string): Promise<FinishResult> {
   if (!data || !data.case || !data.caseId) return { ok: false, message: "We couldn't find your practice run." };
   if (data.session.mode !== "practice") return { ok: false, message: "Only practice runs can be finished this way." };
 
-  const provider = getAIProvider();
   const admin = createAdminClient();
+  // Scoring plus the model answer.
+  const provider = await aiForOrg(data.session.org_id, 2, admin);
 
   const scorePromise = judgeDesign(provider, { case: data.case, design: data.design })
     .then(async (result) => {

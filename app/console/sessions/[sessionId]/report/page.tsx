@@ -9,6 +9,7 @@ import { requireFacilitator } from "@/lib/auth/facilitator";
 import type { OpportunityMap } from "@/lib/report/map";
 import { createClient } from "@/lib/supabase/server";
 import { RegenerateButton } from "./regenerate-button";
+import { DEMO_REPORT_PREFIX } from "@/lib/demo/content";
 
 export const metadata: Metadata = { title: "Opportunity map" };
 
@@ -24,6 +25,8 @@ export default async function ReportPage({ params }: PageProps<"/console/session
 
   const prose = reportProseSchema.safeParse(report?.prose);
   const ready = report?.status === "done" && report.map && prose.success;
+  // The demo's sample report has no session data behind it, so it can't be rewritten.
+  const isSample = session.name.startsWith(DEMO_REPORT_PREFIX);
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-8">
@@ -34,7 +37,7 @@ export default async function ReportPage({ params }: PageProps<"/console/session
         </Link>
         {ready && (
           <div className="flex flex-wrap items-center gap-2">
-            <RegenerateButton sessionId={session.id} />
+            {!isSample && <RegenerateButton sessionId={session.id} />}
             <a href={`/api/report/${session.id}/pdf`} className={buttonClasses("primary")} download>
               Download PDF
             </a>

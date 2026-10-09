@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { getAIProvider } from "@/lib/ai";
+import { aiForOrg } from "@/lib/ai/for-org";
 import { runDesignCheck } from "@/lib/ai/tasks/check-and-twist";
 import { loadPlayerTeam } from "@/lib/play/load";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -30,7 +30,7 @@ export async function checkDesign(teamId: string): Promise<DesignCheckResult> {
 
   let result: Awaited<ReturnType<typeof runDesignCheck>>;
   try {
-    result = await runDesignCheck(getAIProvider(), {
+    result = await runDesignCheck(await aiForOrg(data.session.org_id, 1, admin), {
       case: data.case,
       design: data.design,
       phase: data.session.phase,

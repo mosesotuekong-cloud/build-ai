@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { requireFacilitator } from "@/lib/auth/facilitator";
 import { getMockStatus } from "@/lib/config/env";
@@ -11,6 +12,7 @@ const PROVIDER_LABEL = { anthropic: "Anthropic", openai: "OpenAI", mock: "Mock (
 
 export default async function ConsoleHome() {
   const ctx = await requireFacilitator();
+  if (ctx.isDemo) redirect("/console/demo");
   const org = ctx.activeOrg;
   const supabase = await createClient();
   const { count: deckCount } = org

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getAIProvider } from "@/lib/ai";
+import { aiForOrg } from "@/lib/ai/for-org";
 import { COACH_COSTS, coachRequestSchema } from "@/lib/ai/schemas/coach";
 import { runCoachTurn } from "@/lib/coach/engine";
 import { loadCoachHistory, loadPlayerTeam } from "@/lib/play/load";
@@ -53,8 +53,9 @@ export async function POST(request: Request) {
   const askedText = message.trim() || (kind === "question" ? "Can you give us a question to think about?" : kind === "nudge" ? "We'd like a nudge." : "We'd like an analogy.");
   await admin.from("coach_messages").insert({ team_id: teamId, role: "team", content: askedText, player_id: data.playerId, trigger: "asked" });
 
+  // A coach turn is the reply plus its leak check.
   const result = await runCoachTurn(
-    getAIProvider(),
+    await aiForOrg(data.session.org_id, 2, admin),
     { case: data.case, design: data.design, phase: data.session.phase, twist: data.twist?.content ?? null, platforms: data.session.target_platforms, history },
     kind,
     askedText,

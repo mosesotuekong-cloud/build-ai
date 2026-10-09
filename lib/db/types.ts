@@ -154,6 +154,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"demo_ai_days": {
+                  Row: {
+                    "day": string,"units": number
+                  }
+                  Insert: {
+                    "day": string,"units"?: number
+                  }
+                  Update: {
+                    "day"?: string,"units"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"demo_starts": {
+                  Row: {
+                    "created_at": string,"id": string,"ip_hash": string,"org_id": string | null
+                  }
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"ip_hash": string,"org_id"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"ip_hash"?: string,"org_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "demo_starts_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"design_checks": {
                   Row: {
                     "created_at": string,"design_version": Database["public"]['Enums']["design_version"],"flags": NonNullable<Json>,"id": string,"source": string,"team_id": string
@@ -307,13 +339,13 @@ isOneToOne: false
                   ]
                 },"organizations": {
                   Row: {
-                    "ai_stack": (string)[],"created_at": string,"id": string,"is_active": boolean,"name": string,"session_credits": number,"slug": string,"updated_at": string
+                    "ai_stack": (string)[],"created_at": string,"demo_ai_units": number,"demo_expires_at": string | null,"id": string,"is_active": boolean,"is_demo": boolean,"name": string,"session_credits": number,"slug": string,"updated_at": string
                   }
                   Insert: {
-                    "ai_stack"?: (string)[],"created_at"?: string,"id"?: string,"is_active"?: boolean,"name": string,"session_credits"?: number,"slug": string,"updated_at"?: string
+                    "ai_stack"?: (string)[],"created_at"?: string,"demo_ai_units"?: number,"demo_expires_at"?: string | null,"id"?: string,"is_active"?: boolean,"is_demo"?: boolean,"name": string,"session_credits"?: number,"slug": string,"updated_at"?: string
                   }
                   Update: {
-                    "ai_stack"?: (string)[],"created_at"?: string,"id"?: string,"is_active"?: boolean,"name"?: string,"session_credits"?: number,"slug"?: string,"updated_at"?: string
+                    "ai_stack"?: (string)[],"created_at"?: string,"demo_ai_units"?: number,"demo_expires_at"?: string | null,"id"?: string,"is_active"?: boolean,"is_demo"?: boolean,"name"?: string,"session_credits"?: number,"slug"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -561,11 +593,17 @@ isOneToOne: true
 "is_team_staff":
 { Args: { "target_team": string }; Returns: boolean
                            },
+"purge_expired_demos":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
 "set_org_ai_stack":
 { Args: { "stack": (string)[],"target_org": string }; Returns: undefined
                            },
 "snapshot_designs_for_twist":
 { Args: { "target_session": string }; Returns: undefined
+                           },
+"spend_demo_ai":
+{ Args: { "amount": number,"daily_limit": number,"target_org": string }; Returns: boolean
                            },
 "spend_hint_tokens":
 { Args: { "amount": number,"target_team": string }; Returns: number

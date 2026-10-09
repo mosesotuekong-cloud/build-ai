@@ -1,5 +1,5 @@
 import "server-only";
-import { getAIProvider } from "@/lib/ai";
+import { aiForSession } from "@/lib/ai/for-org";
 import { assessUseCase, checkScoreFrom, judgeDesign, writeReferenceSolution } from "@/lib/ai/tasks/judge-design";
 import { getCheckCard } from "@/lib/checks/cards";
 import type { CoachCase, CoachDesign } from "@/lib/coach/context";
@@ -39,7 +39,8 @@ export async function judgeSession(sessionId: string, { onlyUnscored = false } =
     .select("id, cases (title, story, cost, who_feels_it, function_slug), designs (*), twists (content), scores (status)")
     .eq("session_id", sessionId);
   if (!teams?.length) return;
-  const provider = getAIProvider();
+  // A score and an assessment per team.
+  const provider = await aiForSession(sessionId, teams.length * 2, admin);
 
   await Promise.all(
     teams
@@ -95,7 +96,7 @@ export async function writeReferenceSolutions(sessionId: string, admin: Admin = 
 
   const { data: cached } = await admin.from("reference_solutions").select("case_id").in("case_id", [...cases.keys()]);
   const done = new Set((cached ?? []).map((r) => r.case_id));
-  const provider = getAIProvider();
+  const provider = await aiForSession(sessionId, cases.size - done.size, admin);
 
   await Promise.all(
     [...cases.values()]
@@ -125,7 +126,7 @@ export async function scoreChecks(sessionId: string, kind: "baseline" | "post", 
     .eq("session_id", sessionId)
     .eq("kind", kind)
     .is("total", null);
-  const provider = getAIProvider();
+  const provider = await aiForSession(sessionId, checks?.length ?? 0, admin);
 
   await Promise.all(
     (checks ?? [])

@@ -18,7 +18,7 @@ Local URLs: Studio http://localhost:54323, test inbox (magic links) http://local
 ## Rules of thumb
 
 - Schema changes go only in new files in `supabase/migrations/`. Every table has RLS enabled.
-- All AI calls go through `getAIProvider()` in `lib/ai/`. Validate every response with zod. Prompts live in `lib/ai/prompts/`, one file per prompt.
+- All AI calls go through `lib/ai/`. Work done for an organisation or session uses `aiForOrg()` / `aiForSession()` (`lib/ai/for-org.ts`), which caps demo sandboxes; use `getAIProvider()` directly only for work that belongs to no organisation. Validate every response with zod. Prompts live in `lib/ai/prompts/`, one file per prompt.
 - All n8n calls go through `lib/n8n/client.ts`.
 - Exports: the neutral plan (`lib/export/plan.ts`) is the source of truth. The AI only writes plans; compilers behind `WorkflowCompiler` turn them into files. n8n templates in `lib/export/n8n/templates/` come from real node definitions; never guess a node type, typeVersion or parameter shape. Credentials stay empty.
 - `lib/supabase/admin.ts` (service role) is server-only. Never import it from client components.

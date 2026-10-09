@@ -30,7 +30,10 @@ export default function Home() {
             a ranked list of what to automate first.
           </p>
           <div className="flex flex-wrap items-end gap-6">
-            <Link href="/login" className={buttonClasses("primary", "px-7 py-4 text-lg")}>
+            <Link href="/demo" className={buttonClasses("primary", "px-7 py-4 text-lg")}>
+              Try the demo
+            </Link>
+            <Link href="/login" className={buttonClasses("secondary", "px-7 py-4 text-lg")}>
               Run a session
             </Link>
             <div className="w-full max-w-xs space-y-1.5">

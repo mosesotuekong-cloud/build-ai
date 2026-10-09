@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getAIProvider } from "@/lib/ai";
+import { aiForOrg } from "@/lib/ai/for-org";
 import { CANVAS_SLOTS, SLOT_LABELS } from "@/lib/ai/schemas/canvas";
 import { runCoachTurn } from "@/lib/coach/engine";
 import { loadCoachHistory, loadPlayerTeam } from "@/lib/play/load";
@@ -36,8 +36,9 @@ export async function POST(request: Request) {
   if (found.data) return Response.json({ message: found.data });
 
   const history = await loadCoachHistory(teamId);
+  // A coach turn is the reply plus its leak check.
   const result = await runCoachTurn(
-    getAIProvider(),
+    await aiForOrg(data.session.org_id, 2, admin),
     { case: data.case, design: data.design, phase: data.session.phase, twist: data.twist?.content ?? null, platforms: data.session.target_platforms, history },
     "question",
     `(No message from the team. The ${SLOT_LABELS[slot].title} slot is still empty after a few minutes. Ask one short, friendly question, under 25 words, that helps them make a start on the ${SLOT_LABELS[slot].title} slot. Do not suggest an answer.)`,

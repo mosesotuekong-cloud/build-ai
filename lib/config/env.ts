@@ -22,6 +22,13 @@ const serverEnvSchema = z.object({
   AI_MOCK_DELAY_MS: z.coerce.number().int().min(0).default(600),
   // auto: Anthropic, then OpenAI, then mock. Set to mock to save credit while clicking around.
   AI_PROVIDER: z.enum(["auto", "anthropic", "openai", "mock"]).default("auto"),
+  // The no-sign-in demo. Units are roughly one AI call each.
+  DEMO_ENABLED: z.enum(["true", "false"]).default("true").transform((v) => v === "true"),
+  DEMO_AI_UNITS: z.coerce.number().int().min(0).default(40),
+  DEMO_DAILY_AI_UNITS: z.coerce.number().int().min(0).default(600),
+  DEMO_STARTS_PER_IP_PER_DAY: z.coerce.number().int().min(1).default(5),
+  // Salt for hashing visitor IP addresses. Falls back to the service role key.
+  DEMO_IP_SALT: optionalString,
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

@@ -9,11 +9,24 @@ export default async function ConsoleLayout({ children }: LayoutProps<"/console"
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <MockBanner status={getMockStatus()} />
+      {ctx.isDemo ? (
+        <div className="bg-amber-400 px-4 py-2 text-center text-sm font-semibold text-ink-900">
+          You&apos;re in a demo sandbox. It&apos;s private and disappears within a day.{" "}
+          <Link href="/console/demo" className="underline">
+            Back to the tour
+          </Link>{" "}
+          ·{" "}
+          <Link href="/login" className="underline">
+            Sign up to run it with your team
+          </Link>
+        </div>
+      ) : (
+        <MockBanner status={getMockStatus()} />
+      )}
       <header className="border-b border-cream-200 bg-cream-100/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
           <div className="flex items-center gap-4">
-            <Link href="/console">
+            <Link href={ctx.isDemo ? "/console/demo" : "/console"}>
               <Wordmark size="sm" />
             </Link>
             {ctx.activeOrg && (

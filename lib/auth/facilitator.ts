@@ -13,6 +13,8 @@ export type Membership = {
   sessionCredits: number;
   aiStack: string[];
   role: "admin" | "facilitator";
+  isDemo: boolean;
+  demoExpiresAt: string | null;
 };
 
 export type FacilitatorContext = {
@@ -20,20 +22,23 @@ export type FacilitatorContext = {
   email: string;
   isPlatformAdmin: boolean;
   memberships: Membership[];
+  // An anonymous visitor in a demo sandbox (see app/demo).
+  isDemo: boolean;
 };
 
 // Loads the signed-in facilitator, their orgs and admin status. Returns null
-// for signed-out visitors and anonymous players. Cached per request.
+// for signed-out visitors and anonymous players. An anonymous visitor counts
+// as a facilitator only inside their own demo sandbox. Cached per request.
 export const getFacilitatorContext = cache(async (): Promise<FacilitatorContext | null> => {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
-  if (!user || user.is_anonymous || !user.email) return null;
+  if (!user || (!user.is_anonymous && !user.email)) return null;
 
   const [{ data: rows }, { data: adminRow }] = await Promise.all([
     supabase
       .from("org_members")
-      .select("role, organizations (id, name, slug, is_active, session_credits, ai_stack)")
+      .select("role, organizations (id, name, slug, is_active, session_credits, ai_stack, is_demo, demo_expires_at)")
       .eq("user_id", user.id),
     supabase.from("platform_admins").select("user_id").eq("user_id", user.id).maybeSingle(),
   ]);
@@ -50,11 +55,20 @@ export const getFacilitatorContext = cache(async (): Promise<FacilitatorContext 
         sessionCredits: org.session_credits,
         aiStack: org.ai_stack,
         role: row.role,
+        isDemo: org.is_demo,
+        demoExpiresAt: org.demo_expires_at,
       },
     ];
   });
 
-  return { userId: user.id, email: user.email, isPlatformAdmin: Boolean(adminRow), memberships };
+  if (user.is_anonymous) {
+    // Anonymous players (in real sessions) never get console access; demo
+    // visitors only see live, unexpired sandboxes.
+    const sandboxes = memberships.filter((m) => m.isDemo && m.demoExpiresAt && new Date(m.demoExpiresAt) > new Date());
+    if (!sandboxes.length) return null;
+    return { userId: user.id, email: "Demo visitor", isPlatformAdmin: false, memberships: sandboxes, isDemo: true };
+  }
+  return { userId: user.id, email: user.email!, isPlatformAdmin: Boolean(adminRow), memberships: memberships.filter((m) => !m.isDemo), isDemo: false };
 });
 
 // For pages inside /console. Signed-out visitors go to login; people without

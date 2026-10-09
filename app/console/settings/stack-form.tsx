@@ -29,8 +29,8 @@ export function StackForm({ orgId, initial, canEdit }: { orgId: string; initial:
           >
             {pending ? "Saving…" : "Save stack"}
           </Button>
-          <span className="text-sm text-ink-500" role="status">
-            {message ?? `${selected.length} selected`}
+          <span className={`text-sm ${dirty && !message ? "font-semibold text-amber-700" : "text-ink-500"}`} role="status">
+            {message ?? (dirty ? `${selected.length} selected. Not saved yet: press Save stack.` : `${selected.length} selected`)}
           </span>
         </div>
       ) : (

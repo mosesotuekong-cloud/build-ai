@@ -13,5 +13,5 @@ export async function saveAiStack(orgId: string, slugs: string[]): Promise<{ ok:
   const { error } = await supabase.rpc("set_org_ai_stack", { target_org: z.uuid().parse(orgId), stack: cleanPlatformSlugs(slugs) });
   if (error) return { ok: false, message: "Only organisation admins can change the stack." };
   revalidatePath("/console", "layout");
-  return { ok: true, message: "Saved." };
+  return { ok: true, message: "Saved. New decks and sessions use this stack. Existing decks keep theirs: change a deck's stack on its page." };
 }

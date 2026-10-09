@@ -1,5 +1,5 @@
 import "server-only";
-import { getAIProvider } from "@/lib/ai";
+import { aiForSession } from "@/lib/ai/for-org";
 import type { Assessment } from "@/lib/ai/schemas/assessment";
 import type { CheckKind } from "@/lib/ai/schemas/check";
 import type { ScoredCriterion } from "@/lib/ai/schemas/judge";
@@ -100,7 +100,7 @@ export async function generateReport(sessionId: string, admin: Admin = createAdm
   await admin.from("reports").upsert({ session_id: sessionId, org_id: input.orgId, status: "pending" }, { onConflict: "session_id" });
   try {
     const map = buildOpportunityMap(input);
-    const { prose, source } = await writeReportProse(getAIProvider(), map);
+    const { prose, source } = await writeReportProse(await aiForSession(sessionId, 1, admin), map);
     await admin
       .from("reports")
       .update({ status: "done", map, prose, prose_source: source, generated_at: new Date().toISOString() })

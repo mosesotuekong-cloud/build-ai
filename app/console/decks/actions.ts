@@ -58,6 +58,7 @@ export async function createDeck(_prev: FormState, formData: FormData): Promise<
 
   const { ctx, org, supabase } = await context();
   const { function_slugs, mode, ...details } = parsed.data;
+  if (mode === "generate" && org.isDemo) return { status: "error", message: "Writing new cases with AI is switched off in the demo. Choose \"Start empty and write my own\", or sign up to try it." };
   const { data: deck, error } = await supabase
     .from("decks")
     .insert({ ...details, function_slugs, org_id: org.orgId, created_by: ctx.userId })
@@ -143,7 +144,7 @@ export async function addFunctions(deckId: string, slugs: string[], generate: bo
   await supabase.from("decks").update({ function_slugs: merged }).eq("id", deck.id);
 
   let query = "";
-  if (generate) {
+  if (generate && !org.isDemo) {
     const results = await generateCasesForDeck(supabase, getN8nClient(), { ...deck, org_id: org.orgId }, valid, ctx.userId);
     query = failedQuery(results);
   }
@@ -160,6 +161,7 @@ export async function dealMoreCases(deckId: string, slug: string): Promise<{ ok:
     .eq("id", idSchema.parse(deckId))
     .single();
   if (!deck) return { ok: false, message: "Deck not found." };
+  if (org.isDemo) return { ok: false, message: "Writing new cases with AI is switched off in the demo. Sign up to try it." };
   const [result] = await generateCasesForDeck(supabase, getN8nClient(), { ...deck, org_id: org.orgId }, [functionSlugSchema.parse(slug)], ctx.userId);
   revalidatePath(`/console/decks/${deckId}`);
   return result.ok ? { ok: true } : { ok: false, message: result.message };

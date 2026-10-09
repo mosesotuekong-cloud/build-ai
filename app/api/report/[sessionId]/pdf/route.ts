@@ -26,11 +26,15 @@ export async function GET(_request: Request, ctx: RouteContext<"/api/report/[ses
   const pdf = await renderReportPdf(map, prose.data);
   const name = `${fileSlug(map.session.name)}-opportunity-map.pdf`;
 
+  // Demo sandboxes don't keep files; real organisations keep every export.
   const admin = createAdminClient();
-  const path = `${report.org_id}/${sessionId}/${Date.now()}-${name}`;
-  const { error } = await admin.storage.from("reports").upload(path, pdf, { contentType: "application/pdf" });
-  if (error) console.error("Storing the PDF failed:", error.message);
-  await admin.from("report_exports").insert({ report_id: report.id, format: "pdf", storage_path: error ? null : path, created_by: auth.user.id });
+  const { data: org } = await admin.from("organizations").select("is_demo").eq("id", report.org_id).single();
+  if (!org?.is_demo) {
+    const path = `${report.org_id}/${sessionId}/${Date.now()}-${name}`;
+    const { error } = await admin.storage.from("reports").upload(path, pdf, { contentType: "application/pdf" });
+    if (error) console.error("Storing the PDF failed:", error.message);
+    await admin.from("report_exports").insert({ report_id: report.id, format: "pdf", storage_path: error ? null : path, created_by: auth.user.id });
+  }
 
   return new Response(new Uint8Array(pdf), {
     headers: { "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename="${name}"`, "Cache-Control": "private, no-store" },
