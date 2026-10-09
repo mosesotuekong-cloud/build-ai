@@ -242,6 +242,7 @@ export function PlayBoard({
             {finished ? (
               <motion.div key="results" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                 <Results
+                  teamId={teamId}
                   design={design}
                   score={finished.score}
                   reference={finished.reference}

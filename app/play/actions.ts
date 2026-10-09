@@ -1,9 +1,11 @@
 "use server";
 
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getAIProvider } from "@/lib/ai";
 import { judgeDesign, writeReferenceSolution } from "@/lib/ai/tasks/judge-design";
+import { generateBlueprints } from "@/lib/export/run";
 import type { ScoredCriterion, ReferenceSolution } from "@/lib/ai/schemas/judge";
 import { requireFacilitator } from "@/lib/auth/facilitator";
 import { designPatchSchema, type DesignPatch } from "@/lib/play/design";
@@ -170,6 +172,11 @@ export async function finishPractice(teamId: string): Promise<FinishResult> {
 
   const [score, reference] = await Promise.all([scorePromise, referencePromise]);
   await transitionSession(data.session.id, "reveal", admin);
+  // The take-home files are written after the response. A blueprint from an
+  // earlier version of the design is marked pending first, so it's never
+  // downloaded by mistake.
+  await admin.from("blueprints").update({ status: "pending" }).eq("team_id", data.team.id).neq("design_updated_at", data.design.updated_at);
+  after(() => generateBlueprints(data.session.id, { teamId: data.team.id }));
   return { ok: true, score, reference };
 }
 

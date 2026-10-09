@@ -153,6 +153,16 @@ test("facilitator runs a live session with two teams on phones", async ({ page, 
   await expect(ada.getByRole("heading", { name: "One strong answer" })).toBeVisible();
   await expect(ada.getByText(/Model answer · Trigger/)).toBeVisible({ timeout: 30_000 });
 
+  // Take-home files: the starter n8n workflow downloads as importable JSON.
+  const starter = ada.getByRole("link", { name: /Starter n8n workflow/ });
+  await expect(starter).toBeVisible({ timeout: 30_000 });
+  await expect(ada.getByText(/This is a starter workflow, not a finished build/)).toBeVisible();
+  const [download] = await Promise.all([ada.waitForEvent("download"), starter.click()]);
+  expect(download.suggestedFilename()).toMatch(/-n8n-starter\.json$/);
+  const workflow = JSON.parse(await (await download.createReadStream()).toArray().then((c) => Buffer.concat(c).toString("utf8")));
+  expect(workflow.nodes.length).toBeGreaterThan(3);
+  expect(Object.keys(workflow.connections).length).toBeGreaterThan(2);
+
   // The final round uses the other card of Ada's matched pair.
   await page.getByRole("button", { name: "Start: Final round" }).click();
   await expect(ada.getByText(/Final round · just you/i)).toBeVisible();

@@ -11,6 +11,7 @@ import { Results } from "./results";
 // The reveal on a team's phone: their score, any awards they won, the model
 // answer beside their design, and how to build it on their stack.
 export function RevealView({
+  teamId,
   teamName,
   design,
   score,
@@ -20,6 +21,7 @@ export function RevealView({
   awards,
   overridden,
 }: {
+  teamId: string;
   teamName: string;
   design: CoachDesign;
   score: { total: number; breakdown: ScoredCriterion[]; summary: string } | null;
@@ -59,7 +61,7 @@ export function RevealView({
           Your score is on its way…
         </p>
       ) : (
-        <Results design={design} score={score} reference={reference} platforms={platforms} />
+        <Results teamId={teamId} design={design} score={score} reference={reference} platforms={platforms} />
       )}
       {overridden && <p className="text-center text-sm text-ink-500">Your facilitator adjusted your final score.</p>}
     </main>

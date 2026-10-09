@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { judgeSession, scoreChecks, writeReferenceSolutions } from "@/lib/judging/run";
+import { generateBlueprints } from "@/lib/export/run";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireFacilitator } from "@/lib/auth/facilitator";
@@ -91,7 +92,7 @@ export async function advanceSession(sessionId: string, to: string): Promise<{ o
   // screens update live as results land.
   if (result.ok) {
     if (target === "judging") after(() => Promise.all([judgeSession(session.id), scoreChecks(session.id, "baseline")]));
-    if (target === "reveal") after(() => writeReferenceSolutions(session.id));
+    if (target === "reveal") after(() => Promise.all([writeReferenceSolutions(session.id), generateBlueprints(session.id)]));
     if (target === "commitments") after(() => scoreChecks(session.id, "post"));
   }
   revalidatePath(`/console/sessions/${session.id}`);

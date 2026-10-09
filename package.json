@@ -18,6 +18,7 @@
     "db:types": "supabase gen types typescript --local > lib/db/types.tmp.ts && node -e \"require('fs').renameSync('lib/db/types.tmp.ts','lib/db/types.ts')\" || (rm -f lib/db/types.tmp.ts && exit 1)",
     "env:local": "tsx scripts/write-env.ts",
     "ai:try": "tsx --conditions=react-server scripts/try-ai.ts",
+    "ai:blueprint": "tsx --conditions=react-server scripts/try-blueprint.ts",
     "db:seed": "tsx scripts/seed-dev.ts",
     "preview": "next build && next start"
   },

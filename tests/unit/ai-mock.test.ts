@@ -8,6 +8,7 @@ import { coachReplySchema, leakCheckSchema } from "@/lib/ai/schemas/coach";
 import { judgeOutputSchema, referenceSolutionSchema } from "@/lib/ai/schemas/judge";
 import { designCheckSchema, twistSchema } from "@/lib/ai/schemas/check";
 import { assessmentSchema } from "@/lib/ai/schemas/assessment";
+import { planSchema } from "@/lib/export/plan";
 import { generateCases } from "@/lib/ai/tasks/generate-cases";
 
 const provider = createMockProvider({ delayMs: 0 });
@@ -22,6 +23,7 @@ const fixtureSchemas: Record<string, z.ZodType> = {
   "design-check": designCheckSchema,
   twist: twistSchema,
   assessment: assessmentSchema,
+  blueprint: planSchema,
 };
 
 describe("AI fixtures", () => {
@@ -63,8 +65,8 @@ describe("mock provider", () => {
   it("fails clearly when a task has no fixture", async () => {
     await expect(
       provider.generateObject({
-        task: "blueprint",
-        model: "blueprint",
+        task: "opportunity-map",
+        model: "opportunityMap",
         system: "",
         messages: [{ role: "user", content: "hi" }],
         schema: z.object({}),

@@ -23,7 +23,32 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "cases": {
+            "blueprints": {
+                  Row: {
+                    "created_at": string,"design_updated_at": string,"design_version": Database["public"]['Enums']["design_version"],"id": string,"plan": Json | null,"session_id": string,"source": string | null,"status": string,"team_id": string,"updated_at": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"design_updated_at": string,"design_version": Database["public"]['Enums']["design_version"],"id"?: string,"plan"?: Json | null,"session_id": string,"source"?: string | null,"status"?: string,"team_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"design_updated_at"?: string,"design_version"?: Database["public"]['Enums']["design_version"],"id"?: string,"plan"?: Json | null,"session_id"?: string,"source"?: string | null,"status"?: string,"team_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "blueprints_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "sessions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "blueprints_team_id_fkey"
+      columns: ["team_id"]
+isOneToOne: true
+      referencedRelation: "teams"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"cases": {
                   Row: {
                     "cost": string,"created_at": string,"deck_id": string,"function_slug": string,"id": string,"position": number,"session_id": string | null,"source": Database["public"]['Enums']["case_source"],"story": string,"title": string,"updated_at": string,"who_feels_it": string
                   }

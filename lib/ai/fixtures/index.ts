@@ -4,6 +4,7 @@ import type { JudgeOutput, ReferenceSolution } from "../schemas/judge";
 import type { DesignCheck, Twist } from "../schemas/check";
 import type { Assessment } from "../schemas/assessment";
 import { caseFixtures } from "./cases";
+import { leaveRequestPlan } from "@/lib/export/fixtures";
 
 // Fixtures for the mock provider. Each task maps fixture keys to a value;
 // "default" is used when the request has no fixtureKey or no exact match.
@@ -83,6 +84,7 @@ export const objectFixtures: Partial<Record<AITask, Record<string, unknown>>> = 
   "design-check": { default: designCheck },
   twist: { default: twist },
   assessment: { default: assessment },
+  blueprint: { default: leaveRequestPlan },
 };
 
 export const textFixtures: Partial<Record<AITask, Record<string, string>>> = {

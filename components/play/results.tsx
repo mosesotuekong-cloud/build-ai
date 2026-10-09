@@ -10,16 +10,19 @@ import { CANVAS_SLOTS, SLOT_LABELS } from "@/lib/ai/schemas/canvas";
 import type { ReferenceSolution, ScoredCriterion } from "@/lib/ai/schemas/judge";
 import type { CoachDesign } from "@/lib/coach/context";
 import { getPlatform, type Platform } from "@/lib/config/platforms";
+import { BlueprintDownloads } from "./blueprint-downloads";
 
-// The end of a practice run: score, model answer, and build guides for the
-// organisation's stack.
+// The end of a run (practice or the live reveal): score, model answer, build
+// guides for the organisation's stack, and the take-home files.
 export function Results({
+  teamId,
   design,
   score,
   reference,
   platforms,
   onKeepGoing,
 }: {
+  teamId?: string;
   design: CoachDesign;
   score: { total: number; breakdown: ScoredCriterion[]; summary: string } | null;
   reference: ReferenceSolution | null;
@@ -130,6 +133,8 @@ export function Results({
         <BuildGuides design={design} stack={stack} />
       </section>
 
+      {teamId && <BlueprintDownloads teamId={teamId} stack={stack} />}
+
       {onKeepGoing && (
         <div className="flex flex-wrap gap-3">
           <Button
@@ -200,7 +205,7 @@ function BuildGuides({ design, stack }: { design: CoachDesign; stack: Platform[]
         </ol>
         <p className="text-ink-500 text-xs">
           {platform.export === "compiler"
-            ? "A starter workflow file for this platform comes with the full export (coming soon)."
+            ? "Download the starter workflow for this platform under Take it home."
             : "This is a build guide, not a finished build. Check product names and features with your platform team."}
         </p>
       </div>

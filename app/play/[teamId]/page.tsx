@@ -110,6 +110,7 @@ export default async function PlayPage({ params }: PageProps<"/play/[teamId]">) 
         {refresher}
         <RefreshWhile waiting={!finished || !reference} />
         <RevealView
+          teamId={teamId}
           teamName={data.team.name}
           design={data.design}
           score={finished ? { total: mine.final, breakdown: mine.breakdown, summary: mine.summary } : null}
