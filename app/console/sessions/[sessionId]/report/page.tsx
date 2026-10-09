@@ -30,7 +30,8 @@ export default async function ReportPage({ params }: PageProps<"/console/session
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-8">
-      <RefreshWhile waiting={report?.status === "pending"} everyMs={3000} />
+      {/* Also wait when the report phase has just started and the report row doesn't exist yet. */}
+      <RefreshWhile waiting={report?.status === "pending" || (!report && session.phase === "report")} everyMs={3000} />
       <nav className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <Link href={`/console/sessions/${session.id}`} className="font-semibold text-green-700 hover:underline">
           ← Back to the session
@@ -54,7 +55,7 @@ export default async function ReportPage({ params }: PageProps<"/console/session
             the words.
           </p>
         </>
-      ) : report?.status === "pending" ? (
+      ) : report?.status === "pending" || (!report && session.phase === "report") ? (
         <p className="rounded-2xl bg-cream-200/60 p-6 text-center text-lg text-ink-700" role="status">
           Writing your opportunity map… this takes about a minute.
         </p>
