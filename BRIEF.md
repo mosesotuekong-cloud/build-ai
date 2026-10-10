@@ -8,6 +8,7 @@ The product name lives in a single config constant (`lib/config/app.ts`) so it c
 
 Newest first. Add a line whenever Moses confirms a change.
 
+- 2026-10-10: Simplified around one four-step method, each step built on a recognised framework: **Fix** (Lean ECRS: what would we stop, merge or simplify before automating?), **Design** (the five slots, framed on the AI Canvas by Agrawal, Gans and Goldfarb), **Control** (human in the loop, on the loop or out of the loop, matched to risk) and **Rank** (value × readiness × risk into the four portfolio buckets). Changes: a new 3-minute "Fix it first" phase after the lobby; the human slot becomes "Control", a 3-way choice plus who and what they see; teams adapt during the twist itself (no separate adapt phase); judging runs in the background while teams rank (no judging phase); the scorecard becomes three taps (value, readiness, risk) and the AI fills in the kind of AI and platform fit. Cut: the separate paid design check (the coach covers it), coin earn-back, and three awards instead of six. The before-and-after check stays but is off by default. Flow: lobby → warm-up (optional) → fix → design → twist (optional) → rank → reveal → final round (optional) → commitments → report. Older sessions in the removed phases can still move on. This supersedes the earn-back and design-check parts of the 2026-10-07 and 2026-10-09 entries below.
 - 2026-10-09: No-sign-in demo (milestone 9.5, before milestone 10). "Try the demo" on the home page gives a visitor an anonymous sign-in and a private sandbox organisation (is_demo) that is deleted after 24 hours. Three stops: play a case (practice with the coach, score, model answer, n8n starter), run a room (a live session with three bot teams, visitor on a fourth team, console, big screen and phone), and see a finished sample opportunity map. Live AI is capped: each sandbox gets DEMO_AI_UNITS (default 40, roughly one per AI call), all sandboxes share DEMO_DAILY_AI_UNITS a day (default 600), then scripted replies. At most DEMO_STARTS_PER_IP_PER_DAY sandboxes per IP (only a salted hash is stored). AI case writing is off in demos and demo PDFs are not stored. No bot-check service yet.
 - 2026-10-09: Builda is also an AI discovery tool. Every designed use case gets a discovery scorecard (team-rated in the prioritise phase, AI-assessed at judging) and the opportunity map groups use cases into portfolio buckets. Staff can raise their own problems at any time ("Bring your own problem"); these join the backlog, and a team may design one instead of a deck case. See "AI discovery outputs".
 - 2026-10-09: Kinds of AI used to classify each use case: simple rule (no AI), classify or route, extract from documents, summarise, draft or generate, answer questions over data, forecast, chat or voice assistant (for example a WhatsApp bot), agent that takes actions.
@@ -129,11 +130,11 @@ A session must not require a facilitator, and must work with a single team of a 
 
 Model the session as an explicit state machine with server-side transitions only:
 
-`draft → lobby → baseline_check (optional) → solving → twist → solving_after_twist → prioritise → judging → reveal → post_check (optional) → commitments → report → closed`
+`draft → lobby → baseline_check (optional) → fix → solving → twist (optional, teams adapt during it) → prioritise ("Rank"; judging runs in the background) → reveal → post_check (optional) → commitments → report → closed`. `solving_after_twist` and `judging` remain only so older sessions can move on.
 
 The facilitator (or, in a facilitator-less session, the system or the solo player) advances phases. Every transition is broadcast on a Realtime channel for the session. Timers are server-authoritative: store phase start time and duration, and let clients compute the countdown. Write unit tests for every allowed and disallowed transition.
 
-Optional phases: when the before-and-after check is off, `lobby → solving` and `reveal → commitments` are allowed directly and `baseline_check` / `post_check` are not. The transition table depends on session settings, and the tests cover both settings. The no-facilitator, single-player rule applies to every new phase: a solo player can complete the checks, prioritise and commit on their own.
+Optional phases: when the before-and-after check is off (the default), `lobby → fix` and `reveal → commitments` are allowed directly and `baseline_check` / `post_check` are not. The transition table depends on session settings, and the tests cover both settings. The no-facilitator, single-player rule applies to every new phase: a solo player can complete the checks, prioritise and commit on their own.
 
 ## Data model (starting point)
 
@@ -224,9 +225,9 @@ Generated per team, specific to their case and current design, realistic for the
 
 Twists have a kind. Phase one builds operational twists only. The `kind` field and the session's twist mix setting exist from the start, so AI risk twists (phase one and a half) slot in without a migration.
 
-### Prioritise (team, no AI)
+### Rank (team, no AI; phase `prioritise`)
 
-After solving_after_twist, each team drags its design onto an impact (low to high) by effort (low to high) grid, picks how often the process happens (daily, weekly, monthly, quarterly or less) and whether the data is ready (ready, partly, not yet). Stored on the final design version. The opportunity map shows the team's placement beside the AI's assessment, and points out where they disagree.
+After the design (and twist), each team answers three taps: value (1 to 5), readiness (ready, partly, not yet) and risk (low, medium, high). One rule turns them into a bucket: value 2 or less is Park; not ready is Fix the data first; high risk or partly ready is a Strategic bet; the rest are Quick wins. The AI's assessment goes through the same rule, and the opportunity map shows both views and where they disagree. Stored on the final design version. (Replaced the impact-by-effort grid and longer scorecard on 2026-10-10.)
 
 ### Before-and-after check (optional, on by default)
 
@@ -280,7 +281,7 @@ Do not let the AI write n8n JSON directly.
 
 1. The AI turns the team's final design into a tool-neutral plan using only blocks from an allowlisted catalog: form trigger, schedule trigger, webhook, Gmail, Outlook, Google Sheets, WhatsApp Business, Slack, IF, Switch, AI agent with structured output, HTTP request, send-and-wait approval, set/edit fields. Validate the plan with zod.
 2. A deterministic compiler in `lib/export/n8n/` turns the plan into n8n workflow JSON using node templates stored in `lib/export/n8n/templates/`. Build these templates by exporting real nodes from an n8n instance so node types, `typeVersion`s and parameter shapes are exact. Do not guess them. Until Moses exports them, build the compiler and tests against clearly marked placeholder templates.
-3. The human-in-control slot compiles to a send-and-wait approval node.
+3. The Control slot decides the approval: in the loop puts a send-and-wait approval before the action for every case; on the loop puts it only on the cases the rule or AI can't settle; out of the loop has none.
 4. Tools with no block (for example a local HRIS) compile to an HTTP Request node with a sticky note explaining what to fill in.
 5. Credentials are left empty. Sticky notes explain what to connect and which placeholders to replace.
 6. The download screen says plainly that this is a starter workflow, not a finished build.

@@ -20,7 +20,7 @@ describe("demo content", () => {
     expect(settings.before_after_check).toBe(false);
     expect(settings.case_mode).toBe("facilitator_assigns");
     expect(settings.minutes.solving).toBe(5);
-    expect(nextPhase("lobby", settings)).toBe("solving");
+    expect(nextPhase("lobby", settings)).toBe("fix");
   });
 
   it("every team's case is in the HR deck and every scorecard value is valid", () => {

@@ -21,7 +21,6 @@ import { CANVAS_SLOTS, type CanvasSlot } from "@/lib/ai/schemas/canvas";
 import type { ReferenceSolution, ScoredCriterion } from "@/lib/ai/schemas/judge";
 import type { CoachCase, CoachDesign } from "@/lib/coach/context";
 import { finishPractice, reopenPractice, saveDesign } from "../actions";
-import { checkDesign } from "../check-actions";
 
 type Finished = { score: { total: number; breakdown: ScoredCriterion[]; summary: string } | null; reference: ReferenceSolution | null };
 
@@ -71,14 +70,20 @@ export function PlayBoard({
   const [coachDraft, setCoachDraft] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>(history);
   const [dismissed, setDismissed] = useState<ReadonlySet<string>>(new Set());
-  const [coinToast, setCoinToast] = useState<string | null>(null);
-  const [checking, startCheck] = useTransition();
   const [serverOffsetMs] = useState(() => new Date(phaseTimer.serverNow).getTime() - Date.now());
   const [boardRef, shake] = useShake();
   const pending = useRef<Partial<CoachDesign>>({});
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [dirty, setDirty] = useState<ReadonlySet<string>>(new Set());
-  const readOnly = mode === "live" && phase === "twist";
+  // The twist stamp lands when the twist arrives, then teams adapt straight away.
+  const [twistStamp, setTwistStamp] = useState(
+    () => mode === "live" && phase === "twist" && phaseTimer.startedAt !== null && new Date(phaseTimer.serverNow).getTime() - new Date(phaseTimer.startedAt).getTime() < 10_000,
+  );
+  useEffect(() => {
+    if (!twistStamp) return;
+    const t = setTimeout(() => setTwistStamp(false), 2600);
+    return () => clearTimeout(t);
+  }, [twistStamp]);
 
   // Teammates edit the same design on their own phones. When fresh data
   // arrives from the server, take it, except for fields this phone is still
@@ -102,11 +107,6 @@ export function PlayBoard({
     setSaveState("saving");
     const result = await saveDesign(teamId, patch);
     setSaveState(result.ok ? "saved" : "error");
-    if (result.earned && typeof result.tokens === "number") {
-      setTokens(result.tokens);
-      setCoinToast(result.earned === 1 ? "You earned a coin back for acting on the coach's question." : `You earned ${result.earned} coins back for acting on the coach.`);
-      setTimeout(() => setCoinToast(null), 4000);
-    }
     setDirty((d) => new Set([...d].filter((k) => !(k in patch) || k in pending.current)));
   }, [teamId]);
 
@@ -135,13 +135,15 @@ export function PlayBoard({
     const keep = { ...pending.current };
     setDesign((current) => ({ ...current, ...remote, ...Object.fromEntries(Object.keys(keep).map((k) => [k, current[k as keyof CoachDesign]])) }));
   }, []);
-  useTeamDesignSync(teamId, phase === "solving_after_twist" ? "after_twist" : "before_twist", onRemoteDesign);
+  useTeamDesignSync(teamId, phase === "twist" || phase === "solving_after_twist" ? "after_twist" : "before_twist", onRemoteDesign);
 
-  const filled = CANVAS_SLOTS.filter((s) => design[s].trim()).length;
+  // Control counts as filled once a level is chosen, even without a note.
+  const isFilled = (slot: CanvasSlot) => Boolean(design[slot].trim() || (slot === "human" && design.oversight));
+  const filled = CANVAS_SLOTS.filter(isFilled).length;
 
   // The proactive inline coach: one question beside a slot left empty too long.
   const inlineMessages = messages.filter((m) => m.trigger === "inline_idle" && m.role === "coach");
-  const designPhase = phase === "solving" || phase === "solving_after_twist";
+  const designPhase = phase === "solving" || phase === "twist" || phase === "solving_after_twist";
   useInlineCoach({
     teamId,
     enabled: inlineCoach.enabled && designPhase && !finished,
@@ -162,29 +164,6 @@ export function PlayBoard({
     return !design[slot].trim() ? (inlineMessages.find((m) => m.slot === slot && !dismissed.has(m.id)) ?? null) : null;
   };
 
-  const runCheck = () =>
-    startCheck(async () => {
-      if (timer.current) clearTimeout(timer.current);
-      await flush();
-      const result = await checkDesign(teamId);
-      if (typeof result.tokens === "number") setTokens(result.tokens);
-      if (!result.ok) {
-        setCoinToast(result.message);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          { id: `check-${Date.now()}`, role: "team", type: null, slot: null, content: "We asked for a design check." },
-          ...result.messages.map((m) => ({ id: m.id, role: "coach" as const, type: m.type, slot: m.slot, content: m.content, trigger: m.trigger })),
-        ]);
-        setCoinToast(
-          result.clean
-            ? "No hard errors found. Ask the coach what could go wrong on a bad day."
-            : `${result.messages.length} ${result.messages.length === 1 ? "thing" : "things"} to look at. See the notes beside your slots.`,
-        );
-      }
-      setTimeout(() => setCoinToast(null), 5000);
-    });
-
   const finish = () => {
     startFinish(async () => {
       if (timer.current) clearTimeout(timer.current);
@@ -202,7 +181,7 @@ export function PlayBoard({
 
   const askAboutSlot = (slot: CanvasSlot) => {
     setEditing(null);
-    setCoachDraft(`Help us think about our ${slot === "human" ? "human in control" : slot} slot.`);
+    setCoachDraft(`Help us think about our ${slot === "human" ? "control" : slot} slot.`);
     setCoachOpen(true);
   };
 
@@ -255,40 +234,14 @@ export function PlayBoard({
               </motion.div>
             ) : (
               <motion.section key="canvas" ref={boardRef} className="relative space-y-6" exit={{ opacity: 0 }} aria-label="Your design">
-                {readOnly && (
-                  <p className="rounded-2xl bg-amber-100 p-4 font-semibold text-amber-700" role="status">
-                    {twist ? (
-                      <>
-                        <span className="block text-xs tracking-wider uppercase">Twist!</span>
-                        <span className="block text-lg text-ink-900">{twist}</span>
-                        <span className="mt-1 block text-sm">Adapt your design when the next round starts. You&apos;ve got a bonus coin.</span>
-                      </>
-                    ) : (
-                      <>
-                        Twist! Something has changed for your team. Listen to your facilitator, then adapt your design when the next round
-                        starts. You&apos;ve got a bonus coin.
-                      </>
-                    )}
-                  </p>
-                )}
-                {twist && (phase === "twist" || phase === "solving_after_twist") && !readOnly && (
-                  <div className="rounded-2xl border-2 border-amber-400 bg-amber-50 p-4">
-                    <p className="text-xs font-bold tracking-wider text-amber-700 uppercase">Your twist</p>
-                    <p className="font-semibold text-ink-900">{twist}</p>
+                {twist && (phase === "twist" || phase === "solving_after_twist") && (
+                  <div className="rounded-2xl border-2 border-amber-400 bg-amber-50 p-4" role="status">
+                    <p className="text-xs font-bold tracking-wider text-amber-700 uppercase">Twist! Adapt your design</p>
+                    <p className="text-lg font-semibold text-ink-900">{twist}</p>
                   </div>
                 )}
                 <div className="flex flex-wrap items-baseline justify-between gap-3">
                   <h2 className="font-display text-2xl font-bold">Your design</h2>
-                  {designPhase && !finished && (
-                    <button
-                      type="button"
-                      onClick={runCheck}
-                      disabled={checking || tokens < 1 || filled === 0}
-                      className="rounded-full border-2 border-amber-400 bg-amber-50 px-3.5 py-1.5 text-sm font-bold text-ink-900 hover:bg-amber-100 disabled:opacity-50"
-                    >
-                      {checking ? "Checking…" : "Check our design · 1 coin"}
-                    </button>
-                  )}
                   <span className="text-sm text-ink-500" role="status">
                     {saveState === "saving" ? "Saving…" : saveState === "error" ? "Couldn't save. Check your connection." : `${filled} of 5 slots filled · Saved`}
                   </span>
@@ -299,22 +252,21 @@ export function PlayBoard({
                     <Fragment key={slot}>
                       {i > 0 && (
                         <div className="flex justify-center">
-                          <Connector lit={Boolean(design[CANVAS_SLOTS[i - 1]].trim() && design[slot].trim())} tone={slot === "human" ? "amber" : "green"} direction="vertical" />
+                          <Connector lit={isFilled(CANVAS_SLOTS[i - 1]) && isFilled(slot)} tone={slot === "human" ? "amber" : "green"} direction="vertical" />
                         </div>
                       )}
                       <button
                         type="button"
-                        disabled={readOnly}
                         onClick={() => setEditing(slot)}
                         className="block w-full rounded-2xl text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-600"
-                        aria-label={`Edit ${slot === "human" ? "human in control" : slot}`}
+                        aria-label={`Edit ${slot === "human" ? "control" : slot}`}
                       >
-                        <SlotSocket slot={slot} value={design[slot]} compact active={editing === slot} />
+                        <SlotSocket slot={slot} value={design[slot]} oversight={design.oversight} compact active={editing === slot} />
                       </button>
                       <InlineCoachBubble
                         message={bubbleFor(slot)}
                         onReply={() => {
-                          setCoachDraft(`About our ${slot === "human" ? "human in control" : slot} slot: `);
+                          setCoachDraft(`About our ${slot === "human" ? "control" : slot} slot: `);
                           setCoachOpen(true);
                         }}
                         onDismiss={() => {
@@ -326,11 +278,9 @@ export function PlayBoard({
                   ))}
                 </div>
 
-                <fieldset disabled={readOnly} className={readOnly ? "pointer-events-none opacity-60" : ""}>
-                  <Extras design={design} onChange={update} toolSuggestions={toolSuggestions} systemSuggestions={systemSuggestions} />
-                </fieldset>
+                <Extras design={design} onChange={update} toolSuggestions={toolSuggestions} systemSuggestions={systemSuggestions} />
                 <Stamp show={stamp} text="Locked in" tone="green" />
-                <Stamp show={readOnly} text="Twist" />
+                <Stamp show={twistStamp} text="Twist" />
               </motion.section>
             )}
           </AnimatePresence>
@@ -353,20 +303,6 @@ export function PlayBoard({
       </div>
 
       {mode === "live" && <RaiseIdeaButton teamId={teamId} offsetForCoach={coachEnabled} />}
-
-      <AnimatePresence>
-        {coinToast && (
-          <motion.p
-            role="status"
-            className="fixed inset-x-4 top-20 z-50 mx-auto max-w-sm rounded-2xl border-2 border-amber-500 bg-amber-400 p-4 text-center font-semibold text-ink-900 shadow-lift"
-            initial={{ y: -30, opacity: 0, scale: 0.9 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: -30, opacity: 0 }}
-          >
-            {coinToast}
-          </motion.p>
-        )}
-      </AnimatePresence>
 
       {/* Phone: the coach opens as a sheet. */}
       {!finished && coachEnabled && (
@@ -413,8 +349,9 @@ export function PlayBoard({
       <SlotEditor
         slot={editing}
         value={editing ? design[editing] : ""}
-        onSave={(slot, value) => {
-          update({ [slot]: value } as Partial<CoachDesign>);
+        oversight={design.oversight ?? null}
+        onSave={(slot, value, oversight) => {
+          update({ [slot]: value, ...(slot === "human" ? { oversight: oversight ?? null } : {}) } as Partial<CoachDesign>);
           setEditing(null);
         }}
         onAskCoach={askAboutSlot}

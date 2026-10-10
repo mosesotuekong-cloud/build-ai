@@ -4,6 +4,7 @@ import type { Assessment } from "@/lib/ai/schemas/assessment";
 import type { CheckKind } from "@/lib/ai/schemas/check";
 import type { ScoredCriterion } from "@/lib/ai/schemas/judge";
 import { functionName } from "@/lib/decks/schemas";
+import { fixSchema, type Oversight } from "@/lib/ai/schemas/canvas";
 import { readSettings } from "@/lib/session/settings";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildOpportunityMap, type ReportInput } from "./map";
@@ -75,6 +76,10 @@ export async function loadReportInput(sessionId: string, admin: Admin = createAd
               risks: design.risks,
               ai_kind: design.ai_kind,
               platform_fit: design.platform_fit,
+              readiness: design.readiness,
+              risk_level: design.risk_level,
+              oversight: (design.oversight as Oversight | null) ?? null,
+              fix: fixSchema.safeParse(design.fix).data ?? null,
             }
           : null,
         score: counted ? { final: score.final ?? 0, breakdown: (score.breakdown as ScoredCriterion[] | null) ?? [] } : null,

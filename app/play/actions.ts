@@ -13,8 +13,6 @@ import { loadPlayerTeam } from "@/lib/play/load";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { designSaveTargets, type Phase } from "@/lib/session/machine";
-import { CANVAS_SLOTS } from "@/lib/ai/schemas/canvas";
-import { isMeaningfulChange, pickEarnableMessage } from "@/lib/coach/earn-back";
 import { transitionSession } from "@/lib/session/server";
 import { readSettings } from "@/lib/session/settings";
 
@@ -83,7 +81,7 @@ export async function startPractice(caseId: string) {
 export async function saveDesign(
   teamId: string,
   patch: DesignPatch,
-): Promise<{ ok: boolean; savedAt?: string; locked?: boolean; earned?: number; tokens?: number }> {
+): Promise<{ ok: boolean; savedAt?: string; locked?: boolean }> {
   const parsed = designPatchSchema.safeParse(patch);
   if (!parsed.success) return { ok: false };
   const data_ = await loadPlayerTeam(idSchema.parse(teamId));
@@ -100,31 +98,7 @@ export async function saveDesign(
   }
   if (!savedAt) return { ok: false };
 
-  // Acting on the coach pays: a real change to a slot the coach asked about
-  // earns one coin back, once per coach message, up to the session's cap.
-  const changed = CANVAS_SLOTS.filter((slot) => typeof parsed.data[slot] === "string" && isMeaningfulChange(data_.design[slot], parsed.data[slot]!));
-  if (!changed.length) return { ok: true, savedAt };
-  const admin = createAdminClient();
-  const { data: messages } = await admin
-    .from("coach_messages")
-    .select("id, role, slot, token_earned_at, created_at")
-    .eq("team_id", data_.team.id)
-    .eq("role", "coach")
-    .is("token_earned_at", null)
-    .in("slot", changed);
-  const cap = readSettings(data_.session.settings).earn_back_cap;
-  let earned = 0;
-  let tokens: number | undefined;
-  for (const slot of changed) {
-    const message = pickEarnableMessage(messages ?? [], slot);
-    if (!message) continue;
-    const { data: balance } = await admin.rpc("earn_hint_token", { target_team: data_.team.id, target_message: message.id, cap });
-    if (typeof balance === "number" && balance >= 0) {
-      earned++;
-      tokens = balance;
-    }
-  }
-  return { ok: true, savedAt, earned, tokens };
+  return { ok: true, savedAt };
 }
 
 export type FinishResult =

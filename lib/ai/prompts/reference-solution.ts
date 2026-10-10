@@ -7,7 +7,7 @@ Write one strong, realistic design for the case, then explain the choices.
 - steps: what information is gathered or prepared, from which systems.
 - decision: what gets decided, and say clearly whether it is a simple rule (give the rule) or AI judgement (say what the AI reads and decides).
 - action: what gets done automatically, for whom, through which channel.
-- human: which step a person checks, approves or overrides, and why there.
+- human: the level of control (in the loop, on the loop or out of the loop) and why it fits the risk, then which step a person checks, approves or overrides, and what they see.
 - explanation: 3 to 5 plain sentences on why these choices fit, including one alternative design that would also be valid.
 
 Use the company's real tools and local reality (WhatsApp, Excel, email, paper forms, local systems). Keep each slot to one or two sentences. Plain British English.`;

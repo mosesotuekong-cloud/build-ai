@@ -13,12 +13,11 @@ const ALLOWED: Record<string, [Phase, Phase][]> = {
   all: [
     ["draft", "lobby"],
     ["lobby", "baseline_check"],
-    ["baseline_check", "solving"],
+    ["baseline_check", "fix"],
+    ["fix", "solving"],
     ["solving", "twist"],
-    ["twist", "solving_after_twist"],
-    ["solving_after_twist", "prioritise"],
-    ["prioritise", "judging"],
-    ["judging", "reveal"],
+    ["twist", "prioritise"],
+    ["prioritise", "reveal"],
     ["reveal", "post_check"],
     ["post_check", "commitments"],
     ["commitments", "report"],
@@ -26,12 +25,11 @@ const ALLOWED: Record<string, [Phase, Phase][]> = {
   ],
   noChecks: [
     ["draft", "lobby"],
-    ["lobby", "solving"],
+    ["lobby", "fix"],
+    ["fix", "solving"],
     ["solving", "twist"],
-    ["twist", "solving_after_twist"],
-    ["solving_after_twist", "prioritise"],
-    ["prioritise", "judging"],
-    ["judging", "reveal"],
+    ["twist", "prioritise"],
+    ["prioritise", "reveal"],
     ["reveal", "commitments"],
     ["commitments", "report"],
     ["report", "closed"],
@@ -39,10 +37,10 @@ const ALLOWED: Record<string, [Phase, Phase][]> = {
   noTwist: [
     ["draft", "lobby"],
     ["lobby", "baseline_check"],
-    ["baseline_check", "solving"],
+    ["baseline_check", "fix"],
+    ["fix", "solving"],
     ["solving", "prioritise"],
-    ["prioritise", "judging"],
-    ["judging", "reveal"],
+    ["prioritise", "reveal"],
     ["reveal", "post_check"],
     ["post_check", "commitments"],
     ["commitments", "report"],
@@ -50,10 +48,10 @@ const ALLOWED: Record<string, [Phase, Phase][]> = {
   ],
   bare: [
     ["draft", "lobby"],
-    ["lobby", "solving"],
+    ["lobby", "fix"],
+    ["fix", "solving"],
     ["solving", "prioritise"],
-    ["prioritise", "judging"],
-    ["judging", "reveal"],
+    ["prioritise", "reveal"],
     ["reveal", "commitments"],
     ["commitments", "report"],
     ["report", "closed"],
@@ -62,23 +60,17 @@ const ALLOWED: Record<string, [Phase, Phase][]> = {
 
 // Leaving an optional phase is always allowed, even when the setting is off,
 // so a room never gets stuck if a facilitator changes settings mid-session.
-// Entering a switched-off phase is not.
+// Entering a switched-off phase is not. Sessions left in a phase from the
+// older, longer flow (solving_after_twist, judging) can always move on.
+const LEGACY: [Phase, Phase][] = [
+  ["solving_after_twist", "prioritise"],
+  ["judging", "reveal"],
+];
 const EXITS: Record<string, [Phase, Phase][]> = {
-  all: [],
-  noChecks: [
-    ["baseline_check", "solving"],
-    ["post_check", "commitments"],
-  ],
-  noTwist: [
-    ["twist", "solving_after_twist"],
-    ["solving_after_twist", "prioritise"],
-  ],
-  bare: [
-    ["baseline_check", "solving"],
-    ["post_check", "commitments"],
-    ["twist", "solving_after_twist"],
-    ["solving_after_twist", "prioritise"],
-  ],
+  all: [...LEGACY],
+  noChecks: [...LEGACY, ["baseline_check", "fix"], ["post_check", "commitments"]],
+  noTwist: [...LEGACY, ["twist", "prioritise"]],
+  bare: [...LEGACY, ["baseline_check", "fix"], ["post_check", "commitments"], ["twist", "prioritise"]],
 };
 
 const CASES = [
@@ -115,13 +107,14 @@ describe("live session transitions", () => {
   it("skips the optional check phases when the check is off", () => {
     expect(canTransition("lobby", "baseline_check", NO_CHECKS)).toBe(false);
     expect(canTransition("reveal", "post_check", NO_CHECKS)).toBe(false);
-    expect(canTransition("lobby", "solving", ALL)).toBe(false);
+    expect(canTransition("lobby", "fix", ALL)).toBe(false);
     expect(canTransition("reveal", "commitments", ALL)).toBe(false);
   });
 
   it("never goes backwards or skips ahead", () => {
     expect(canTransition("solving", "lobby", ALL)).toBe(false);
-    expect(canTransition("solving", "judging", ALL)).toBe(false);
+    expect(canTransition("solving", "reveal", ALL)).toBe(false);
+    expect(canTransition("lobby", "solving", NO_CHECKS)).toBe(false);
     expect(canTransition("closed", "lobby", ALL)).toBe(false);
   });
 
@@ -144,8 +137,8 @@ describe("practice run transitions", () => {
 describe("session settings", () => {
   it("fills in every default from an empty object", () => {
     const s = sessionSettingsSchema.parse({});
-    expect(s).toMatchObject({ hint_tokens: 3, twist_bonus_tokens: 1, earn_back_cap: 3, before_after_check: true, case_mode: "teams_pick", function_mode: "whole_pile" });
-    expect(s.minutes.solving).toBe(20);
+    expect(s).toMatchObject({ hint_tokens: 3, twist_bonus_tokens: 1, before_after_check: false, case_mode: "teams_pick", function_mode: "whole_pile" });
+    expect(s.minutes).toMatchObject({ fix: 3, solving: 20, twist: 8, prioritise: 3 });
   });
 
   it("falls back to defaults for junk", () => {
@@ -158,7 +151,9 @@ describe("session settings", () => {
     expect(phaseDurationSeconds("solving", s)).toBe(900);
     expect(phaseDurationSeconds("baseline_check", s)).toBe(240);
     expect(phaseDurationSeconds("lobby", s)).toBeNull();
-    expect(phaseDurationSeconds("judging", s)).toBeNull();
+    expect(phaseDurationSeconds("fix", s)).toBe(180);
+    expect(phaseDurationSeconds("twist", s)).toBe(480);
+    expect(phaseDurationSeconds("reveal", s)).toBeNull();
   });
 });
 
@@ -171,9 +166,9 @@ describe("design saves around phase changes", () => {
     expect(designSaveTargets("solving_after_twist", started, at(600))).toEqual(["after_twist"]);
   });
 
-  it("still lands a last-second edit just after the twist, in both versions", () => {
+  it("lands a last-second edit in both versions, then adapts the copy during the twist", () => {
     expect(designSaveTargets("twist", started, at(3))).toEqual(["before_twist", "after_twist"]);
-    expect(designSaveTargets("twist", started, at(16))).toEqual([]);
+    expect(designSaveTargets("twist", started, at(16))).toEqual(["after_twist"]);
   });
 
   it("still lands a last-second edit just after design ends", () => {
@@ -182,6 +177,6 @@ describe("design saves around phase changes", () => {
   });
 
   it("refuses saves in other phases", () => {
-    for (const phase of ["lobby", "judging", "reveal", "closed"] as const) expect(designSaveTargets(phase, started, at(1))).toEqual([]);
+    for (const phase of ["lobby", "fix", "judging", "reveal", "closed"] as const) expect(designSaveTargets(phase, started, at(1))).toEqual([]);
   });
 });

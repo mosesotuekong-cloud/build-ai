@@ -1,4 +1,4 @@
-import { CANVAS_SLOTS, SLOT_LABELS } from "@/lib/ai/schemas/canvas";
+import { CANVAS_SLOTS, oversightLabel, SLOT_LABELS } from "@/lib/ai/schemas/canvas";
 import type { CoachDesign } from "@/lib/coach/context";
 import type { Platform } from "@/lib/config/platforms";
 import { orderBlocks, type Plan } from "./plan";
@@ -25,7 +25,7 @@ export function buildGuideMarkdown(input: { design: CoachDesign; plan: Plan | nu
       "",
       `### ${SLOT_LABELS[slot].title}${slot === "human" ? " (keep this)" : ""}`,
       "",
-      `- **Your design:** ${design[slot].trim() || "You left this empty. Decide it before you build."}`,
+      `- **Your design:** ${slot === "human" && oversightLabel(design.oversight) ? `${oversightLabel(design.oversight)}. ` : ""}${design[slot].trim() || (slot === "human" && design.oversight ? "" : "You left this empty. Decide it before you build.")}`,
       `- **On ${platform.name}:** ${platform.slots[slot]}`,
     );
     for (const b of blocks) {

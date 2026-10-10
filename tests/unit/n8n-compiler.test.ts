@@ -216,10 +216,33 @@ describe("build guides", () => {
     for (const platform of PLATFORMS) {
       const md = buildGuideMarkdown({ design: designs[0], plan: leaveRequestPlan, platform });
       expect(md).toContain(`build guide for ${platform.name}`);
-      expect(md).toContain("### Human in control (keep this)");
+      expect(md).toContain("### Control (keep this)");
       expect(md).toContain("not a finished build");
     }
     const md = buildGuideMarkdown({ design: designs[2], plan: null, platform: getPlatform("power-automate")! });
     expect(md).toContain("You left this empty");
+  });
+});
+
+describe("control levels shape the plan", () => {
+  const base = designs[0];
+  it("in the loop: a person approves every case before the action", () => {
+    const plan = planFromDesign({ ...base, oversight: "in" });
+    expect(plan.links.filter((l) => l.to === "approve").map((l) => l.branch).sort()).toEqual(["false", "true"]);
+    expect(plan.links.some((l) => l.from === "decide" && l.to === "act")).toBe(false);
+    expect(validatePlan(plan)).toEqual([]);
+  });
+
+  it("on the loop: the rule settles easy cases, a person decides the rest", () => {
+    const plan = planFromDesign({ ...base, oversight: "on" });
+    expect(plan.links).toEqual(expect.arrayContaining([link("decide", "act", "true"), link("decide", "approve", "false")]));
+  });
+
+  it("out of the loop: no approval at all, and it still compiles", () => {
+    const plan = planFromDesign({ ...base, oversight: "out" });
+    expect(plan.blocks.some((b) => b.kind === "approval")).toBe(false);
+    expect(validatePlan(plan)).toEqual(["No approval block: a person must stay in control."]);
+    expect(validatePlan(plan, { requireApproval: false })).toEqual([]);
+    checkWorkflow(n8nCompiler.compile(plan));
   });
 });

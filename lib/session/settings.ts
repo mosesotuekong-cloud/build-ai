@@ -5,13 +5,13 @@ import { z } from "zod";
 export const sessionSettingsSchema = z.object({
   hint_tokens: z.number().int().min(0).max(10).default(3),
   twist_bonus_tokens: z.number().int().min(0).max(5).default(1),
-  earn_back_cap: z.number().int().min(0).max(10).default(3),
   coach_enabled: z.boolean().default(true),
   inline_coach: z.boolean().default(true),
   inline_idle_minutes: z.number().int().min(1).max(30).default(4),
   twist_enabled: z.boolean().default(true),
   twist_mix: z.enum(["operational", "risk", "mixed"]).default("operational"),
-  before_after_check: z.boolean().default(true),
+  // The solo warm-up and final rounds. Off by default; mainly for the compliance pack.
+  before_after_check: z.boolean().default(false),
   // How teams get a case: they draw one from the deck, or the facilitator assigns.
   case_mode: z.enum(["teams_pick", "facilitator_assigns"]).default("teams_pick"),
   // With a mixed-function deck: draw from the whole pile, or pick a function first.
@@ -21,6 +21,8 @@ export const sessionSettingsSchema = z.object({
     .object({
       baseline_check: z.number().min(1).max(30).default(4),
       solving: z.number().min(1).max(120).default(20),
+      fix: z.number().min(1).max(15).default(3),
+      twist: z.number().min(1).max(60).default(8),
       solving_after_twist: z.number().min(1).max(60).default(10),
       prioritise: z.number().min(1).max(30).default(3),
       post_check: z.number().min(1).max(30).default(4),

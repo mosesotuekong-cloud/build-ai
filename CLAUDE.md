@@ -22,9 +22,10 @@ Local URLs: Studio http://localhost:54323, test inbox (magic links) http://local
 - All n8n calls go through `lib/n8n/client.ts`.
 - Exports: the neutral plan (`lib/export/plan.ts`) is the source of truth. The AI only writes plans; compilers behind `WorkflowCompiler` turn them into files. n8n templates in `lib/export/n8n/templates/` come from real node definitions; never guess a node type, typeVersion or parameter shape. Credentials stay empty.
 - `lib/supabase/admin.ts` (service role) is server-only. Never import it from client components.
-- Never assume a facilitator is present in a session (see "Architecture rule" in the brief). This includes every new phase: baseline_check, prioritise, post_check and commitments.
+- Never assume a facilitator is present in a session (see "Architecture rule" in the brief). This includes every new phase: baseline_check, fix, prioritise, post_check and commitments.
 - Session phases come from one transition table in `lib/session/`. The optional phases depend on session settings, and every allowed and disallowed transition has a unit test under both settings.
 - Player names and commitment owner emails never go to the AI provider. Use player ids or "Player 1" in prompts. Anything shared outside the facilitator's organisation is anonymised.
 - Hint tokens, earn-back and phase changes are enforced on the server only.
 - Phase one and a half features (compliance pack, certificates, AI risk twists, CSV/Jira/UiPath exports) get their columns and tables now; do not build their screens until Moses says so.
 - Player-facing copy is plain, friendly British English.
+- The method is Fix → Design → Control → Rank (see the 2026-10-10 decision in the brief). Keep new features inside those four steps; anything else is noise until Moses asks for it.

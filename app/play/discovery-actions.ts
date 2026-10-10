@@ -3,12 +3,25 @@
 import { z } from "zod";
 import { assignCheckCard } from "@/lib/checks/cards";
 import { scorecardPatchSchema, type ScorecardPatch } from "@/lib/discovery/scorecard";
+import { fixSchema, type FixNotes } from "@/lib/ai/schemas/canvas";
 import { loadPlayerTeam } from "@/lib/play/load";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const idSchema = z.uuid();
-const RAISE_PHASES = new Set(["lobby", "baseline_check", "solving", "twist", "solving_after_twist", "prioritise"]);
+const RAISE_PHASES = new Set(["lobby", "baseline_check", "fix", "solving", "twist", "solving_after_twist", "prioritise"]);
+
+// Fix it first: what the team would stop, merge or simplify before
+// automating. Saved on the team's design during the fix phase.
+export async function saveFix(teamId: string, fix: Partial<FixNotes>): Promise<{ ok: boolean }> {
+  const data = await loadPlayerTeam(idSchema.parse(teamId));
+  if (!data || data.session.phase !== "fix") return { ok: false };
+  const merged = fixSchema.safeParse({ ...(data.design.fix ?? {}), ...fix });
+  if (!merged.success) return { ok: false };
+  const supabase = await createClient();
+  const { error } = await supabase.from("designs").update({ fix: merged.data }).eq("id", data.design.id);
+  return { ok: !error };
+}
 
 // The team's discovery scorecard, during the prioritise phase. Writes the
 // current design version through the player's own client (RLS).

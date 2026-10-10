@@ -1,4 +1,4 @@
-import { CANVAS_SLOTS, SLOT_LABELS } from "@/lib/ai/schemas/canvas";
+import { CANVAS_SLOTS, oversightLabel, SLOT_LABELS, type FixNotes, type Oversight } from "@/lib/ai/schemas/canvas";
 import { getPlatform } from "@/lib/config/platforms";
 
 export type CoachCase = { title: string; story: string; cost: string; who_feels_it: string; function_name: string };
@@ -13,6 +13,10 @@ export type CoachDesign = {
   hours_saved_per_month: number | null;
   tools: string[];
   systems: string[];
+  // Control: in, on or out of the loop. Fix: what the team would stop,
+  // merge or simplify first. Older designs have neither.
+  oversight?: Oversight | null;
+  fix?: FixNotes | null;
 };
 
 export type CoachHistoryItem = { role: "team" | "coach"; content: string };
@@ -31,8 +35,16 @@ export type CoachContext = {
 export function describeSituation(ctx: Omit<CoachContext, "history">): string {
   const slots = CANVAS_SLOTS.map((slot) => {
     const value = ctx.design[slot].trim();
+    if (slot === "human") {
+      const level = oversightLabel(ctx.design.oversight);
+      return `- Control (how much a person stays involved): ${level ? `${level}. ` : "(level not chosen) "}${value || (level ? "" : "(empty)")}`.trimEnd();
+    }
     return `- ${SLOT_LABELS[slot].title}: ${value || "(empty)"}`;
   });
+  const fix = ctx.design.fix;
+  const fixLines = fix && (fix.eliminate || fix.combine || fix.simplify)
+    ? ["", "FIX IT FIRST (what the team would stop, merge or simplify before automating)", fix.eliminate && `- Stop: ${fix.eliminate}`, fix.combine && `- Merge: ${fix.combine}`, fix.simplify && `- Simplify: ${fix.simplify}`].filter(Boolean)
+    : [];
   const platformNames = ctx.platforms.map((s) => getPlatform(s)?.name).filter(Boolean);
 
   return [
@@ -47,6 +59,7 @@ export function describeSituation(ctx: Omit<CoachContext, "history">): string {
     `- Hours saved per month: ${ctx.design.hours_saved_per_month ?? "(not estimated)"}`,
     `- Tools: ${ctx.design.tools.join(", ") || "(none named)"}`,
     `- Systems involved: ${ctx.design.systems.join(", ") || "(none named)"}`,
+    ...fixLines,
     "",
     `Phase: ${ctx.phase}`,
     ctx.twist ? `Twist that changed their situation: ${ctx.twist}` : "",

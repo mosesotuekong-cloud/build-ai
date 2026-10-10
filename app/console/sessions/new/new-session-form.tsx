@@ -54,16 +54,13 @@ export function NewSessionForm({ decks, defaultDeck }: { decks: DeckOption[]; de
             <TextInput name="minutes_solving" type="number" min={1} max={120} defaultValue={20} />
           </Field>
           <Field label="Time to adapt after the twist (minutes)">
-            <TextInput name="minutes_after_twist" type="number" min={1} max={60} defaultValue={10} />
+            <TextInput name="minutes_after_twist" type="number" min={1} max={60} defaultValue={8} />
           </Field>
           <Field label="Hint coins per team">
             <TextInput name="hint_tokens" type="number" min={0} max={10} defaultValue={3} />
           </Field>
           <Field label="Bonus coins when the twist lands">
             <TextInput name="twist_bonus_tokens" type="number" min={0} max={5} defaultValue={1} />
-          </Field>
-          <Field label="Coins a team can earn back" hint="For improving a slot after the coach asks about it.">
-            <TextInput name="earn_back_cap" type="number" min={0} max={10} defaultValue={3} />
           </Field>
           <Field label="Inline coach waits (minutes)" hint="Before asking about a slot that's still empty.">
             <TextInput name="inline_idle_minutes" type="number" min={1} max={30} defaultValue={4} />
@@ -73,7 +70,7 @@ export function NewSessionForm({ decks, defaultDeck }: { decks: DeckOption[]; de
           <Toggle name="coach_enabled" label="AI coach" hint="Asks teams questions. Never gives the answer." />
           <Toggle name="inline_coach" label="Inline coach" hint="Pops up beside a slot that's still empty after a few minutes, with one short question." />
           <Toggle name="twist_enabled" label="Twist" hint="Halfway through, something changes and teams adapt." />
-          <Toggle name="before_after_check" label="Before-and-after check" hint="A 4-minute solo round at the start and end, to show what people learned." />
+          <Toggle name="before_after_check" defaultOn={false} label="Before-and-after check" hint="A 4-minute solo round at the start and end, to show what people learned. Off by default; useful for training records." />
         </div>
       </Card>
 
@@ -89,10 +86,10 @@ export function NewSessionForm({ decks, defaultDeck }: { decks: DeckOption[]; de
   );
 }
 
-function Toggle({ name, label, hint }: { name: string; label: string; hint: string }) {
+function Toggle({ name, label, hint, defaultOn = true }: { name: string; label: string; hint: string; defaultOn?: boolean }) {
   return (
     <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-cream-300 bg-white p-3 has-[:checked]:border-green-600">
-      <input type="checkbox" name={name} defaultChecked className="mt-1 h-5 w-5 accent-green-600" />
+      <input type="checkbox" name={name} defaultChecked={defaultOn} className="mt-1 h-5 w-5 accent-green-600" />
       <span>
         <span className="block font-semibold text-ink-900">{label}</span>
         <span className="block text-sm text-ink-500">{hint}</span>

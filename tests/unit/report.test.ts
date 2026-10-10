@@ -25,10 +25,13 @@ describe("opportunity map", () => {
   it("keeps the team's view and the AI's view, and says where they disagree", () => {
     const payslip = map.useCases.find((u) => u.designName === "Payslip helper")!;
     expect(payslip.team.bucket).toBe("park");
-    expect(payslip.ai?.bucket).toBe("quick_win");
-    expect(payslip.disagreements.join(" ")).toMatch(/team placed this in Park; the AI would put it in Quick wins/);
-    expect(payslip.disagreements.join(" ")).toMatch(/impact 2 of 5; the AI rated it 4/);
+    expect(payslip.ai?.bucket).toBe("strategic_bet");
+    expect(payslip.disagreements.join(" ")).toMatch(/team placed this in Park; the AI would put it in Strategic bets/);
+    expect(payslip.disagreements.join(" ")).toMatch(/value 2 of 5; the AI rated it 4/);
     expect(payslip.risk).toBe("high");
+    expect(payslip.oversight).toBe("out");
+    // Fully automatic on high-risk work is called out before anything is built.
+    expect(payslip.itReasons).toContain("Fully automatic on high-risk work: put a person in the loop first");
     expect(map.useCases[0].disagreements).toEqual([]);
   });
 
@@ -36,7 +39,8 @@ describe("opportunity map", () => {
     const leave = map.useCases[0];
     expect(leave.needsIT).toBe(true);
     expect(leave.itReasons).toEqual(expect.arrayContaining(["Personal data: check with data protection first", "Connects to Google Sheets"]));
-    expect(map.useCases[1].itReasons).toContain("Data access needs confirming");
+    expect(map.useCases[1].itReasons).toContain("Data or access isn't ready yet");
+    expect(map.useCases[0].fix?.eliminate).toBe("Stop taking leave requests by phone");
   });
 
   it("groups by platform, lists raised problems and commitments with owners", () => {
@@ -56,19 +60,23 @@ describe("opportunity map", () => {
     expect(buildOpportunityMap({ ...sampleReportInput, session: { ...sampleReportInput.session, beforeAfter: false } }).beforeAfter).toBeNull();
   });
 
-  it("turns first design-check flags and coach use into learning facts", () => {
+  it("turns Fix, Control, older design-check flags and coach use into learning facts", () => {
     const facts = learningFrom(sampleReportInput.teams);
-    expect(facts[0].text).toBe("2 of 3 teams left out a human checkpoint until prompted.");
-    expect(facts.find((f) => f.key === "coach")?.text).toBe("Teams asked the coach 4 times, most often about the human in control.");
+    expect(facts.find((f) => f.key === "fix")?.text).toBe("1 of 3 teams found something to stop, merge or simplify before automating.");
+    expect(facts.find((f) => f.key === "control")?.text).toBe("Control: 1 kept a person in the loop, 1 put a person on the loop, and 1 chose fully automatic.");
+    expect(facts.find((f) => f.key === "risky_auto")?.text).toBe("1 of 3 teams left high-risk work fully automatic. Ask why before anything is built.");
+    expect(facts.find((f) => f.key === "no_human_control")?.text).toBe("2 of 3 teams left out a human checkpoint until prompted.");
+    expect(facts.find((f) => f.key === "coach")?.text).toBe("Teams asked the coach 4 times, most often about control.");
     expect(facts.find((f) => f.key === "weakest_criterion")).toBeTruthy();
   });
 
   it("works out readiness and the AI's bucket the same way as the team's", () => {
     expect(teamReadiness({ data_location: "known", data_access: "yes", data_quality: "good" } as never)).toBe("ready");
     expect(teamReadiness({ data_location: null, data_access: "no", data_quality: null } as never)).toBe("not_ready");
-    expect(aiBucket({ impact: 5, effort: 2, data_readiness: "partly" })).toBe("quick_win");
-    expect(aiBucket({ impact: 5, effort: 2, data_readiness: "not_ready" })).toBe("fix_data");
-    expect(aiBucket({ impact: 2, effort: 1, data_readiness: "ready" })).toBe("park");
+    expect(aiBucket({ impact: 5, data_readiness: "ready", risk: "low" })).toBe("quick_win");
+    expect(aiBucket({ impact: 5, data_readiness: "partly", risk: "low" })).toBe("strategic_bet");
+    expect(aiBucket({ impact: 5, data_readiness: "not_ready", risk: "low" })).toBe("fix_data");
+    expect(aiBucket({ impact: 2, data_readiness: "ready", risk: "low" })).toBe("park");
   });
 
   it("copes with a session where nobody finished", () => {

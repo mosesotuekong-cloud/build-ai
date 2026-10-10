@@ -37,6 +37,8 @@ test("facilitator runs a live session with two teams on phones", async ({ page, 
   // Create the session and open the lobby.
   await page.goto(`/console/sessions/new?deck=${deckId}`);
   await page.getByLabel("Session name").fill("Playwright away day");
+  // The solo rounds are off by default; this test covers them too.
+  await page.getByRole("checkbox", { name: /^Before-and-after check/ }).check();
   await page.getByRole("button", { name: "Create draft session" }).click();
   await page.waitForURL(/\/console\/sessions\/[0-9a-f-]{36}$/);
   await page.getByRole("button", { name: /Open the lobby/ }).click();
@@ -89,7 +91,14 @@ test("facilitator runs a live session with two teams on phones", async ({ page, 
   await expect(ada.getByText(/Done. Wait for your facilitator/)).toBeVisible();
   await expect(page.getByText(/1 of 2 players have locked in their warm-up round/)).toBeVisible();
 
-  // Design. Phones follow along live.
+  // Step 1, Fix it first: what would the team stop, merge or simplify?
+  await page.getByRole("button", { name: "Start: Fix it first" }).click();
+  await expect(ada.getByRole("heading", { name: "Don't automate the mess." })).toBeVisible();
+  await expect(presenter.getByRole("list", { name: "The four steps" })).toBeVisible();
+  await ada.getByLabel("Which step could we stop doing altogether?").fill("Stop posting paper guarantor forms");
+  await expect(ada.getByText(/1 of 3 answered · Saved/)).toBeVisible();
+
+  // Step 2, Design. Phones follow along live.
   await page.getByRole("button", { name: "Start: Design" }).click();
   await expect(ada.getByRole("heading", { level: 1, name: "The onboarding document chase" })).toBeVisible();
   await expect(tunde.getByRole("heading", { level: 1, name: "The visitor log book" })).toBeVisible();
@@ -99,6 +108,14 @@ test("facilitator runs a live session with two teams on phones", async ({ page, 
   await ada.getByRole("dialog").getByRole("textbox").fill("A new hire accepts the offer in the HRIS");
   await ada.getByRole("button", { name: "Snap it in" }).click();
   await expect(ada.getByText("1 of 5 slots filled · Saved")).toBeVisible();
+
+  // Step 3, Control: how much a person stays involved.
+  await ada.getByRole("button", { name: "Edit control" }).click();
+  await ada.getByRole("radio", { name: /^On the loop/ }).click();
+  await ada.getByRole("dialog").getByRole("textbox").fill("HR checks the documents are genuine");
+  await ada.getByRole("button", { name: "Snap it in" }).click();
+  await expect(ada.getByText("On the loop", { exact: true })).toBeVisible();
+  await expect(ada.getByText("2 of 5 slots filled · Saved")).toBeVisible();
 
   // A teammate on another phone sees Ada's edit arrive, and adds their own.
   const chidi = await joinOnPhone(browser, code, "Chidi", { existing: "The Fixers" });
@@ -110,32 +127,25 @@ test("facilitator runs a live session with two teams on phones", async ({ page, 
   await page.getByRole("button", { name: /The Fixers/ }).click();
   await expect(page.getByLabel("The Fixers in detail").getByText("A new hire accepts the offer in the HRIS")).toBeVisible();
 
-  // The twist locks the canvas and drops a bonus coin.
+  // The twist drops a bonus coin, and teams adapt straight away.
   await page.getByRole("button", { name: "Start: Twist" }).click();
   // Each team gets its own twist (the mock writes the same one for both).
   await expect(ada.getByText(/line manager who approves these is on leave/)).toBeVisible();
   await expect(presenter.getByText(/line manager who approves these is on leave/).first()).toBeVisible();
   await expect(ada.getByText("Hint coins: 4")).toBeAttached();
-  await expect(ada.getByRole("button", { name: "Edit trigger" })).toBeDisabled();
-
-  // Adapting: the canvas opens again, starting from the saved design.
-  await page.getByRole("button", { name: "Start: Adapt" }).click();
   await expect(ada.getByRole("button", { name: "Edit trigger" })).toBeEnabled();
   await expect(ada.getByText("A new hire accepts the offer in the HRIS")).toBeVisible();
 
-  // Prioritise: Ada rates the use case on the discovery scorecard.
-  await page.getByRole("button", { name: "Start: Prioritise" }).click();
-  await expect(ada.getByText("The Fixers · Prioritise")).toBeVisible();
-  await ada.getByRole("button", { name: "Impact 5, effort 2" }).click();
-  await ada.getByRole("radio", { name: "Daily" }).click();
-  await ada.getByRole("button", { name: /Extract from documents/ }).click();
-  await expect(ada.getByText(/Saved/)).toBeVisible();
+  // Step 4, Rank: three taps. Judging starts in the background at the same time.
+  await page.getByRole("button", { name: "Start: Rank" }).click();
+  await expect(ada.getByText("The Fixers · Rank")).toBeVisible();
+  await ada.getByRole("radio", { name: "Value 5: A big deal" }).click();
+  await ada.getByRole("radio", { name: /^Ready/ }).click();
+  await ada.getByRole("radio", { name: /^Low/ }).click();
+  await expect(ada.getByText("Quick wins", { exact: true })).toBeVisible();
+  await expect(ada.getByText(/3 of 3 answered · Saved/)).toBeVisible();
   // The team detail is still open from earlier; it updates live.
   await expect(page.getByLabel("The Fixers in detail").getByText("Quick win")).toBeVisible();
-
-  // Judging runs in the background; the projector drums, the console counts.
-  await page.getByRole("button", { name: "Start: Judging" }).click();
-  await expect(presenter.getByText(/The judges are deliberating/)).toBeVisible();
   await expect(page.getByText("2 of 2 teams judged")).toBeVisible({ timeout: 30_000 });
 
   // The facilitator overrides one score; both are kept.

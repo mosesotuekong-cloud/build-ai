@@ -2,6 +2,9 @@ import { CANVAS_SLOTS, SLOT_LABELS } from "@/lib/ai/schemas/canvas";
 import type { ReportProse } from "@/lib/ai/schemas/report";
 import { AI_KINDS, FREQUENCIES } from "@/lib/discovery/scorecard";
 import { BUCKETS, bucketTitle, type OpportunityMap, type UseCase } from "@/lib/report/map";
+import { oversightLabel } from "@/lib/ai/schemas/canvas";
+
+const readinessText = (r: string | null) => (r === "not_ready" ? "not ready" : (r ?? "not rated"));
 
 const BUCKET_STYLE: Record<string, string> = {
   quick_win: "border-green-600 bg-green-50",
@@ -267,18 +270,24 @@ function UseCaseCard({ u, note }: { u: UseCase; note?: string }) {
         <ul className="mt-2 space-y-1">
           {CANVAS_SLOTS.map((s) => (
             <li key={s}>
-              <strong className={s === "human" ? "text-amber-700" : "text-green-700"}>{SLOT_LABELS[s].title}:</strong> {u.slots[s] || <em>empty</em>}
+              <strong className={s === "human" ? "text-amber-700" : "text-green-700"}>{SLOT_LABELS[s].title}:</strong>{" "}
+              {s === "human" && oversightLabel(u.oversight) ? `${oversightLabel(u.oversight)}. ` : ""}
+              {u.slots[s] || (s === "human" && u.oversight ? "" : <em>empty</em>)}
             </li>
           ))}
         </ul>
+        {u.fix && (
+          <p className="mt-2 text-ink-700">
+            <strong>Fix it first:</strong> {[u.fix.eliminate && `stop ${u.fix.eliminate}`, u.fix.combine && `merge ${u.fix.combine}`, u.fix.simplify && `simplify ${u.fix.simplify}`].filter(Boolean).join("; ")}
+          </p>
+        )}
       </details>
 
       <div className="grid gap-3 text-sm sm:grid-cols-2">
         <div className="rounded-xl border border-cream-300 p-3">
           <p className="font-semibold">The team&apos;s view</p>
           <p className="text-ink-700">
-            Impact {u.team.impact ?? "?"}/5 · effort {u.team.effort ?? "?"}/5 · data {u.team.readiness?.replace("_", " ") ?? "not rated"}
-            {u.team.frequency && ` · ${u.team.frequency}`}
+            Value {u.team.impact ?? "?"}/5 · {readinessText(u.team.readiness)} · {u.team.risk ? `${u.team.risk} risk` : "risk not rated"}
           </p>
           <p className="text-ink-500">{bucketTitle(u.team.bucket)}</p>
         </div>
@@ -287,7 +296,7 @@ function UseCaseCard({ u, note }: { u: UseCase; note?: string }) {
           {u.ai ? (
             <>
               <p className="text-ink-700">
-                Impact {u.ai.impact}/5 · effort {u.ai.effort}/5 · data {u.ai.readiness.replace("_", " ")} · {u.ai.risk} risk
+                Value {u.ai.impact}/5 · {readinessText(u.ai.readiness)} · {u.ai.risk} risk
               </p>
               <p className="text-ink-500">{bucketTitle(u.ai.bucket)}</p>
             </>

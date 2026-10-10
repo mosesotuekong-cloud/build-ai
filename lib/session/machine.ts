@@ -3,13 +3,19 @@ import type { SessionSettings } from "./settings";
 // The session state machine. This is the only place that decides which
 // phase can follow which. Transitions happen on the server only.
 //
-//   draft → lobby → baseline_check (optional) → solving → twist → solving_after_twist
-//   → prioritise → judging → reveal → post_check (optional) → commitments → report → closed
+// The four-step method: Fix → Design → Control (part of Design) → Rank.
 //
+//   draft → lobby → baseline_check (optional) → fix → solving → twist (optional)
+//   → prioritise ("Rank") → reveal → post_check (optional) → commitments → report → closed
+//
+// Teams adapt their design during the twist itself. Judging runs in the
+// background while teams rank, so there is no judging phase to wait through.
 // Optional phases depend on settings: without the before-and-after check,
-// lobby goes straight to solving and reveal straight to commitments. Without
-// the twist, solving goes straight to prioritise. Leaving a switched-off phase
-// is still allowed, so changing settings mid-session never strands a room.
+// lobby goes straight to fix and reveal straight to commitments. Without the
+// twist, solving goes straight to prioritise. Leaving a switched-off phase is
+// still allowed, so changing settings mid-session never strands a room.
+// "solving_after_twist" and "judging" belong to the older, longer flow; a
+// session left in one of them can still move on.
 // Any phase can be ended early
 // (→ closed), except a draft, which is simply deleted.
 //
@@ -20,6 +26,7 @@ export const PHASES = [
   "draft",
   "lobby",
   "baseline_check",
+  "fix",
   "solving",
   "twist",
   "solving_after_twist",
@@ -42,17 +49,19 @@ export function nextPhase(phase: Phase, settings: MachineSettings): Phase | null
     case "draft":
       return "lobby";
     case "lobby":
-      return settings.before_after_check ? "baseline_check" : "solving";
+      return settings.before_after_check ? "baseline_check" : "fix";
     case "baseline_check":
+      return "fix";
+    case "fix":
       return "solving";
     case "solving":
       return settings.twist_enabled ? "twist" : "prioritise";
     case "twist":
-      return "solving_after_twist";
+      return "prioritise";
     case "solving_after_twist":
       return "prioritise";
     case "prioritise":
-      return "judging";
+      return "reveal";
     case "judging":
       return "reveal";
     case "reveal":
@@ -77,7 +86,7 @@ export function canTransition(from: Phase, to: Phase, settings: MachineSettings,
 }
 
 // Phases where teams can edit their design and talk to the coach.
-export const DESIGN_PHASES: ReadonlySet<Phase> = new Set(["solving", "solving_after_twist"]);
+export const DESIGN_PHASES: ReadonlySet<Phase> = new Set(["solving", "twist", "solving_after_twist"]);
 export const COACH_PHASES: ReadonlySet<Phase> = new Set(["solving", "twist", "solving_after_twist"]);
 
 // Timed phases and their duration in seconds, or null to run until advanced.
@@ -90,10 +99,11 @@ export const PHASE_LABELS: Record<Phase, { title: string; player: string }> = {
   draft: { title: "Draft", player: "This session hasn't opened yet." },
   lobby: { title: "Lobby", player: "You're in. Pick your case while everyone joins." },
   baseline_check: { title: "Warm-up round", player: "A quick solo round to warm up." },
-  solving: { title: "Design", player: "Design your automation. The coach is here to help." },
-  twist: { title: "Twist", player: "Something just changed for your team." },
+  fix: { title: "Fix it first", player: "Before you automate: what would you stop, merge or simplify?" },
+  solving: { title: "Design", player: "Design your automation, and decide how much a person stays in control." },
+  twist: { title: "Twist", player: "Something just changed. Adapt your design." },
   solving_after_twist: { title: "Adapt", player: "Adapt your design to the twist." },
-  prioritise: { title: "Prioritise", player: "Place your design on the impact and effort grid." },
+  prioritise: { title: "Rank", player: "Is it worth it, is it ready, how risky is it? Three taps." },
   judging: { title: "Judging", player: "Designs are being judged. Hold tight." },
   reveal: { title: "Reveal", player: "Here's how it went." },
   post_check: { title: "Final round", player: "One more quick solo round." },
@@ -116,11 +126,12 @@ export function designSaveTargets(
 ): ("before_twist" | "after_twist" | "current")[] {
   if (phase === "solving") return ["before_twist"];
   if (phase === "solving_after_twist") return ["after_twist"];
+  // The twist has snapshotted the design. A save in the first moments may be
+  // a late edit from before it, so it lands in both versions; after that,
+  // teams adapt the copy they carry on with.
   const withinGrace = phaseStartedAt !== null && now - new Date(phaseStartedAt).getTime() <= DESIGN_SAVE_GRACE_SECONDS * 1000;
-  if (!withinGrace) return [];
-  // The twist has just snapshotted the design; a late save belongs in both the
-  // saved pre-twist version and the copy the team carries on from.
-  if (phase === "twist") return ["before_twist", "after_twist"];
-  if (phase === "prioritise") return ["current"];
+  if (phase === "twist") return withinGrace ? ["before_twist", "after_twist"] : ["after_twist"];
+  // Just after the canvas locks, a last edit still lands.
+  if (withinGrace && phase === "prioritise") return ["current"];
   return [];
 }

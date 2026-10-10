@@ -51,7 +51,7 @@ function idMaker(seed: string) {
 const replace = (what: string | null, fallback: string) => `${T.REPLACE}: ${what?.trim() || fallback}`;
 
 export function compileN8n(plan: Plan): N8nWorkflow {
-  const problems = validatePlan(plan);
+  const problems = validatePlan(plan, { requireApproval: false });
   if (problems.length) throw new Error(`Cannot compile an invalid plan: ${problems.join(" ")}`);
 
   const ids = idMaker(plan.name + JSON.stringify(plan.blocks.map((b) => b.id)));

@@ -2,6 +2,7 @@ import { OPPORTUNITY_MAP_SYSTEM } from "@/lib/ai/prompts/opportunity-map";
 import { reportProseSchema, type ReportProse } from "@/lib/ai/schemas/report";
 import type { AIProvider } from "@/lib/ai/types";
 import { bucketTitle, BUCKETS, type OpportunityMap } from "./map";
+import { oversightLabel } from "@/lib/ai/schemas/canvas";
 
 // What the AI sees: the map without team names, owners or any player data.
 export function anonymisedBrief(map: OpportunityMap): string {
@@ -17,6 +18,7 @@ export function anonymisedBrief(map: OpportunityMap): string {
       `${u.ref}: ${u.designName} (${u.functionName}${u.source === "raised" ? ", raised by staff" : ""}). Bucket: ${bucketTitle(u.bucket)}.`,
       `  Design: trigger: ${u.slots.trigger || "-"} | steps: ${u.slots.steps || "-"} | decision: ${u.slots.decision || "-"} | action: ${u.slots.action || "-"} | human: ${u.slots.human || "-"}`,
       `  Hours a month: ${u.hoursPerMonth ?? "not estimated"}. Kind of AI: ${u.aiKindLabel ?? "unclear"}. Risk: ${u.risk}${u.riskReasons.length ? ` (${u.riskReasons.join(", ")})` : ""}. Best-fit platform: ${u.platformFit?.name ?? "none"}.`,
+      `  Control: ${oversightLabel(u.oversight) ?? "not chosen"}.${u.fix ? ` Fix it first: ${[u.fix.eliminate && `stop ${u.fix.eliminate}`, u.fix.combine && `merge ${u.fix.combine}`, u.fix.simplify && `simplify ${u.fix.simplify}`].filter(Boolean).join("; ")}.` : ""}`,
       `  Before building: ${u.itReasons.join("; ") || "nothing flagged"}.`,
       u.ai ? `  AI assessment note: ${u.ai.note}` : "",
       u.disagreements.length ? `  Disagreements: ${u.disagreements.join(" ")}` : "",

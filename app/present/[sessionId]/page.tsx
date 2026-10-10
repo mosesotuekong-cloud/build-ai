@@ -27,7 +27,7 @@ export default async function PresentPage({ params }: PageProps<"/present/[sessi
     .select("id, name, created_at, players (display_name, left_at), designs (version, trigger, steps, decision, action, human), twists (content)")
     .eq("session_id", session.id)
     .order("created_at");
-  const results = ["judging", "reveal", "post_check", "commitments", "report", "closed"].includes(session.phase) ? await loadSessionScores(session.id) : null;
+  const results = ["prioritise", "judging", "reveal", "post_check", "commitments", "report", "closed"].includes(session.phase) ? await loadSessionScores(session.id) : null;
   const { data: commitments } =
     session.phase === "commitments" ? await supabase.from("commitments").select("team_id, first_step, due_date").eq("session_id", session.id) : { data: [] };
 

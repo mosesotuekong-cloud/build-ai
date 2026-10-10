@@ -30,8 +30,9 @@ export async function transitionSession(sessionId: string, to: Phase, admin: Adm
     creditUsed = true;
   }
 
-  // Teams that haven't picked a case get one dealt before design starts.
-  if (mode === "live" && to === "solving") await dealRemainingCases(admin, session.id, session.deck_id);
+  // Teams that haven't picked a case get one dealt before they need it: at
+  // Fix it first (or at design, for a session that skipped it).
+  if (mode === "live" && (to === "fix" || to === "solving")) await dealRemainingCases(admin, session.id, session.deck_id);
   // The pre-twist design is saved as a version before the twist lands.
   if (mode === "live" && to === "twist") {
     await admin.rpc("snapshot_designs_for_twist", { target_session: session.id });

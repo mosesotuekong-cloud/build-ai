@@ -2,6 +2,7 @@ import "server-only";
 import { aiForSession } from "@/lib/ai/for-org";
 import { writeBlueprint } from "@/lib/ai/tasks/blueprint";
 import type { CoachDesign } from "@/lib/coach/context";
+import { fixSchema, type Oversight } from "@/lib/ai/schemas/canvas";
 import { functionName } from "@/lib/decks/schemas";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { planFromDesign } from "./from-design";
@@ -18,6 +19,8 @@ const toDesign = (d: Record<string, unknown>): CoachDesign => ({
   hours_saved_per_month: d.hours_saved_per_month == null ? null : Number(d.hours_saved_per_month),
   tools: (d.tools as string[]) ?? [],
   systems: (d.systems as string[]) ?? [],
+  oversight: (d.oversight as Oversight | null) ?? null,
+  fix: fixSchema.safeParse(d.fix).data ?? null,
 });
 
 // Writes a blueprint for every team in the session (or just the given team)

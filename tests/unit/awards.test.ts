@@ -17,22 +17,23 @@ describe("leaderboard and awards", () => {
     expect(rankTeams(teams).map((t) => t.id)).toEqual(["b", "a", "c"]);
   });
 
-  it("gives the top design to the winner and spreads criterion awards", () => {
+  it("gives three awards: top design, best control and best rule-or-AI call", () => {
     const awards = computeAwards(teams);
+    expect(awards.map((a) => a.key)).toEqual(["winner", "human", "decision"]);
     expect(awards[0]).toMatchObject({ key: "winner", teamId: "b" });
     expect(awards.find((a) => a.key === "human")?.teamId).toBe("a");
-    expect(awards.find((a) => a.key === "hours")?.teamId).toBe("c");
+    // Bravo has the best decision score but already won; Charlie is next with a score.
+    expect(awards.find((a) => a.key === "decision")?.teamId).toBe("c");
   });
 
   it("lets a team win again only when everyone has already won", () => {
-    const awards = computeAwards(teams);
-    // trigger: Charlie (15) has already won "hours"; Alpha has "human"; the winner has "winner".
-    expect(awards.find((a) => a.key === "trigger")?.teamId).toBe("c");
+    const awards = computeAwards(teams.slice(0, 1));
+    expect(awards.find((a) => a.key === "human")?.teamId).toBe("a");
   });
 
   it("never awards a criterion nobody scored on, and handles no teams", () => {
-    const zeroHours = [{ ...teams[0], breakdown: breakdown({ human: 10 }) }];
-    expect(computeAwards(zeroHours).find((a) => a.key === "hours")).toBeUndefined();
+    const zeroDecision = [{ ...teams[0], breakdown: breakdown({ human: 10 }) }];
+    expect(computeAwards(zeroDecision).find((a) => a.key === "decision")).toBeUndefined();
     expect(computeAwards([])).toEqual([]);
   });
 });

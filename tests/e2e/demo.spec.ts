@@ -18,11 +18,12 @@ test("a visitor tries the demo without signing up", async ({ page }, testInfo) =
   await expect(page.getByRole("button", { name: "Write it again" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Download PDF" })).toBeVisible();
 
-  // Stop 2: the room is in the lobby with four teams and goes straight to design.
+  // Stop 2: the room is in the lobby with four teams; Fix it first, then design.
   await page.getByRole("link", { name: "Back to the tour" }).click();
   await page.getByRole("link", { name: "Open the facilitator console" }).click();
   await expect(page.getByRole("heading", { name: /Demo room/ })).toBeVisible();
   for (const team of ["Your team", "Night Owls", "Early Birds", "Lions"]) await expect(page.getByText(team, { exact: true }).first()).toBeVisible();
+  await page.getByRole("button", { name: "Start: Fix it first" }).click();
   await page.getByRole("button", { name: "Start: Design" }).click();
   await expect(page.getByRole("button", { name: "Start: Twist" })).toBeVisible();
 

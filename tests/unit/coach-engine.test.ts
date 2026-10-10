@@ -112,3 +112,29 @@ describe("platform catalog", () => {
     expect(cleanPlatformSlugs(["uipath", "nope", "n8n", "n8n"])).toEqual(["n8n", "uipath"]);
   });
 });
+
+describe("the coach and judge see Fix and Control", () => {
+  it("describes the control level and what the team would fix first", async () => {
+    const { describeSituation } = await import("@/lib/coach/context");
+    const text = describeSituation({
+      case: { title: "Leave", story: "Story", cost: "", who_feels_it: "", function_name: "HR" },
+      design: {
+        trigger: "Form",
+        steps: "",
+        decision: "",
+        action: "",
+        human: "The manager checks clashes",
+        name: "",
+        hours_saved_per_month: null,
+        tools: [],
+        systems: [],
+        oversight: "on",
+        fix: { eliminate: "Stop phone requests", combine: "", simplify: "" },
+      },
+      phase: "solving",
+      platforms: [],
+    });
+    expect(text).toContain("- Control (how much a person stays involved): On the loop. The manager checks clashes");
+    expect(text).toContain("- Stop: Stop phone requests");
+  });
+});

@@ -118,7 +118,7 @@ export function allowedBranches(b: PlanBlock): (string | null)[] {
 // Checks what zod can't: links point at real blocks, one trigger starts the
 // flow, everything is reachable, no loops, branches fit the block, and a
 // person stays in control. Returns a list of problems (empty means valid).
-export function validatePlan(plan: Plan): string[] {
+export function validatePlan(plan: Plan, { requireApproval = true }: { requireApproval?: boolean } = {}): string[] {
   const problems: string[] = [];
   const byId = new Map<string, PlanBlock>();
   for (const b of plan.blocks) {
@@ -128,7 +128,8 @@ export function validatePlan(plan: Plan): string[] {
 
   const triggers = plan.blocks.filter((b) => TRIGGER_KINDS.includes(b.kind));
   if (triggers.length !== 1) problems.push(`Expected exactly one trigger block, found ${triggers.length}.`);
-  if (!plan.blocks.some((b) => b.kind === "approval")) problems.push("No approval block: a person must stay in control.");
+  // A person stays in control unless the team chose fully automatic.
+  if (requireApproval && !plan.blocks.some((b) => b.kind === "approval")) problems.push("No approval block: a person must stay in control.");
 
   const seen = new Set<string>();
   for (const l of plan.links) {

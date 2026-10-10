@@ -17,7 +17,7 @@ const SANDBOX_HOURS = 24;
 export const DEMO_ROOM_SETTINGS = {
   before_after_check: false,
   case_mode: "facilitator_assigns",
-  minutes: { solving: 5, solving_after_twist: 3, prioritise: 2, commitments: 2 },
+  minutes: { fix: 2, solving: 5, twist: 3, prioritise: 2, commitments: 2 },
 } as const;
 
 export function hashIp(ip: string): string {

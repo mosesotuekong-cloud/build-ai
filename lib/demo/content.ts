@@ -25,11 +25,32 @@ type DemoDesign = {
   personal_data: string | null;
   risks: string[];
   ai_kind: string | null;
+  oversight: "in" | "on" | "out" | null;
+  readiness: "ready" | "partly" | "not_yet" | null;
+  risk_level: "low" | "medium" | "high" | null;
+  fix: { eliminate: string; combine: string; simplify: string };
 };
 
 type DemoTeam = { name: string; caseTitle: string; design: DemoDesign };
 
-const blank = { hours_saved_per_month: null, tools: [], systems: [], impact: null, effort: null, frequency: null, data_location: null, data_access: null, data_quality: null, personal_data: null, risks: [], ai_kind: null };
+const blank = {
+  hours_saved_per_month: null,
+  tools: [],
+  systems: [],
+  impact: null,
+  effort: null,
+  frequency: null,
+  data_location: null,
+  data_access: null,
+  data_quality: null,
+  personal_data: null,
+  risks: [],
+  ai_kind: null,
+  oversight: null,
+  readiness: null,
+  risk_level: null,
+  fix: { eliminate: "", combine: "", simplify: "" },
+};
 
 export const VISITOR_TEAM: DemoTeam = {
   name: "Your team",
@@ -68,6 +89,10 @@ export const BOT_TEAMS: DemoTeam[] = [
       personal_data: "yes",
       risks: ["people_decisions"],
       ai_kind: "rule",
+      oversight: "on",
+      readiness: "ready",
+      risk_level: "medium",
+      fix: { eliminate: "Stop asking for printed guarantor forms", combine: "One form for ID, bank details and certificates", simplify: "" },
     },
   },
   {
@@ -92,6 +117,10 @@ export const BOT_TEAMS: DemoTeam[] = [
       personal_data: "no",
       risks: [],
       ai_kind: "summarise",
+      oversight: "in",
+      readiness: "partly",
+      risk_level: "low",
+      fix: { eliminate: "", combine: "Merge the four spreadsheets into one HR tracker", simplify: "Agree one definition of headcount" },
     },
   },
   {
@@ -116,6 +145,10 @@ export const BOT_TEAMS: DemoTeam[] = [
       personal_data: "yes",
       risks: ["customer_facing", "pay"],
       ai_kind: "assistant",
+      oversight: "on",
+      readiness: "partly",
+      risk_level: "high",
+      fix: { eliminate: "", combine: "", simplify: "Publish the top 20 answers on the intranet first" },
     },
   },
 ];

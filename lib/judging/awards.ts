@@ -4,10 +4,10 @@ export type RankedTeam = { id: string; name: string; final: number; breakdown: S
 
 export type Award = { key: string; title: string; reason: string; teamId: string; teamName: string };
 
+// Three awards in all: the top design, plus the two calls that matter most
+// in practice: the right level of control, and rule versus AI.
 const AWARD_DEFS = [
-  { key: "human", criterion: "human", title: "Best human checkpoint", reason: "Put a person exactly where the risk is." },
-  { key: "hours", criterion: "hours", title: "Most believable hours saved", reason: "Hours saved you'd sign off in a budget meeting." },
-  { key: "trigger", criterion: "trigger", title: "Sharpest trigger", reason: "Started from a real, specific event." },
+  { key: "human", criterion: "human", title: "Best control", reason: "Kept a person exactly where the risk is." },
   { key: "decision", criterion: "decision", title: "Best rule-or-AI call", reason: "Used AI only where judgement was needed." },
 ] as const;
 

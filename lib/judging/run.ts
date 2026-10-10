@@ -1,4 +1,5 @@
 import "server-only";
+import { fixSchema, type Oversight } from "@/lib/ai/schemas/canvas";
 import { aiForSession } from "@/lib/ai/for-org";
 import { assessUseCase, checkScoreFrom, judgeDesign, writeReferenceSolution } from "@/lib/ai/tasks/judge-design";
 import { getCheckCard } from "@/lib/checks/cards";
@@ -26,6 +27,8 @@ const toDesign = (d: Record<string, unknown> | undefined): CoachDesign => ({
   hours_saved_per_month: d?.hours_saved_per_month === null || d?.hours_saved_per_month === undefined ? null : Number(d.hours_saved_per_month),
   tools: (d?.tools as string[]) ?? [],
   systems: (d?.systems as string[]) ?? [],
+  oversight: (d?.oversight as Oversight | null) ?? null,
+  fix: fixSchema.safeParse(d?.fix).data ?? null,
 });
 
 // Judges every team in the session, in parallel. Each team gets a "pending"

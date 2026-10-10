@@ -11,8 +11,7 @@ import { Card } from "@/components/ui/card";
 import { CANVAS_SLOTS } from "@/lib/ai/schemas/canvas";
 import type { CoachDesign } from "@/lib/coach/context";
 import { functionName } from "@/lib/decks/schemas";
-import { getPlatform } from "@/lib/config/platforms";
-import { AI_KINDS, DATA_QUESTIONS, FREQUENCIES, RISKS, portfolioBucket, scorecardProgress, type Scorecard } from "@/lib/discovery/scorecard";
+import { FREQUENCIES, READINESS, RISK_LEVELS, portfolioBucket, scorecardProgress, type Scorecard } from "@/lib/discovery/scorecard";
 import { nextPhase, PHASE_LABELS, type Phase } from "@/lib/session/machine";
 import type { SessionSettings } from "@/lib/session/settings";
 import { addTime, advanceToNext, assignCase, deleteDraft, endSession } from "../actions";
@@ -220,7 +219,7 @@ export function RunConsole({
                     {t.twist && <p className="rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-700">Twist: {t.twist}</p>}
                     <SlotMeter filled={t.filled} size="sm" />
                     <p className="text-xs text-ink-500">
-                      {t.messages.filter((m) => m.role === "team").length} coach questions · {t.messages.filter((m) => m.earned).length} coins earned · {selected === t.id ? "Hide details" : "View design and coach chat"}
+                      {t.messages.filter((m) => m.role === "team").length} coach questions · {selected === t.id ? "Hide details" : "View design and coach chat"}
                     </p>
                   </button>
                   {canAssign && (
@@ -247,7 +246,7 @@ export function RunConsole({
 
       {selectedTeam && <TeamDetail team={selectedTeam} caseTitle={caseTitle(selectedTeam.caseId)} />}
 
-      {["judging", "reveal", "post_check", "commitments", "report", "closed"].includes(phase) && (
+      {["prioritise", "judging", "reveal", "post_check", "commitments", "report", "closed"].includes(phase) && (
         <ResultsPanel
           sessionId={session.id}
           scores={results.scores}
@@ -315,15 +314,10 @@ function ScorecardSummary({ card }: { card: Scorecard }) {
   const bucket = portfolioBucket(card);
   return (
     <dl className="grid gap-x-4 gap-y-1.5 text-sm sm:grid-cols-2">
-      <Row term="Impact / effort" value={card.impact && card.effort ? `${card.impact} / ${card.effort} out of 5` : "Not placed"} />
+      <Row term="Value" value={card.impact ? `${card.impact} of 5` : "Not answered"} />
+      <Row term="Ready?" value={label(READINESS, card.readiness)} />
+      <Row term="Risk" value={label(RISK_LEVELS, card.risk_level)} />
       <Row term="Portfolio" value={bucket ? BUCKET_NAMES[bucket] : "Not enough answers"} />
-      <Row term="How often" value={`${label(FREQUENCIES, card.frequency)}${card.volume_per_month ? `, about ${card.volume_per_month} a month` : ""}`} />
-      {DATA_QUESTIONS.map((q) => (
-        <Row key={q.key} term={q.question} value={label(q.options, card[q.key])} />
-      ))}
-      <Row term="Risks" value={card.risks.map((x) => RISKS.find((o) => o.value === x)?.label ?? x).join(", ") || "None picked"} />
-      <Row term="Kind of AI" value={label(AI_KINDS, card.ai_kind)} />
-      <Row term="Platform fit" value={card.platform_fit ? (getPlatform(card.platform_fit)?.name ?? "Not sure") : "Not answered"} />
     </dl>
   );
 }
@@ -349,7 +343,7 @@ function TeamDetail({ team, caseTitle }: { team: RunTeam; caseTitle: string | nu
         {team.design ? (
           <div className="space-y-2">
             {CANVAS_SLOTS.map((slot) => (
-              <SlotSocket key={slot} slot={slot} value={team.design![slot]} compact />
+              <SlotSocket key={slot} slot={slot} value={team.design![slot]} oversight={team.design!.oversight} compact />
             ))}
             <p className="text-sm text-ink-500">
               {team.design.name ? `“${team.design.name}” · ` : ""}

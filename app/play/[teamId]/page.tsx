@@ -6,6 +6,7 @@ import { CheckView } from "@/components/play/check-view";
 import { LobbyView } from "@/components/play/lobby-view";
 import { RaiseIdeaButton } from "@/components/play/raise-idea";
 import { ScorecardView } from "@/components/play/scorecard-view";
+import { FixView } from "@/components/play/fix-view";
 import { CommitmentsView } from "@/components/play/commitments-view";
 import { RevealView } from "@/components/play/reveal-view";
 import { RefreshWhile } from "@/components/session/refresh-while";
@@ -78,7 +79,17 @@ export default async function PlayPage({ params }: PageProps<"/play/[teamId]">) 
     }
   }
 
-  // Prioritise: the team's discovery scorecard.
+  // Fix it first: what the team would stop, merge or simplify.
+  if (live && phase === "fix" && data.case) {
+    return (
+      <>
+        {refresher}
+        <FixView teamId={teamId} teamName={data.team.name} caseInfo={data.case} initial={data.design.fix ?? { eliminate: "", combine: "", simplify: "" }} timer={timer} extra={<RaiseIdeaButton teamId={teamId} />} />
+      </>
+    );
+  }
+
+  // Rank: value, readiness and risk.
   if (live && phase === "prioritise" && data.case) {
     return (
       <>

@@ -45,12 +45,11 @@ export async function createSession(_prev: CreateSessionState, formData: FormDat
     coach_enabled: formData.get("coach_enabled") === "on",
     inline_coach: formData.get("inline_coach") === "on",
     inline_idle_minutes: number("inline_idle_minutes"),
-    earn_back_cap: number("earn_back_cap"),
     twist_enabled: formData.get("twist_enabled") === "on",
     before_after_check: formData.get("before_after_check") === "on",
     case_mode: formData.get("case_mode") ?? undefined,
     function_mode: formData.get("function_mode") ?? undefined,
-    minutes: { solving: number("minutes_solving"), solving_after_twist: number("minutes_after_twist") },
+    minutes: { solving: number("minutes_solving"), twist: number("minutes_after_twist") },
   });
   if (!settings.success) return { status: "error", message: "Some settings are out of range. Check the numbers." };
 
@@ -92,7 +91,10 @@ export async function advanceSession(sessionId: string, to: string): Promise<{ o
   // Slow AI work runs after the response, so the room moves on at once and
   // screens update live as results land.
   if (result.ok) {
-    if (target === "judging") after(() => Promise.all([judgeSession(session.id), scoreChecks(session.id, "baseline")]));
+    // Designs are final once ranking starts, so judging runs while teams rank
+    // and scores are ready (or nearly) by the reveal.
+    if (target === "prioritise") after(() => Promise.all([judgeSession(session.id), scoreChecks(session.id, "baseline")]));
+    if (target === "judging") after(() => judgeSession(session.id, { onlyUnscored: true }));
     if (target === "reveal") after(() => Promise.all([writeReferenceSolutions(session.id), generateBlueprints(session.id)]));
     if (target === "commitments") after(() => scoreChecks(session.id, "post"));
     // The opportunity map is written when the report phase starts, or at the

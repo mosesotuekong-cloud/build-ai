@@ -47,9 +47,11 @@ describe("discovery scorecard", () => {
     expect(scorecardPatchSchema.safeParse({ risks: ["vibes"] }).success).toBe(false);
   });
 
-  it("counts progress", () => {
-    expect(scorecardProgress(EMPTY_SCORECARD)).toEqual({ done: 0, total: 7 });
-    expect(scorecardProgress({ ...EMPTY_SCORECARD, impact: 3, effort: 2, frequency: "daily" }).done).toBe(2);
+  it("counts the three Rank taps", () => {
+    expect(scorecardProgress(EMPTY_SCORECARD)).toEqual({ done: 0, total: 3 });
+    expect(scorecardProgress({ ...EMPTY_SCORECARD, impact: 3, readiness: "ready" }).done).toBe(2);
+    expect(scorecardPatchSchema.safeParse({ readiness: "ready", risk_level: "high" }).success).toBe(true);
+    expect(scorecardPatchSchema.safeParse({ readiness: "maybe" }).success).toBe(false);
   });
 
   it("suggests a kind of AI from the decision wording", () => {
@@ -61,12 +63,21 @@ describe("discovery scorecard", () => {
     expect(suggestAiKind("")).toBeNull();
   });
 
-  it("puts use cases into portfolio buckets", () => {
-    const base = { data_location: "known", data_access: "yes", data_quality: "good" } as const;
+  it("puts use cases into portfolio buckets from value, readiness and risk", () => {
+    expect(portfolioBucket({ impact: 5, readiness: "ready", risk_level: "low" })).toBe("quick_win");
+    expect(portfolioBucket({ impact: 3, readiness: "ready", risk_level: "medium" })).toBe("quick_win");
+    expect(portfolioBucket({ impact: 4, readiness: "ready", risk_level: "high" })).toBe("strategic_bet");
+    expect(portfolioBucket({ impact: 4, readiness: "partly", risk_level: "low" })).toBe("strategic_bet");
+    expect(portfolioBucket({ impact: 5, readiness: "not_yet", risk_level: "low" })).toBe("fix_data");
+    expect(portfolioBucket({ impact: 2, readiness: "ready", risk_level: "low" })).toBe("park");
+    expect(portfolioBucket({ impact: null, readiness: "ready", risk_level: "low" })).toBeNull();
+    expect(portfolioBucket({ impact: 4, readiness: null, risk_level: null })).toBeNull();
+  });
+
+  it("still reads older sessions' long scorecard", () => {
+    const base = { readiness: null, risk_level: null, data_location: "known", data_access: "yes", data_quality: "good" } as const;
     expect(portfolioBucket({ ...base, impact: 5, effort: 2 })).toBe("quick_win");
     expect(portfolioBucket({ ...base, impact: 4, effort: 5 })).toBe("strategic_bet");
     expect(portfolioBucket({ ...base, impact: 5, effort: 2, data_quality: "messy" })).toBe("fix_data");
-    expect(portfolioBucket({ ...base, impact: 1, effort: 1 })).toBe("park");
-    expect(portfolioBucket({ ...base, impact: null, effort: 3 })).toBeNull();
   });
 });

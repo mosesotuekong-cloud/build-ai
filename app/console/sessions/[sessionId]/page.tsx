@@ -3,7 +3,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { requireFacilitator } from "@/lib/auth/facilitator";
-import { CANVAS_SLOTS } from "@/lib/ai/schemas/canvas";
+import { CANVAS_SLOTS, fixSchema, type Oversight } from "@/lib/ai/schemas/canvas";
 import { readSettings } from "@/lib/session/settings";
 import { createClient } from "@/lib/supabase/server";
 import { RunConsole, type RunTeam } from "./run-console";
@@ -27,7 +27,7 @@ export default async function RunSessionPage({ params }: PageProps<"/console/ses
   const [{ data: teams }, { data: cases }] = await Promise.all([
     supabase
       .from("teams")
-      .select("id, name, case_id, hint_tokens_remaining, created_at, players (id, display_name, left_at), twists (content), design_checks (id, flags, created_at), designs (version, trigger, steps, decision, action, human, name, hours_saved_per_month, tools, systems, updated_at, impact, effort, frequency, volume_per_month, data_location, data_access, data_quality, personal_data, risks, ai_kind, platform_fit)")
+      .select("id, name, case_id, hint_tokens_remaining, created_at, players (id, display_name, left_at), twists (content), design_checks (id, flags, created_at), designs (version, trigger, steps, decision, action, human, name, hours_saved_per_month, tools, systems, updated_at, impact, effort, frequency, volume_per_month, data_location, data_access, data_quality, personal_data, risks, ai_kind, platform_fit, readiness, risk_level, oversight, fix)")
       .eq("session_id", session.id)
       .order("created_at"),
     session.deck_id
@@ -68,7 +68,12 @@ export default async function RunSessionPage({ params }: PageProps<"/console/ses
       checks: t.design_checks.map((c) => ({ id: c.id, flags: (c.flags as { slot: string; kind: string; question: string }[]) ?? [], created_at: c.created_at })),
       players: t.players.filter((p) => !p.left_at).map((p) => p.display_name),
       design: design
-        ? { ...design, hours_saved_per_month: design.hours_saved_per_month === null ? null : Number(design.hours_saved_per_month) }
+        ? {
+            ...design,
+            hours_saved_per_month: design.hours_saved_per_month === null ? null : Number(design.hours_saved_per_month),
+            oversight: (design.oversight as Oversight | null) ?? null,
+            fix: fixSchema.safeParse(design.fix).data ?? null,
+          }
         : null,
       scorecard: design
         ? {
@@ -83,9 +88,11 @@ export default async function RunSessionPage({ params }: PageProps<"/console/ses
             risks: design.risks,
             ai_kind: design.ai_kind,
             platform_fit: design.platform_fit,
+            readiness: design.readiness,
+            risk_level: design.risk_level,
           }
         : null,
-      filled: Object.fromEntries(CANVAS_SLOTS.map((s) => [s, Boolean(design?.[s]?.trim())])),
+      filled: Object.fromEntries(CANVAS_SLOTS.map((s) => [s, Boolean(design?.[s]?.trim() || (s === "human" && design?.oversight))])),
       messages: (messages ?? []).filter((m) => m.team_id === t.id).map((m) => ({ id: m.id, role: m.role, type: m.type, slot: m.slot, content: m.content, inline: m.trigger === "inline_idle", earned: Boolean(m.token_earned_at) })),
     };
   });

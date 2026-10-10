@@ -5,6 +5,9 @@ import type { ReportProse } from "@/lib/ai/schemas/report";
 import { APP_NAME } from "@/lib/config/app";
 import { AI_KINDS } from "@/lib/discovery/scorecard";
 import { BUCKETS, bucketTitle, type OpportunityMap } from "./map";
+import { oversightLabel } from "@/lib/ai/schemas/canvas";
+
+const readinessText = (r: string | null) => (r === "not_ready" ? "not ready" : (r ?? "not rated"));
 
 // The opportunity map as a PDF. Same content and order as the web report;
 // the executive summary fits on page one.
@@ -152,10 +155,10 @@ function ReportDocument({ map, prose }: { map: OpportunityMap; prose: ReportPros
               ))}
             </View>
             {CANVAS_SLOTS.map((slot) => (
-              <T key={slot} style={{ fontSize: 9, color: C.ink2 }}>{`${SLOT_LABELS[slot].title}: ${u.slots[slot] || "empty"}`}</T>
+              <T key={slot} style={{ fontSize: 9, color: C.ink2 }}>{`${SLOT_LABELS[slot].title}: ${slot === "human" && oversightLabel(u.oversight) ? `${oversightLabel(u.oversight)}. ` : ""}${u.slots[slot] || (slot === "human" && u.oversight ? "" : "empty")}`}</T>
             ))}
             <T style={[s.small, { marginTop: 4 }]}>
-              {`Team's view: impact ${u.team.impact ?? "?"}/5, effort ${u.team.effort ?? "?"}/5, ${bucketTitle(u.team.bucket)}.${u.ai ? `  AI's view: impact ${u.ai.impact}/5, effort ${u.ai.effort}/5, ${bucketTitle(u.ai.bucket)}.` : ""}`}
+              {`Team's view: value ${u.team.impact ?? "?"}/5, ${readinessText(u.team.readiness)}, ${u.team.risk ?? "unrated"} risk: ${bucketTitle(u.team.bucket)}.${u.ai ? `  AI's view: value ${u.ai.impact}/5, ${readinessText(u.ai.readiness)}, ${u.ai.risk} risk: ${bucketTitle(u.ai.bucket)}.` : ""}`}
             </T>
             {u.disagreements.length > 0 && (
               <View style={s.callout}>

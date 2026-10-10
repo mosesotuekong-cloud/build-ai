@@ -10,7 +10,7 @@ Each card describes one painful, repetitive process in a single business functio
 2. Steps: what information is gathered or prepared.
 3. Decision: what gets decided, by a simple rule or by AI judgement.
 4. Action: what gets done automatically.
-5. Human in control: which step a person checks, approves or overrides.
+5. Control: how much a person stays involved (in the loop, on the loop or out of the loop), and where.
 
 Worked example of a finished design: ${WORKED_EXAMPLE}
 

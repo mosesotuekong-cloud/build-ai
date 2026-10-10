@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { functionName } from "@/lib/decks/schemas";
 import type { CoachCase, CoachDesign, CoachHistoryItem } from "@/lib/coach/context";
 import type { Scorecard } from "@/lib/discovery/scorecard";
+import { EMPTY_FIX, fixSchema, type Oversight } from "@/lib/ai/schemas/canvas";
 
 export type PlayerTeam = {
   userId: string;
@@ -54,7 +55,7 @@ export async function loadPlayerTeam(teamId: string): Promise<PlayerTeam | null>
     admin
       .from("designs")
       .select(
-        "id, trigger, steps, decision, action, human, name, hours_saved_per_month, tools, systems, updated_at, impact, effort, frequency, volume_per_month, data_location, data_access, data_quality, personal_data, risks, ai_kind, platform_fit",
+        "id, trigger, steps, decision, action, human, name, hours_saved_per_month, tools, systems, updated_at, impact, effort, frequency, volume_per_month, data_location, data_access, data_quality, personal_data, risks, ai_kind, platform_fit, readiness, risk_level, oversight, fix",
       )
       .eq("team_id", teamId)
       .order("version", { ascending: false })
@@ -90,6 +91,8 @@ export async function loadPlayerTeam(teamId: string): Promise<PlayerTeam | null>
       hours_saved_per_month: design.hours_saved_per_month === null ? null : Number(design.hours_saved_per_month),
       tools: design.tools,
       systems: design.systems,
+      oversight: (design.oversight as Oversight | null) ?? null,
+      fix: fixSchema.safeParse(design.fix).data ?? EMPTY_FIX,
     },
     twist: twist ?? null,
     scorecard: {
@@ -104,6 +107,8 @@ export async function loadPlayerTeam(teamId: string): Promise<PlayerTeam | null>
       risks: design.risks,
       ai_kind: design.ai_kind,
       platform_fit: design.platform_fit,
+      readiness: design.readiness,
+      risk_level: design.risk_level,
     },
   };
 }

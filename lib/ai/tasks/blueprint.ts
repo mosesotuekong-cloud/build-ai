@@ -36,7 +36,7 @@ export async function writeBlueprint(
         schema: planSchema,
         maxTokens: 6000,
       });
-      problems = validatePlan(plan);
+      problems = validatePlan(plan, { requireApproval: input.design.oversight !== "out" });
       if (!problems.length) return { plan, source: "ai", problems: [] };
     } catch (error) {
       problems = [error instanceof Error ? error.message : "The plan could not be read."];

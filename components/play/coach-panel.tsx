@@ -13,7 +13,7 @@ const SLOT_LABEL: Record<string, string> = {
   steps: "Steps",
   decision: "Decision",
   action: "Action",
-  human: "Human in control",
+  human: "Control",
   name: "Name",
   hours_saved: "Hours saved",
   tools: "Tools",

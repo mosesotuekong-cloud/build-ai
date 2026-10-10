@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { SLOT_LABELS, type CanvasSlot } from "@/lib/ai/schemas/canvas";
+import { oversightLabel, SLOT_LABELS, type CanvasSlot } from "@/lib/ai/schemas/canvas";
 import { SPRINGS } from "./springs";
 
 export type SlotSocketProps = {
@@ -11,13 +11,16 @@ export type SlotSocketProps = {
   active?: boolean;
   compact?: boolean;
   className?: string;
+  // Control only: in, on or out of the loop, shown as a badge.
+  oversight?: string | null;
 };
 
 // One of the five canvas slots as a socket on a board. Empty, it is a recessed
-// dashed outline; filled, a tile snaps into it with a spring. "Human in
-// control" is always amber.
-export function SlotSocket({ slot, value, active = false, compact = false, className = "" }: SlotSocketProps) {
-  const filled = Boolean(value && value.trim());
+// dashed outline; filled, a tile snaps into it with a spring. Control (the
+// human slot) is always amber.
+export function SlotSocket({ slot, value, active = false, compact = false, className = "", oversight = null }: SlotSocketProps) {
+  const level = slot === "human" ? oversightLabel(oversight) : null;
+  const filled = Boolean((value && value.trim()) || level);
   const isHuman = slot === "human";
   const index = ["trigger", "steps", "decision", "action", "human"].indexOf(slot) + 1;
   const { title, prompt } = SLOT_LABELS[slot];
@@ -45,7 +48,7 @@ export function SlotSocket({ slot, value, active = false, compact = false, class
       <AnimatePresence>
         {filled && (
           <motion.div
-            key={value}
+            key={`${value}|${level}`}
             className={`z-10 flex flex-col gap-2 rounded-2xl border-b-4 p-3 shadow-lift [grid-area:1/1] ${
               isHuman ? "border-amber-500 bg-amber-400 text-ink-900" : "border-green-800 bg-green-600 text-cream-50"
             }`}
@@ -67,7 +70,8 @@ export function SlotSocket({ slot, value, active = false, compact = false, class
                 ✓
               </motion.span>
             </div>
-            <p className={`leading-snug ${compact ? "text-sm" : ""}`}>{value}</p>
+            {level && <span className="w-fit rounded-full bg-ink-900 px-2.5 py-0.5 text-xs font-bold text-amber-300">{level}</span>}
+            {value && <p className={`leading-snug ${compact ? "text-sm" : ""}`}>{value}</p>}
           </motion.div>
         )}
       </AnimatePresence>

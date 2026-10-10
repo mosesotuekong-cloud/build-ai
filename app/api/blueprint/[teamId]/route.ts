@@ -30,7 +30,7 @@ export async function GET(request: Request, ctx: RouteContext<"/api/blueprint/[t
   }
   if (!blueprint) return new Response("Not found", { status: 404 });
   const parsed = planSchema.safeParse(blueprint.plan);
-  if (blueprint.status !== "done" || !parsed.success || validatePlan(parsed.data).length) {
+  if (blueprint.status !== "done" || !parsed.success || validatePlan(parsed.data, { requireApproval: false }).length) {
     return new Response("Your blueprint isn't ready yet.", { status: 409 });
   }
   const plan = parsed.data;

@@ -101,23 +101,31 @@ export function planFromDesign(design: CoachDesign): Plan {
     note: design.action,
   });
   blocks.push(action);
-  links.push(link("decide", "act", "true"));
 
-  // Human in control
+  // Control: where (or whether) a person approves, by the team's chosen level.
   const humanText = design.human || "A person checks before anything goes out";
-  blocks.push(
-    block({
-      id: "approve",
-      kind: "approval",
-      slot: "human",
-      label: "A person decides",
-      channel: channelOf(`${humanText} ${design.tools.join(" ")}`),
-      to: "the person in control",
-      message: humanText,
-      note: humanText,
-    }),
-  );
-  links.push(link("decide", "approve", "false"), link("approve", "act", "approved"));
+  const approval = block({
+    id: "approve",
+    kind: "approval",
+    slot: "human",
+    label: "A person decides",
+    channel: channelOf(`${humanText} ${design.tools.join(" ")}`),
+    to: "the person in control",
+    message: humanText,
+    note: humanText,
+  });
+  if (design.oversight === "out") {
+    // Fully automatic: both outcomes of the rule go straight to the action.
+    links.push(link("decide", "act", "true"), link("decide", "act", "false"));
+  } else if (design.oversight === "in") {
+    // In the loop: a person approves every case before the action.
+    blocks.push(approval);
+    links.push(link("decide", "approve", "true"), link("decide", "approve", "false"), link("approve", "act", "approved"));
+  } else {
+    // On the loop (and the default): the rule settles the easy cases; a person decides the rest.
+    blocks.push(approval);
+    links.push(link("decide", "act", "true"), link("decide", "approve", "false"), link("approve", "act", "approved"));
+  }
 
   if (has(`${design.action} ${design.steps}`, "record", "log", "sheet", "register", "track")) {
     blocks.push(block({ id: "record", kind: "sheets_append", slot: "action", label: "Keep a record", fields: ["Date", "Outcome"], note: "Logs what happened." }));

@@ -31,8 +31,8 @@ export function PresenterScreen({
   const phase = session.phase as Phase;
   // The big code is for the lobby; once design starts, a small strip lets latecomers join.
   const showCode = ["lobby", "baseline_check"].includes(phase) && session.joinCode;
-  const showCodeStrip = phase === "solving" && session.joinCode;
-  const showProgress = ["solving", "twist", "solving_after_twist", "prioritise"].includes(phase);
+  const showCodeStrip = (phase === "fix" || phase === "solving") && session.joinCode;
+  const showProgress = ["solving", "twist", "solving_after_twist"].includes(phase);
   const showTwists = phase === "twist" || phase === "solving_after_twist";
 
   return (
@@ -59,6 +59,7 @@ export function PresenterScreen({
           exit={{ opacity: 0, y: -40 }}
           transition={SPRINGS.gentle}
         >
+          <MethodStrip phase={phase} />
           <div className="space-y-3">
             <p className="text-2xl font-bold tracking-[0.3em] text-green-700 uppercase">{PHASE_LABELS[phase].title}</p>
             <PhaseTimer startedAt={session.startedAt} durationSeconds={session.duration} serverNow={serverNow} size="xl" />
@@ -74,8 +75,9 @@ export function PresenterScreen({
           )}
 
           {phase === "closed" && <p className="font-display text-6xl font-bold">Thanks for playing</p>}
-          {phase === "judging" && results && <Drumroll done={results.done} total={results.total} />}
-          {(phase === "reveal" || phase === "report") && results && <Leaderboard rows={results.leaderboard} awards={results.awards} />}
+          {/* Judging runs while teams rank; the reveal drums until every design is scored. */}
+          {(phase === "judging" || phase === "reveal") && results && results.done < results.total && <Drumroll done={results.done} total={results.total} />}
+          {(phase === "reveal" || phase === "report") && results && results.done >= results.total && <Leaderboard rows={results.leaderboard} awards={results.awards} />}
           {phase === "commitments" && (
             <ul className="w-full max-w-5xl space-y-3 text-left" aria-label="Pledges">
               {pledges.length === 0 && <li className="text-center text-3xl text-ink-500">Teams are writing their pledges…</li>}
@@ -125,5 +127,36 @@ export function PresenterScreen({
         <Stamp show={phase === "twist"} text="Twist" />
       </div>
     </main>
+  );
+}
+
+// The four-step method, with the current step lit, so the room always knows
+// where it is: Fix → Design → Control → Rank.
+const METHOD = [
+  { label: "Fix", phases: ["fix"] },
+  { label: "Design", phases: ["solving", "twist", "solving_after_twist"] },
+  { label: "Control", phases: ["solving", "twist", "solving_after_twist"] },
+  { label: "Rank", phases: ["prioritise"] },
+];
+function MethodStrip({ phase }: { phase: Phase }) {
+  if (!METHOD.some((m) => m.phases.includes(phase))) return null;
+  return (
+    <ol className="flex items-center gap-3" aria-label="The four steps">
+      {METHOD.map((m, i) => {
+        const on = m.phases.includes(phase);
+        return (
+          <li key={m.label} className="flex items-center gap-3">
+            {i > 0 && <span className="h-1 w-10 rounded-full bg-cream-300" aria-hidden />}
+            <span
+              className={`rounded-full px-6 py-2 font-display text-2xl font-bold ${
+                on ? (m.label === "Control" ? "bg-amber-400 text-ink-900" : "bg-green-600 text-cream-50") : "bg-cream-200 text-ink-500"
+              }`}
+            >
+              {i + 1}. {m.label}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
