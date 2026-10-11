@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Caladea, Carlito } from "next/font/google";
+import { Archivo, Inter } from "next/font/google";
 import { MotionProvider } from "@/components/game/motion-provider";
 import { APP_NAME, APP_TAGLINE } from "@/lib/config/app";
 import "./globals.css";
 
-const display = Caladea({ variable: "--font-display-face", subsets: ["latin"], weight: ["700"] });
-const ui = Carlito({ variable: "--font-ui", subsets: ["latin"], weight: ["400", "700"] });
+const display = Archivo({ variable: "--font-display-face", subsets: ["latin"], axes: ["wdth"] });
+const ui = Inter({ variable: "--font-ui", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: { default: APP_NAME, template: `%s · ${APP_NAME}` },
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#fdf5e8",
+  themeColor: "#edeae6",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

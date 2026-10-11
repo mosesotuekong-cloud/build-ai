@@ -1,46 +1,49 @@
 @import "tailwindcss";
 
-/* Builda brand (matches the promo reel): green, amber, cream and ink.
-   Amber is reserved for "Human in control" and game highlights. */
+/* Builda brand, shared with the website: warm greys, charcoal and one
+   orange. Token names are kept from the first palette so every screen
+   follows: "green" is the charcoal structure (with orange-deep for links
+   and labels), "amber" is Builda orange, kept for Control, coins and
+   game highlights, and "cream" is the warm grey paper. */
 @theme {
-  --color-green-50: #e7f2ef;
-  --color-green-100: #cfe5df;
-  --color-green-200: #a3ccc1;
-  --color-green-400: #3e8f7d;
-  --color-green-500: #1b7563;
-  --color-green-600: #0e5e4e;
-  --color-green-700: #0b4a3e;
-  --color-green-800: #08382f;
-  --color-green-900: #052620;
+  --color-green-50: #fbefe6;
+  --color-green-100: #f8dcc8;
+  --color-green-200: #f2be9a;
+  --color-green-400: #8a817a;
+  --color-green-500: #3f3a36;
+  --color-green-600: #2a2826;
+  --color-green-700: #c2500f;
+  --color-green-800: #1c1b1a;
+  --color-green-900: #141312;
 
-  --color-amber-50: #fdf4e4;
-  --color-amber-100: #fae6c3;
-  --color-amber-300: #f2c47e;
-  --color-amber-400: #eaab4e;
-  --color-amber-500: #d8922f;
-  --color-amber-700: #8f5b12;
+  --color-amber-50: #fdf0e6;
+  --color-amber-100: #fbe0cc;
+  --color-amber-300: #f7a36e;
+  --color-amber-400: #f26b1d;
+  --color-amber-500: #d9580f;
+  --color-amber-700: #a8430c;
 
-  --color-cream-50: #fffbf4;
-  --color-cream-100: #fdf5e8;
-  --color-cream-200: #f4e7d0;
-  --color-cream-300: #e6d3b3;
+  --color-cream-50: #f7f5f2;
+  --color-cream-100: #edeae6;
+  --color-cream-200: #e2ded8;
+  --color-cream-300: #d2ccc4;
 
-  --color-ink-900: #1b1f1d;
-  --color-ink-700: #3e4542;
-  --color-ink-500: #6b726e;
-  --color-ink-300: #a9aeaa;
+  --color-ink-900: #1c1b1a;
+  --color-ink-700: #4a4643;
+  --color-ink-500: #6b6560;
+  --color-ink-300: #a8a29e;
 
   --color-danger-50: #fbece8;
   --color-danger-600: #b4412f;
   --color-danger-700: #8e3122;
 
   --font-sans: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-display-face), Georgia, serif;
+  --font-display: var(--font-display-face), ui-sans-serif, system-ui, sans-serif;
 
   /* Physical-feeling depth for cards and sockets. */
-  --shadow-card: 0 1px 0 rgba(27, 31, 29, 0.06), 0 8px 24px -12px rgba(27, 31, 29, 0.25);
-  --shadow-lift: 0 2px 0 rgba(27, 31, 29, 0.06), 0 22px 40px -18px rgba(27, 31, 29, 0.35);
-  --shadow-socket: inset 0 2px 6px rgba(27, 31, 29, 0.08);
+  --shadow-card: 0 1px 0 rgba(28, 27, 26, 0.06), 0 8px 24px -12px rgba(28, 27, 26, 0.25);
+  --shadow-lift: 0 2px 0 rgba(28, 27, 26, 0.06), 0 22px 40px -18px rgba(28, 27, 26, 0.35);
+  --shadow-socket: inset 0 2px 6px rgba(28, 27, 26, 0.08);
 }
 
 body {
@@ -50,4 +53,15 @@ body {
 
 ::selection {
   background: var(--color-amber-100);
+}
+
+/* Headings use Archivo slightly widened; the wordmark goes fully wide. */
+.font-display {
+  font-stretch: 112%;
+  font-variation-settings: "wdth" 112;
+}
+.font-wide {
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-variation-settings: "wdth" 125;
 }

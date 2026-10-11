@@ -12,7 +12,8 @@ const readinessText = (r: string | null) => (r === "not_ready" ? "not ready" : (
 // The opportunity map as a PDF. Same content and order as the web report;
 // the executive summary fits on page one.
 
-const C = { green: "#1f7a4d", greenLight: "#e8f4ec", amber: "#f2b233", amberLight: "#fff6e0", ink: "#1d2420", ink2: "#4a524d", ink3: "#7a827d", cream: "#faf6ee", line: "#e4dccb" };
+// Builda colours, shared with the website: charcoal, warm greys and one orange.
+const C = { green: "#c2500f", greenLight: "#fbefe6", amber: "#f26b1d", amberLight: "#fdf0e6", ink: "#1c1b1a", ink2: "#4a4643", ink3: "#6b6560", cream: "#edeae6", line: "#d2ccc4" };
 
 type Style = Parameters<typeof StyleSheet.create>[0][string];
 
