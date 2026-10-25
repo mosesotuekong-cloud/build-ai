@@ -36,7 +36,10 @@ test("a team runs a quick discovery from setup to a strengthened workflow", asyn
   await next();
   await page.getByRole("radio", { name: /On the loop/ }).click();
   await next();
+  await page.getByRole("button", { name: /Build my workflow/ }).click();
+  await expect(page.getByText(/Before building, pick how much it's worth and how ready/)).toBeVisible();
   await page.getByRole("button", { name: "A lot" }).click();
+  await page.getByRole("button", { name: /^Ready/ }).click();
   await page.getByRole("button", { name: /Build my workflow/ }).click();
   await expect(page.getByRole("heading", { name: "Take it away" })).toBeVisible({ timeout: 60_000 });
 

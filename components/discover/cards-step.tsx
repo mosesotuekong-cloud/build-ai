@@ -56,6 +56,9 @@ export function CardsStep({ discovery, onBuilt }: { discovery: Discovery; onBuil
   const build = () =>
     startBuilding(async () => {
       setError(null);
+      if (rank.value === null || rank.readiness === null) {
+        return setError(`Before building, pick ${[rank.value === null && "how much it's worth", rank.readiness === null && "how ready the data and systems are"].filter(Boolean).join(" and ")}.`);
+      }
       const r = await buildWorkflow(discovery.id, progress());
       if (!r.ok) return setError(r.error);
       onBuilt();

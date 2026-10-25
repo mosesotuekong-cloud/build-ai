@@ -180,6 +180,7 @@ export async function buildWorkflow(id: string, progress: z.input<typeof progres
   const d = await owned(id);
   if (!d) return fail("We can't find that discovery.");
   if (!d.design.trigger.trim() || !d.design.action.trim()) return fail("Fill in at least the Trigger and Action cards first.");
+  if (d.rank.value === null || d.rank.readiness === null) return fail("On the Worth it? card, pick how much it's worth and how ready the data and systems are.");
   const design = { ...d.design, name: d.design.name.trim() || d.challenge?.title || "Our automation" };
   // A rebuilt design replaces any earlier strengthening.
   const fresh: Discovery = { ...d, design, strengthened: null };
