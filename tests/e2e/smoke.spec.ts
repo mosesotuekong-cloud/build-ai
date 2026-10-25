@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("home page shows the headline and plays the demo round", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1, name: "Your team knows what's broken." })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Find where AI fits in your work." })).toBeVisible();
   await expect(page.getByText("Watch a round")).toBeVisible();
   // The demo only plays once it is on screen.
   await page.getByText("Watch a round").evaluate((el) => el.scrollIntoView({ block: "start" }));

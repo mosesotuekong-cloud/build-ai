@@ -13,7 +13,11 @@ export type AITask =
   | "reference-solution"
   | "blueprint"
   | "opportunity-map"
-  | "assessment";
+  | "assessment"
+  | "suggest-challenges"
+  | "card-nudge"
+  | "follow-up"
+  | "strengthen";
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 

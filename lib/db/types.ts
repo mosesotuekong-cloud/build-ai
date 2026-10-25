@@ -243,6 +243,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"discoveries": {
+                  Row: {
+                    "ai_units": number,"answers": Json | null,"card": number,"challenge": Json | null,"created_at": string,"design": NonNullable<Json>,"function_slug": string,"id": string,"ip_hash": string | null,"plan": Json | null,"plan_source": string | null,"player_names": (string)[],"players": number,"questions": Json | null,"rank": NonNullable<Json>,"region": string,"stack": (string)[],"stage": string,"strengthened": Json | null,"suggestions": Json | null,"updated_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "ai_units"?: number,"answers"?: Json | null,"card"?: number,"challenge"?: Json | null,"created_at"?: string,"design"?: NonNullable<Json>,"function_slug": string,"id"?: string,"ip_hash"?: string | null,"plan"?: Json | null,"plan_source"?: string | null,"player_names"?: (string)[],"players"?: number,"questions"?: Json | null,"rank"?: NonNullable<Json>,"region"?: string,"stack"?: (string)[],"stage"?: string,"strengthened"?: Json | null,"suggestions"?: Json | null,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "ai_units"?: number,"answers"?: Json | null,"card"?: number,"challenge"?: Json | null,"created_at"?: string,"design"?: NonNullable<Json>,"function_slug"?: string,"id"?: string,"ip_hash"?: string | null,"plan"?: Json | null,"plan_source"?: string | null,"player_names"?: (string)[],"players"?: number,"questions"?: Json | null,"rank"?: NonNullable<Json>,"region"?: string,"stack"?: (string)[],"stage"?: string,"strengthened"?: Json | null,"suggestions"?: Json | null,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"discovery_ai_days": {
+                  Row: {
+                    "day": string,"units": number
+                  }
+                  Insert: {
+                    "day": string,"units"?: number
+                  }
+                  Update: {
+                    "day"?: string,"units"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"functions": {
                   Row: {
                     "name": string,"slug": string,"sort_order": number
@@ -626,6 +652,9 @@ isOneToOne: true
                            },
 "spend_demo_ai":
 { Args: { "amount": number,"daily_limit": number,"target_org": string }; Returns: boolean
+                           },
+"spend_discovery_ai":
+{ Args: { "daily_limit": number,"per_discovery": number,"target": string,"units": number }; Returns: boolean
                            },
 "spend_hint_tokens":
 { Args: { "amount": number,"target_team": string }; Returns: number

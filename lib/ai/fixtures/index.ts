@@ -4,6 +4,7 @@ import type { JudgeOutput, ReferenceSolution } from "../schemas/judge";
 import type { DesignCheck, Twist } from "../schemas/check";
 import type { Assessment } from "../schemas/assessment";
 import { caseFixtures } from "./cases";
+import { challengeFixtures, followUpFixture, nudgeFixtures, strengthenFixture } from "./discovery";
 import { leaveRequestPlan } from "@/lib/export/fixtures";
 import { sampleReportProse } from "@/lib/report/fixtures";
 
@@ -87,6 +88,10 @@ export const objectFixtures: Partial<Record<AITask, Record<string, unknown>>> = 
   assessment: { default: assessment },
   blueprint: { default: leaveRequestPlan },
   "opportunity-map": { default: sampleReportProse },
+  "suggest-challenges": { default: challengeFixtures.finance, ...challengeFixtures },
+  "card-nudge": { default: nudgeFixtures.trigger, ...nudgeFixtures },
+  "follow-up": { default: followUpFixture },
+  strengthen: { default: strengthenFixture },
 };
 
 export const textFixtures: Partial<Record<AITask, Record<string, string>>> = {

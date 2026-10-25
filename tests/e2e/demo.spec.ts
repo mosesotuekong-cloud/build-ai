@@ -7,7 +7,7 @@ test("a visitor tries the demo without signing up", async ({ page }, testInfo) =
   test.setTimeout(120_000);
 
   await page.goto("/");
-  await page.getByRole("link", { name: "Try the demo" }).click();
+  await page.getByRole("link", { name: "Try the workshop demo" }).click();
   await page.getByRole("button", { name: "Start the demo" }).click();
   await expect(page.getByRole("heading", { name: "Three stops, ten minutes." })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(/You're in a demo sandbox/)).toBeVisible();

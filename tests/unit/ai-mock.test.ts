@@ -10,6 +10,7 @@ import { designCheckSchema, twistSchema } from "@/lib/ai/schemas/check";
 import { assessmentSchema } from "@/lib/ai/schemas/assessment";
 import { planSchema } from "@/lib/export/plan";
 import { reportProseSchema } from "@/lib/ai/schemas/report";
+import { cardNudgeSchema, challengeSuggestionsSchema, followUpSchema, strengthenSchema } from "@/lib/ai/schemas/discovery";
 import { generateCases } from "@/lib/ai/tasks/generate-cases";
 
 const provider = createMockProvider({ delayMs: 0 });
@@ -26,6 +27,10 @@ const fixtureSchemas: Record<string, z.ZodType> = {
   assessment: assessmentSchema,
   blueprint: planSchema,
   "opportunity-map": reportProseSchema,
+  "suggest-challenges": challengeSuggestionsSchema,
+  "card-nudge": cardNudgeSchema,
+  "follow-up": followUpSchema,
+  strengthen: strengthenSchema,
 };
 
 describe("AI fixtures", () => {

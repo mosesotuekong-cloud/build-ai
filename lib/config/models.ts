@@ -13,6 +13,10 @@ export const MODEL_ROLES = [
   "referenceSolution",
   "blueprint",
   "opportunityMap",
+  // Quick discovery: suggest challenges, nudge a card, ask follow-up
+  // questions, and strengthen the design from the answers.
+  "discovery",
+  "strengthen",
 ] as const;
 
 export type ModelRole = (typeof MODEL_ROLES)[number];
@@ -28,6 +32,8 @@ export const MODELS = {
     referenceSolution: "claude-opus-5-5",
     blueprint: "claude-opus-5-5",
     opportunityMap: "claude-opus-5-5",
+    discovery: "claude-sonnet-5-5",
+    strengthen: "claude-opus-5-5",
   },
   openai: {
     coach: "gpt-5.4-mini",
@@ -39,6 +45,8 @@ export const MODELS = {
     referenceSolution: "gpt-5.5",
     blueprint: "gpt-5.5",
     opportunityMap: "gpt-5.5",
+    discovery: "gpt-5.4-mini",
+    strengthen: "gpt-5.5",
   },
 } as const satisfies Record<string, Record<ModelRole, string>>;
 
@@ -55,4 +63,6 @@ export const MODEL_EFFORT: Record<ModelRole, "low" | "medium" | "high"> = {
   referenceSolution: "high",
   blueprint: "medium",
   opportunityMap: "high",
+  discovery: "low",
+  strengthen: "medium",
 };
