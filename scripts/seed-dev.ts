@@ -30,7 +30,7 @@ const FACILITATOR_EMAIL = "facilitator@builda.test";
 const PENDING_EMAIL = "pending@builda.test"; // signed up but not in any org
 // One facilitator per end-to-end test file, so parallel sign-ins never cancel
 // each other's magic links.
-const E2E_EMAILS = ["e2e-decks@builda.test", "e2e-session@builda.test", "e2e-coach@builda.test"];
+const E2E_EMAILS = ["e2e-decks@builda.test", "e2e-session@builda.test", "e2e-coach@builda.test", "e2e-short@builda.test"];
 
 async function ensureUser(email: string): Promise<string> {
   const { data: list, error: listError } = await admin.auth.admin.listUsers({ perPage: 1000 });

@@ -129,6 +129,25 @@ isOneToOne: true
       referencedColumns: ["id"]
     }
                   ]
+                },"credit_grants": {
+                  Row: {
+                    "amount": number,"balance_after": number,"created_at": string,"granted_by": string | null,"id": string,"org_id": string,"reason": string
+                  }
+                  Insert: {
+                    "amount": number,"balance_after": number,"created_at"?: string,"granted_by"?: string | null,"id"?: string,"org_id": string,"reason"?: string
+                  }
+                  Update: {
+                    "amount"?: number,"balance_after"?: number,"created_at"?: string,"granted_by"?: string | null,"id"?: string,"org_id"?: string,"reason"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "credit_grants_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"decks": {
                   Row: {
                     "company_size": string,"copied_from": string | null,"country": string,"created_at": string,"created_by": string | null,"function_slugs": (string)[],"id": string,"industry": string,"name": string,"org_id": string | null,"pain_points": string,"target_platforms": (string)[],"tools": (string)[],"updated_at": string
@@ -568,6 +587,9 @@ isOneToOne: true
                            },
 "earn_hint_token":
 { Args: { "cap": number,"target_message": string,"target_team": string }; Returns: number
+                           },
+"grant_session_credits":
+{ Args: { "amount": number,"granted_by": string,"reason": string,"target_org": string }; Returns: number
                            },
 "has_org_role":
 { Args: { "target_org": string,"wanted": Database["public"]['Enums']["org_role"] }; Returns: boolean

@@ -25,6 +25,6 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     reuseExistingServer: false,
     timeout: 300_000,
-    env: { AI_PROVIDER: "mock", NEXT_PUBLIC_SITE_URL: `http://localhost:${PORT}`, DEMO_STARTS_PER_IP_PER_DAY: "1000" },
+    env: { AI_PROVIDER: "mock", NEXT_PUBLIC_SITE_URL: `http://localhost:${PORT}`, DEMO_STARTS_PER_IP_PER_DAY: "1000", SUPER_ADMIN_EMAILS: "otumosesjobs@gmail.com,e2e-admin@builda.test" },
   },
 });

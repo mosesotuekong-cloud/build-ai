@@ -49,7 +49,9 @@ export default async function ConsoleLayout({ children }: LayoutProps<"/console"
               Settings
             </Link>
             {ctx.isPlatformAdmin && (
-              <span className="rounded-full bg-green-100 px-3 py-1 font-semibold text-green-700">Super admin</span>
+              <Link href="/admin" className="rounded-full bg-amber-400 px-3 py-1 font-semibold text-ink-900 hover:bg-amber-300">
+                Super admin
+              </Link>
             )}
             <span className="hidden text-ink-500 md:inline">{ctx.email}</span>
             <form action="/auth/signout" method="post">

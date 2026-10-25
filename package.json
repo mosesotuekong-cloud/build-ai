@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:rls": "vitest run --config vitest.rls.config.mts",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset && npm run db:seed",
@@ -21,6 +22,7 @@
     "ai:blueprint": "tsx --conditions=react-server scripts/try-blueprint.ts",
     "ai:report": "tsx --conditions=react-server scripts/try-report.mts",
     "db:seed": "tsx scripts/seed-dev.ts",
+    "db:seed:library": "tsx scripts/seed-library.ts",
     "preview": "next build && next start"
   },
   "dependencies": {

@@ -10,7 +10,8 @@
 - `npm run db:start` / `npm run db:stop`: Supabase local stack (needs Docker Desktop running)
 - `npm run db:reset`: re-run every migration and `supabase/seed.sql`, then `npm run db:seed`
 - `npm run db:types`: regenerate `lib/db/types.ts` from the local database
-- `npm test`: Vitest unit tests; `npm run test:e2e`: Playwright
+- `npm test`: Vitest unit tests; `npm run test:rls`: row-level security against the local database; `npm run test:e2e`: Playwright
+- `npm run db:seed:library`: load the library decks into any project (production-safe). Deployment steps: `DEPLOY.md`. Super admin console: `/admin`.
 - `npm run typecheck`, `npm run lint`
 
 Local URLs: Studio http://localhost:54323, test inbox (magic links) http://localhost:54319.
