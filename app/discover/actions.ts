@@ -5,12 +5,14 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { followUpAnswersSchema } from "@/lib/ai/schemas/discovery";
 import { writeBlueprint } from "@/lib/ai/tasks/blueprint";
-import { askFollowUps, nudgeCard, strengthen, suggestChallenges } from "@/lib/ai/tasks/discovery";
+import { askFollowUps, nudgeCard, strengthen, suggestChallenges, triageTasks } from "@/lib/ai/tasks/discovery";
 import type { NudgeCard } from "@/lib/ai/prompts/discovery";
 import { readServerEnv } from "@/lib/config/env";
 import { hashIp } from "@/lib/demo/sandbox";
 import { CARDS, challengeSchema, coachCase, coachDesign, discoveryDesignSchema, ownChallengeSchema, rankSchema, setupSchema, type Challenge, type Discovery, type Setup } from "@/lib/discover/model";
 import { aiForDiscovery, getOwnDiscovery } from "@/lib/discover/server";
+import { businessInputsSchema, type BusinessInputs } from "@/lib/discover/business";
+import type { TriagedTask } from "@/lib/ai/schemas/discovery";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -93,6 +95,27 @@ export async function suggestChallengesFor(id: string): Promise<Result<{ suggest
   }
 }
 
+// Step 2a (other way in): "Start from our week". The team lists recurring
+// tasks; the AI sorts them and offers the best as challenge cards, which
+// then work like the suggestions.
+const weekSchema = z.array(z.string().trim().min(2).max(160)).min(3, "List at least three tasks.").max(12, "Keep it to twelve tasks or fewer.");
+export async function triageWeek(id: string, rawTasks: string[]): Promise<Result<{ tasks: TriagedTask[]; suggestions: Challenge[]; scripted: boolean }>> {
+  const parsed = weekSchema.safeParse(rawTasks.map((t) => t.trim()).filter(Boolean));
+  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Please check your tasks.");
+  const d = await owned(id);
+  if (!d) return fail("We can't find that discovery.");
+  try {
+    const { provider, scripted } = await aiForDiscovery(id, 1);
+    const triage = await triageTasks(provider, d, parsed.data);
+    const suggestions = triage.challenges.map((c) => ({ ...c, source: "ai" as const }));
+    await update(id, { tasks: triage.tasks, suggestions });
+    return { ok: true, tasks: triage.tasks, suggestions, scripted };
+  } catch (error) {
+    console.error("Sorting the week failed:", error instanceof Error ? error.message : error);
+    return fail(AI_TROUBLE);
+  }
+}
+
 // Step 2b: pick a suggestion or bring your own; then the cards are dealt.
 export async function chooseChallenge(
   id: string,
@@ -170,6 +193,16 @@ export async function buildWorkflow(id: string, progress: z.input<typeof progres
   }
 }
 
+// The business case inputs, as edited on the results screen.
+export async function saveBusiness(id: string, inputs: BusinessInputs): Promise<Result> {
+  const parsed = businessInputsSchema.safeParse({ ...inputs, source: "edited" });
+  if (!parsed.success) return fail("Some of those numbers look wrong. Please check them.");
+  const d = await owned(id);
+  if (!d) return fail("We can't find that discovery.");
+  await update(id, { business: parsed.data });
+  return { ok: true };
+}
+
 // Back to the cards to change something.
 export async function editCards(id: string): Promise<Result> {
   const d = await owned(id);
@@ -209,7 +242,8 @@ export async function strengthenDiscovery(id: string, answers: Record<string, st
     const strengthened = await strengthen(provider, d, parsed.data);
     const next: Discovery = { ...d, strengthened, answers: parsed.data };
     const result = await buildPlan(id, next);
-    await update(id, { strengthened, answers: parsed.data, plan: result.plan, plan_source: result.source });
+    const keepBusiness = d.business?.source === "edited";
+    await update(id, { strengthened, answers: parsed.data, plan: result.plan, plan_source: result.source, ...(keepBusiness ? {} : { business: null }) });
     return { ok: true, scripted };
   } catch (error) {
     console.error("Strengthening failed:", error instanceof Error ? error.message : error);

@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { EMPTY_FIX, fixSchema, oversightSchema, type FixNotes, type Oversight } from "@/lib/ai/schemas/canvas";
-import { followUpAnswersSchema, followUpSchema, strengthenSchema, type FollowUp, type FollowUpAnswers, type Strengthened } from "@/lib/ai/schemas/discovery";
+import { followUpAnswersSchema, followUpSchema, storedStrengthenSchema, triagedTaskSchema, type FollowUp, type FollowUpAnswers, type StoredStrengthened, type TriagedTask } from "@/lib/ai/schemas/discovery";
+import { businessInputsSchema, type BusinessInputs } from "./business";
+import { effortSchema, reversibilitySchema } from "./verdict";
 import type { CoachCase, CoachDesign } from "@/lib/coach/context";
 import { FUNCTIONS } from "@/lib/config/app";
 import { planSchema, type Plan } from "@/lib/export/plan";
@@ -50,8 +52,10 @@ export type DiscoveryDesign = z.infer<typeof discoveryDesignSchema>;
 
 export const rankSchema = z.object({
   value: z.number().int().min(1).max(5).nullable().default(null),
+  effort: effortSchema.nullable().default(null),
   readiness: z.enum(["ready", "partly", "not_yet"]).nullable().default(null),
   risk: z.enum(["low", "medium", "high"]).nullable().default(null),
+  reversibility: reversibilitySchema.nullable().default(null),
 });
 export type Rank = z.infer<typeof rankSchema>;
 
@@ -100,7 +104,11 @@ export type Discovery = {
   plan: Plan | null;
   questions: FollowUp["questions"] | null;
   answers: FollowUpAnswers | null;
-  strengthened: Strengthened | null;
+  strengthened: StoredStrengthened | null;
+  // "Start from our week": the tasks the team listed, sorted by the AI.
+  tasks: TriagedTask[] | null;
+  // The business case inputs, once someone has seen or changed them.
+  business: BusinessInputs | null;
   created_at: string;
 };
 
@@ -111,7 +119,9 @@ export function toDiscovery(row: Record<string, unknown>): Discovery {
   const plan = planSchema.safeParse(row.plan);
   const questions = followUpSchema.shape.questions.safeParse(row.questions);
   const answers = followUpAnswersSchema.safeParse(row.answers);
-  const strengthened = strengthenSchema.safeParse(row.strengthened);
+  const strengthened = storedStrengthenSchema.safeParse(row.strengthened);
+  const tasks = z.array(triagedTaskSchema).safeParse(row.tasks);
+  const business = businessInputsSchema.safeParse(row.business);
   return {
     id: String(row.id),
     function_slug: String(row.function_slug),
@@ -129,6 +139,8 @@ export function toDiscovery(row: Record<string, unknown>): Discovery {
     questions: questions.success ? questions.data : null,
     answers: answers.success ? answers.data : null,
     strengthened: strengthened.success ? strengthened.data : null,
+    tasks: tasks.success ? tasks.data : null,
+    business: business.success ? business.data : null,
     created_at: String(row.created_at ?? ""),
   };
 }

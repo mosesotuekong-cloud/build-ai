@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AI_KINDS } from "@/lib/discovery/scorecard";
+import { aiActSchema } from "@/lib/discover/ai-act";
 import { generatedCaseSchema } from "./cases";
 
 const aiKinds = AI_KINDS.map((k) => k.value) as [string, ...string[]];
@@ -10,6 +11,21 @@ export const challengeSuggestionsSchema = z.object({
   challenges: z.array(generatedCaseSchema).length(3),
 });
 export type ChallengeSuggestions = z.infer<typeof challengeSuggestionsSchema>;
+
+// "Start from our week": the team lists recurring tasks; the AI sorts each
+// into automate, assist or keep human, then turns the best into challenges.
+export const TASK_LABELS = ["automate", "assist", "human"] as const;
+export const triagedTaskSchema = z.object({
+  task: text(2, 160),
+  label: z.enum(TASK_LABELS),
+  why: text(5, 200),
+});
+export const triageSchema = z.object({
+  tasks: z.array(triagedTaskSchema).min(1).max(12),
+  challenges: z.array(generatedCaseSchema).min(1).max(3),
+});
+export type Triage = z.infer<typeof triageSchema>;
+export type TriagedTask = z.infer<typeof triagedTaskSchema>;
 
 // One coaching question for the card the team is on. Never an answer.
 export const cardNudgeSchema = z.object({
@@ -73,8 +89,22 @@ export const strengthenSchema = z.object({
   next_steps: z.array(z.object({ step: text(5, 200), who: text(2, 80), when: text(2, 40) })).min(3).max(5),
   open_questions: z.array(text(5, 200)).max(4),
   hours_saved_per_month: z.number().min(0).max(5000).nullable(),
+  // Starting values for the business case, from the team's answers.
+  estimates: z.object({
+    cases_per_month: z.number().min(0).max(1_000_000),
+    minutes_per_case: z.number().min(0).max(10_000),
+    automatable_share: z.number().min(0).max(1),
+    build_days: z.number().min(0).max(1000),
+    running_cost_per_month: z.number().min(0).max(10_000_000),
+  }),
+  // EU AI Act: the AI's first read of where this sits.
+  ai_act: aiActSchema,
 });
 export type Strengthened = z.infer<typeof strengthenSchema>;
+// Strengthened results saved before the estimates and the AI Act check
+// existed still load.
+export const storedStrengthenSchema = strengthenSchema.partial({ estimates: true, ai_act: true });
+export type StoredStrengthened = z.infer<typeof storedStrengthenSchema>;
 
 // Overall readiness out of 100: the average of the five dimensions.
 export function readinessScore(dims: Strengthened["readiness"]): number {

@@ -94,7 +94,7 @@ export default async function DemoTourPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-green-600 p-6 text-cream-50">
         <p className="font-display text-xl font-bold">Ready to run it with your own team?</p>
-        <Link href="/login" className={buttonClasses("primary", "bg-amber-400 text-ink-900 hover:bg-amber-300")}>
+        <Link href="/login" className={buttonClasses("accent")}>
           Sign up
         </Link>
       </div>

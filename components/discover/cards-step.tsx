@@ -9,6 +9,7 @@ import { TextArea, TextInput } from "@/components/ui/field";
 import { FIX_PROMPTS, OVERSIGHT_LEVELS, type Oversight } from "@/lib/ai/schemas/canvas";
 import { COMMON_SYSTEMS } from "@/lib/config/systems";
 import { READINESS, RISK_LEVELS, VALUE_LABELS } from "@/lib/discovery/scorecard";
+import { EFFORT_LEVELS, REVERSIBILITY_LEVELS } from "@/lib/discover/verdict";
 import { CARD_EXAMPLES, CARDS, playerFor, type CardKey, type Discovery, type DiscoveryDesign, type Rank } from "@/lib/discover/model";
 
 const tile = (on: boolean, amber = false) =>
@@ -167,6 +168,17 @@ export function CardsStep({ discovery, onBuilt }: { discovery: Discovery; onBuil
                   </div>
                 </fieldset>
                 <fieldset className="space-y-2">
+                  <legend className="font-semibold">How much work to build?</legend>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {EFFORT_LEVELS.map((o) => (
+                      <button key={o.value} type="button" aria-pressed={rank.effort === o.value} onClick={() => setRank({ ...rank, effort: o.value })} className={tile(rank.effort === o.value)}>
+                        <span className="block font-bold">{o.label}</span>
+                        <span className="block text-sm text-ink-700">{o.hint}</span>
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+                <fieldset className="space-y-2">
                   <legend className="font-semibold">How ready are the data and systems?</legend>
                   <div className="grid gap-2 sm:grid-cols-3">
                     {READINESS.map((o) => (
@@ -182,6 +194,17 @@ export function CardsStep({ discovery, onBuilt }: { discovery: Discovery; onBuil
                   <div className="grid gap-2 sm:grid-cols-3">
                     {RISK_LEVELS.map((o) => (
                       <button key={o.value} type="button" aria-pressed={rank.risk === o.value} onClick={() => setRank({ ...rank, risk: o.value })} className={tile(rank.risk === o.value)}>
+                        <span className="block font-bold">{o.label}</span>
+                        <span className="block text-sm text-ink-700">{o.hint}</span>
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+                <fieldset className="space-y-2">
+                  <legend className="font-semibold">If it gets one wrong, can you undo it?</legend>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {REVERSIBILITY_LEVELS.map((o) => (
+                      <button key={o.value} type="button" aria-pressed={rank.reversibility === o.value} onClick={() => setRank({ ...rank, reversibility: o.value })} className={tile(rank.reversibility === o.value)}>
                         <span className="block font-bold">{o.label}</span>
                         <span className="block text-sm text-ink-700">{o.hint}</span>
                       </button>

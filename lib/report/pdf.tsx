@@ -49,6 +49,7 @@ export function pdfText(text: string): string {
   return text
     .replace(/₦\s?/g, "NGN ")
     .replace(/[→⟶]/g, "->")
+    .replace(/−/g, "-")
     .replace(/[≥]/g, ">=")
     .replace(/[≤]/g, "<=")
     .replace(/[^\u0000-ÿ–—‘’“”•…€]/g, "");

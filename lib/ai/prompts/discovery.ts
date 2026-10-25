@@ -38,6 +38,27 @@ export function suggestChallengesMessage(c: DiscoveryContext): string {
   return [...contextLines(c), "", "Write the three challenge cards."].join("\n");
 }
 
+export const TRIAGE_SYSTEM = `You help a business team find where AI fits by starting from their real week, not from ideas.
+
+They list recurring tasks. For each task, decide:
+- automate: rule-based or repetitive enough that a workflow, with AI where judgement is needed, could do most of it, with a person checking exceptions.
+- assist: a person should stay in charge, but AI can speed it up (drafting, summarising, finding information, preparing a decision).
+- human: relationship, judgement, accountability or care work where AI adds little or would do harm.
+
+Give each a one-line "why". Keep each task's wording close to theirs; tidy it only if it is unclear. Never invent tasks they did not list.
+
+Then write 1 to 3 challenge cards from the best "automate" tasks (or "assist" if there are no good automate ones): the ones with the most repetition, time and pain, that their tech stack can handle. Each card has:
+- title: short and memorable, a little playful.
+- story: 3 to 4 plain sentences on what happens today, as they described it, who does it by hand, and what goes wrong. Fill gaps with believable, typical detail for the function and country, but do not contradict them.
+- cost: one sentence on what it costs in time, money or goodwill, with believable figures in the local currency.
+- who_feels_it: a comma-separated list of the roles affected.
+
+Plain British English, warm and specific, no jargon, no exclamation marks. Never describe the solution.`;
+
+export function triageMessage(c: DiscoveryContext, tasks: string[]): string {
+  return [...contextLines(c), "", "THEIR RECURRING TASKS", ...tasks.map((t, i) => `${i + 1}. ${t}`), "", "Sort the tasks and write the challenge cards."].join("\n");
+}
+
 const CARD_HELP: Record<CanvasSlot | "fix" | "rank", string> = {
   fix: "Fix it first: what they would stop, merge or simplify before automating anything.",
   trigger: `${SLOT_LABELS.trigger.title}: ${SLOT_LABELS.trigger.prompt}`,

@@ -63,13 +63,13 @@ export default function Home() {
             <p className="text-cream-100">Facilitated sessions with live teams, a big screen and an opportunity map for the business are still here.</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link href="/login" className={buttonClasses("primary", "bg-amber-400 text-ink-900 hover:bg-amber-300 active:bg-amber-500")}>
+            <Link href="/login" className={buttonClasses("accent")}>
               Run a workshop
             </Link>
-            <Link href="/demo" className={buttonClasses("ghost", "text-cream-50 hover:bg-green-700")}>
+            <Link href="/demo" className={buttonClasses("onDark")}>
               Try the workshop demo
             </Link>
-            <Link href="/join" className={buttonClasses("ghost", "text-cream-50 hover:bg-green-700")}>
+            <Link href="/join" className={buttonClasses("onDark")}>
               Got a game code?
             </Link>
           </div>

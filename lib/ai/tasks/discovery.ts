@@ -1,6 +1,6 @@
 import { describeSituation } from "@/lib/coach/context";
 import { SLOT_LABELS } from "../schemas/canvas";
-import { challengeSuggestionsSchema, cardNudgeSchema, followUpSchema, strengthenSchema, type FollowUp, type FollowUpAnswers, type Strengthened } from "../schemas/discovery";
+import { challengeSuggestionsSchema, cardNudgeSchema, followUpSchema, strengthenSchema, triageSchema, type FollowUp, type FollowUpAnswers, type Strengthened, type Triage } from "../schemas/discovery";
 import type { GeneratedCase } from "../schemas/cases";
 import {
   CARD_NUDGE_SYSTEM,
@@ -10,6 +10,8 @@ import {
   followUpMessage,
   SUGGEST_CHALLENGES_SYSTEM,
   suggestChallengesMessage,
+  TRIAGE_SYSTEM,
+  triageMessage,
   type DiscoveryContext,
   type NudgeCard,
 } from "../prompts/discovery";
@@ -69,6 +71,22 @@ export async function suggestChallenges(provider: AIProvider, d: Discovery): Pro
     fixtureKey: d.function_slug,
   }));
   return out.challenges;
+}
+
+// "Start from our week": sort the team's tasks and turn the best into
+// challenge cards.
+export async function triageTasks(provider: AIProvider, d: Discovery, tasks: string[]): Promise<Triage> {
+  return clean(() =>
+    provider.generateObject({
+      task: "triage-tasks",
+      model: "discovery",
+      system: TRIAGE_SYSTEM,
+      messages: [{ role: "user", content: triageMessage(discoveryContext(d), tasks) }],
+      schema: triageSchema,
+      maxTokens: 3000,
+      fixtureKey: d.function_slug,
+    }),
+  );
 }
 
 export async function nudgeCard(provider: AIProvider, d: Discovery, card: NudgeCard): Promise<string> {

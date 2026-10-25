@@ -9,10 +9,12 @@ import { TextInput } from "@/components/ui/field";
 import { oversightLabel, SLOT_LABELS } from "@/lib/ai/schemas/canvas";
 import { READINESS_DIMENSIONS, readinessScore, type FollowUpQuestion } from "@/lib/ai/schemas/discovery";
 import { getPlatform } from "@/lib/config/platforms";
-import { AI_KINDS, bucketFrom } from "@/lib/discovery/scorecard";
-import { coachDesign, type Discovery } from "@/lib/discover/model";
+import { AI_KINDS } from "@/lib/discovery/scorecard";
+import { aiActOf, businessInputsOf, verdictOf } from "@/lib/discover/insights";
+import { VERDICTS } from "@/lib/discover/verdict";
+import { AiActPanel, BusinessCasePanel, VerdictPanel } from "./worth-panels";
+import { coachDesign, regionOf, type Discovery } from "@/lib/discover/model";
 import { orderBlocks } from "@/lib/export/plan";
-import { BUCKETS } from "@/lib/report/map";
 
 const file = (id: string, name: string) => `/api/discover/${id}/${name}`;
 
@@ -43,7 +45,9 @@ export function ResultsStep({ discovery, anonymous, onChange }: { discovery: Dis
   const st = d.strengthened;
   const hasN8n = d.stack.includes("n8n");
   const guides = d.stack.filter((s) => s !== "n8n").map((s) => getPlatform(s)).filter((p): p is NonNullable<typeof p> => Boolean(p));
-  const bucket = d.rank.value && d.rank.readiness ? BUCKETS.find((b) => b.key === bucketFrom(d.rank.value!, d.rank.readiness!, d.rank.risk ?? "medium")) : null;
+  const { verdict, reasons } = verdictOf(d);
+  const region = regionOf(d);
+  const aiAct = aiActOf(d);
   const [mcpOpen, setMcpOpen] = useState(false);
   const [editing, startEditing] = useTransition();
 
@@ -55,7 +59,8 @@ export function ResultsStep({ discovery, anonymous, onChange }: { discovery: Dis
           <h1 className="font-display text-4xl font-bold">{design.name || plan?.name}</h1>
           <p className="text-lg text-ink-700">{st?.summary ?? plan?.summary}</p>
           <div className="flex flex-wrap gap-2 pt-1 text-sm font-semibold">
-            {bucket && <span className="rounded-full bg-green-600 px-3 py-1 text-cream-50">{bucket.title}</span>}
+            {verdict && <span className="rounded-full bg-green-600 px-3 py-1 text-cream-50">{VERDICTS[verdict].title}</span>}
+            {(aiAct.category === "high_risk" || aiAct.category === "prohibited") && <span className="rounded-full bg-amber-400 px-3 py-1 text-ink-900">EU AI Act: check needed</span>}
             {design.hours_saved_per_month ? <span className="rounded-full bg-cream-200 px-3 py-1">~{design.hours_saved_per_month} hours a month</span> : null}
             {oversightLabel(design.oversight) && <span className="rounded-full bg-amber-100 px-3 py-1">{oversightLabel(design.oversight)}</span>}
             {st && <span className="rounded-full bg-cream-200 px-3 py-1">{AI_KINDS.find((k) => k.value === st.ai_kind)?.label}</span>}
@@ -86,6 +91,10 @@ export function ResultsStep({ discovery, anonymous, onChange }: { discovery: Dis
           ))}
         </ol>
       </section>
+
+      <VerdictPanel verdict={verdict} reasons={reasons} rank={{ ...d.rank, oversight: design.oversight ?? null }} />
+      <BusinessCasePanel key={JSON.stringify(businessInputsOf(d))} id={d.id} initial={businessInputsOf(d)} currency={region.currency} />
+      <AiActPanel check={aiAct} emphasise={region.euAiAct} />
 
       {/* Take it away */}
       <section aria-labelledby="out-h" className="space-y-3">
@@ -334,7 +343,7 @@ function Strengthen({ discovery: d, onChange }: { discovery: Discovery; onChange
         </p>
       )}
       {!open && (
-        <Button type="button" onClick={questions ? () => setOpen(true) : load} disabled={loading} className="bg-amber-400 text-ink-900 hover:bg-amber-300">
+        <Button type="button" onClick={questions ? () => setOpen(true) : load} disabled={loading} variant="accent">
           {loading ? "Thinking of good questions…" : st ? "Change my answers" : "Make it stronger →"}
         </Button>
       )}

@@ -1,4 +1,4 @@
-import type { CardNudge, FollowUp, Strengthened } from "../schemas/discovery";
+import type { CardNudge, FollowUp, Strengthened, Triage } from "../schemas/discovery";
 import { caseFixtures } from "./cases";
 
 // Scripted replies for quick discovery, used by the mock provider (no AI key,
@@ -66,4 +66,21 @@ export const strengthenFixture: Strengthened = {
   ],
   open_questions: ["Who signs off on the use of personal data?", "What volume do we expect at month end?"],
   hours_saved_per_month: 24,
+  estimates: { cases_per_month: 120, minutes_per_case: 18, automatable_share: 0.65, build_days: 8, running_cost_per_month: 60 },
+  ai_act: {
+    category: "minimal",
+    area: null,
+    reason: "It routes and records routine requests and keeps a person deciding anything unusual, so it does not touch a high-risk area.",
+    actions: ["Keep a record of what the AI decides and who checks it.", "Re-check if it starts making decisions about people."],
+  },
+};
+
+export const triageFixture: Triage = {
+  tasks: [
+    { task: "Chasing missing documents by email", label: "automate", why: "Repetitive reminders on a schedule, easy to track." },
+    { task: "Answering the same questions about policies", label: "assist", why: "AI can draft answers from the policy, a person checks the tricky ones." },
+    { task: "Typing form details into a spreadsheet", label: "automate", why: "Pure copying between systems." },
+    { task: "Difficult conversations with staff", label: "human", why: "Needs judgement, empathy and accountability." },
+  ],
+  challenges: (caseFixtures as Record<string, { cases: Triage["challenges"] }>).hr.cases.slice(0, 2),
 };

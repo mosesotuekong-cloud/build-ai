@@ -10,7 +10,7 @@ import { designCheckSchema, twistSchema } from "@/lib/ai/schemas/check";
 import { assessmentSchema } from "@/lib/ai/schemas/assessment";
 import { planSchema } from "@/lib/export/plan";
 import { reportProseSchema } from "@/lib/ai/schemas/report";
-import { cardNudgeSchema, challengeSuggestionsSchema, followUpSchema, strengthenSchema } from "@/lib/ai/schemas/discovery";
+import { cardNudgeSchema, challengeSuggestionsSchema, followUpSchema, strengthenSchema, triageSchema } from "@/lib/ai/schemas/discovery";
 import { generateCases } from "@/lib/ai/tasks/generate-cases";
 
 const provider = createMockProvider({ delayMs: 0 });
@@ -31,6 +31,7 @@ const fixtureSchemas: Record<string, z.ZodType> = {
   "card-nudge": cardNudgeSchema,
   "follow-up": followUpSchema,
   strengthen: strengthenSchema,
+  "triage-tasks": triageSchema,
 };
 
 describe("AI fixtures", () => {

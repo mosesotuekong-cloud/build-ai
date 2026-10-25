@@ -14,6 +14,12 @@ Return:
 - next_steps: 3 to 5 steps for the next 30 days, each with who does it (a role, never a name) and when (for example "Week 1").
 - open_questions: what still needs answering, if anything.
 - hours_saved_per_month: a believable estimate from their volumes, or null if you cannot tell.
+- estimates: starting values for a business case, from their answers where they gave them, otherwise typical for this kind of work: cases_per_month, minutes_per_case (handling time today per case), automatable_share (0 to 1: the share of that time the automation removes after exceptions and human review; rarely above 0.8), build_days (days for one builder to build and test a first version on their stack), running_cost_per_month (licences, AI usage and support, in the local currency).
+- ai_act: a first read under the EU AI Act, not legal advice.
+  - category: "prohibited" (for example inferring emotions at work or in education, social scoring), "high_risk" (Annex III areas such as recruitment and selection, promotion, dismissal, allocating work or monitoring staff, credit scoring, life or health insurance pricing, education admissions and grading, biometrics, critical infrastructure), "transparency" (chatbots or AI-generated content people see, which must say it is AI), or "minimal".
+  - area: the Annex III area or practice it touches in plain words, or null.
+  - reason: why, in one or two sentences. Remember that a person in the loop does not on its own take a system out of high-risk; a narrow procedural or preparatory task that does not replace human assessment may fall outside it.
+  - actions: 1 to 4 practical things to do, for example a legal review, telling the people affected, logging, or narrowing the scope.
 
 Rules:
 - Stay within what their tech stack can do; name its real building blocks where useful.

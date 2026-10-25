@@ -4,9 +4,13 @@ import { FIX_PROMPTS, oversightLabel, SLOT_LABELS } from "@/lib/ai/schemas/canva
 import { READINESS_DIMENSIONS, readinessScore } from "@/lib/ai/schemas/discovery";
 import { APP_NAME } from "@/lib/config/app";
 import { getPlatform } from "@/lib/config/platforms";
-import { AI_KINDS, bucketFrom, READINESS, RISK_LEVELS, VALUE_LABELS } from "@/lib/discovery/scorecard";
+import { AI_KINDS, READINESS, RISK_LEVELS, VALUE_LABELS } from "@/lib/discovery/scorecard";
 import { orderBlocks } from "@/lib/export/plan";
-import { bucketTitle } from "@/lib/report/map";
+import { AI_ACT_CHECKER_URL, AI_ACT_LABELS } from "./ai-act";
+import { paybackText } from "./business";
+import { aiActOf, businessOf, verdictOf } from "./insights";
+import { money } from "./regions";
+import { EFFORT_LEVELS, REVERSIBILITY_LEVELS, VERDICTS } from "./verdict";
 import { pdfText } from "@/lib/report/pdf";
 import { coachDesign, functionLabel, regionOf, type Discovery } from "./model";
 
@@ -57,7 +61,11 @@ function DiscoveryDocument({ d }: { d: Discovery }) {
   const region = regionOf(d);
   const stack = d.stack.map((x) => getPlatform(x)?.name).filter(Boolean).join(", ");
   const r = d.rank;
-  const bucket = r.value && r.readiness ? bucketFrom(r.value, r.readiness, r.risk ?? "medium") : null;
+  const { verdict, reasons } = verdictOf(d);
+  const biz = businessOf(d);
+  const likely = biz.result.scenarios.find((x) => x.key === "likely")!;
+  const aiAct = aiActOf(d);
+  const m = (n: number) => money(n, region.currency);
   const blocks = d.plan ? orderBlocks(d.plan) : [];
   const fix = FIX_PROMPTS.filter((f) => d.design.fix[f.key]?.trim());
   const name = design.name || d.plan?.name || "Our automation";
@@ -133,15 +141,54 @@ function DiscoveryDocument({ d }: { d: Discovery }) {
         <T style={s.h2}>Control</T>
         <T style={s.p}>{`${oversightLabel(design.oversight) ?? "Not chosen"}. ${design.human}`}</T>
 
-        <T style={s.h2}>Worth it?</T>
+        <T style={s.h2}>{`Worth it? ${verdict ? VERDICTS[verdict].title : "Not rated yet"}`}</T>
+        {verdict ? <T style={s.p}>{VERDICTS[verdict].blurb}</T> : null}
         <Bullets
           items={[
             `Value: ${r.value ? VALUE_LABELS[r.value - 1] : "not rated"}`,
+            `Effort: ${EFFORT_LEVELS.find((x) => x.value === r.effort)?.label ?? "not rated"}`,
             `Ready: ${READINESS.find((x) => x.value === r.readiness)?.label ?? "not rated"}`,
             `Risk: ${RISK_LEVELS.find((x) => x.value === r.risk)?.label ?? "not rated"}`,
-            `Where it sits: ${bucketTitle(bucket)}`,
+            `If it gets one wrong: ${REVERSIBILITY_LEVELS.find((x) => x.value === r.reversibility)?.label.toLowerCase() ?? "not rated"}`,
+            ...reasons.map((x) => `Why: ${x}`),
           ]}
         />
+
+        <T style={s.h2}>The business case</T>
+        <T style={s.p}>
+          {`${biz.inputs.cases_per_month.toLocaleString("en-GB")} cases a month at ${biz.inputs.minutes_per_case} minutes each is about ${Math.round(biz.result.hoursTodayPerMonth)} hours a month today (${m(biz.result.costTodayPerMonth)} at ${m(biz.inputs.hourly_rate)} an hour). The automation removes about ${Math.round(biz.inputs.automatable_share * 100)}% of that time. Build: ${biz.inputs.build_days} days at ${m(biz.inputs.build_day_rate)} a day. Running: ${m(biz.inputs.running_cost_per_month)} a month. ${biz.inputs.source === "ai" ? "Starting values estimated by the AI from the team's answers." : biz.inputs.source === "edited" ? "Figures set by the team." : "Starting values from the team's own guess."}`}
+        </T>
+        <View style={[s.row, { borderBottomWidth: 1 }]} wrap={false}>
+          <T style={{ flex: 1.6, fontFamily: "Helvetica-Bold" }}>{""}</T>
+          {biz.result.scenarios.map((x) => (
+            <T key={x.key} style={{ flex: 1, textAlign: "right", fontFamily: "Helvetica-Bold" }}>{x.label}</T>
+          ))}
+        </View>
+        {(
+          [
+            ["Hours saved a month", (x: (typeof biz.result.scenarios)[number]) => Math.round(x.hoursSavedPerMonth).toLocaleString("en-GB")],
+            ["Saved a month, after running costs", (x: (typeof biz.result.scenarios)[number]) => m(x.netPerMonth)],
+            ["Cost to build", (x: (typeof biz.result.scenarios)[number]) => m(x.buildCost)],
+            ["First year, net", (x: (typeof biz.result.scenarios)[number]) => m(x.firstYearNet)],
+            ["Payback", (x: (typeof biz.result.scenarios)[number]) => paybackText(x.paybackMonths)],
+          ] as const
+        ).map(([label, cell]) => (
+          <View key={label} style={s.row} wrap={false}>
+            <T style={{ flex: 1.6, color: C.ink2 }}>{label}</T>
+            {biz.result.scenarios.map((x) => (
+              <T key={x.key} style={{ flex: 1, textAlign: "right", fontFamily: x.key === "likely" ? "Helvetica-Bold" : "Helvetica" }}>
+                {cell(x)}
+              </T>
+            ))}
+          </View>
+        ))}
+        <T style={[s.small, { marginTop: 4 }]}>{`Likely payback: ${paybackText(likely.paybackMonths)}. Cautious assumes 40% less is automated and a 50% build overrun; optimistic the reverse.`}</T>
+
+        <T style={s.h2}>{`EU AI Act: ${AI_ACT_LABELS[aiAct.category].title.replace(/ under the EU AI Act$/, "")}`}</T>
+        {aiAct.area ? <T style={{ fontFamily: "Helvetica-Bold", marginBottom: 3 }}>{aiAct.area}</T> : null}
+        <T style={s.p}>{aiAct.reason}</T>
+        {aiAct.actions.length > 0 && <Bullets items={aiAct.actions} />}
+        <T style={s.small}>{`${aiAct.source === "ai" ? "The AI's assessment" : "A first read from the team's words"}, not legal advice. Check with the European Commission's tool: ${AI_ACT_CHECKER_URL}`}</T>
 
         {st && (
           <>
