@@ -25,7 +25,7 @@ export function VerdictPanel({ verdict, reasons, rank }: { verdict: Verdict | nu
         <h2 id="verdict-h" className="font-display text-3xl font-bold">
           {v?.title ?? "Not rated yet"}
         </h2>
-        <p className="text-ink-700">{v?.blurb ?? "Answer the Worth it? card to get a verdict."}</p>
+        {v && <p className="text-ink-700">{v.blurb}</p>}
         {reasons.length > 0 && (
           <ul className="list-disc space-y-0.5 pl-5 text-sm text-ink-700">
             {reasons.map((r) => (

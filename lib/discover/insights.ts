@@ -8,7 +8,13 @@ import { verdictFrom, verdictReasons, type Verdict } from "./verdict";
 
 export function verdictOf(d: Discovery): { verdict: Verdict | null; reasons: string[] } {
   const input = { ...d.rank, oversight: coachDesign(d).oversight ?? null };
-  return { verdict: verdictFrom(input), reasons: verdictReasons(input) };
+  const verdict = verdictFrom(input);
+  if (!verdict) {
+    // No verdict without these two: say which is missing, nothing else.
+    const missing = [input.value === null && "how much it's worth", input.readiness === null && "how ready the data and systems are"].filter(Boolean);
+    return { verdict, reasons: [`To get a verdict, answer ${missing.join(" and ")} on the Worth it? card.`] };
+  }
+  return { verdict, reasons: verdictReasons(input) };
 }
 
 // The business case inputs: what people set, else the AI's estimates from

@@ -112,3 +112,12 @@ describe("insights for a discovery", () => {
     expect(toDiscovery({ id: "y", function_slug: "hr", strengthened: old }).strengthened).not.toBeNull();
   });
 });
+
+describe("verdict without enough answers", () => {
+  it("says exactly what's missing", () => {
+    const d = toDiscovery({ id: "z", function_slug: "finance", rank: { effort: "high", readiness: "partly", reversibility: "cannot" } });
+    const v = verdictOf(d);
+    expect(v.verdict).toBeNull();
+    expect(v.reasons).toEqual(["To get a verdict, answer how much it's worth on the Worth it? card."]);
+  });
+});
