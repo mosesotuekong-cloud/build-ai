@@ -14,6 +14,10 @@ import { aiForDiscovery, getOwnDiscovery } from "@/lib/discover/server";
 import { businessInputsSchema, type BusinessInputs } from "@/lib/discover/business";
 import type { TriagedTask } from "@/lib/ai/schemas/discovery";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { recordEvent } from "@/lib/discover/events";
+import { readinessScore } from "@/lib/ai/schemas/discovery";
+import { compileN8n } from "@/lib/export/n8n/compile";
+import { validatePlan, type Plan } from "@/lib/export/plan";
 import { createClient } from "@/lib/supabase/server";
 
 // Server actions for quick discovery. Every action checks the discovery
@@ -76,6 +80,7 @@ export async function startDiscovery(input: Setup): Promise<Result> {
     .select("id")
     .single();
   if (error || !data) return fail("We couldn't save that. Please try again.");
+  await recordEvent(data.id, { kind: "started", data: { function_slug: s.function_slug, players: s.players, stack: s.stack, region: s.region } });
   redirect(`/discover/${data.id}`);
 }
 
@@ -134,6 +139,7 @@ export async function chooseChallenge(
     challenge = challengeSchema.parse({ ...own.data, cost: own.data.cost || "Not estimated yet.", who_feels_it: own.data.who_feels_it || "The team", source: "own" });
   }
   await update(id, { challenge, stage: "cards", card: 0 });
+  await recordEvent(id, { kind: "challenge_chosen", data: { via: choice.kind === "own" ? "own" : d.tasks?.length ? "week" : "ai" } });
   return { ok: true };
 }
 
@@ -168,6 +174,16 @@ export async function nudge(id: string, card: NudgeCard, progress: z.input<typeo
   }
 }
 
+// Phase 1 checks that exports are valid: the plan passes the semantic checks
+// and compiles to n8n without error.
+function exportOk(plan: Plan): boolean {
+  try {
+    return validatePlan(plan, { requireApproval: false }).length === 0 && compileN8n(plan).nodes.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 async function buildPlan(id: string, d: Discovery) {
   const { provider } = await aiForDiscovery(id, 2);
   return writeBlueprint(provider, { case: coachCase(d), design: coachDesign(d), platforms: d.stack });
@@ -187,6 +203,16 @@ export async function buildWorkflow(id: string, progress: z.input<typeof progres
   try {
     const result = await buildPlan(id, fresh);
     await update(id, { design, plan: result.plan, plan_source: result.source, stage: "results", questions: null, answers: null, strengthened: null });
+    await recordEvent(id, {
+      kind: "built",
+      data: {
+        seconds_since_start: Math.round((Date.now() - new Date(d.created_at).getTime()) / 1000),
+        plan_source: result.source,
+        export_ok: exportOk(result.plan),
+        blocks: result.plan.blocks.length,
+        problems: result.problems.length,
+      },
+    });
     return { ok: true };
   } catch (error) {
     console.error("Building the workflow failed:", error instanceof Error ? error.message : error);
@@ -245,11 +271,24 @@ export async function strengthenDiscovery(id: string, answers: Record<string, st
     const result = await buildPlan(id, next);
     const keepBusiness = d.business?.source === "edited";
     await update(id, { strengthened, answers: parsed.data, plan: result.plan, plan_source: result.source, ...(keepBusiness ? {} : { business: null }) });
+    await recordEvent(id, { kind: "strengthened", data: { readiness: readinessScore(strengthened.readiness) } });
     return { ok: true, scripted };
   } catch (error) {
     console.error("Strengthening failed:", error instanceof Error ? error.message : error);
     return fail(AI_TROUBLE);
   }
+}
+
+// "Was this useful?" on the results screen: 1 (not at all) to 5 (very).
+const feedbackSchema = z.object({ useful: z.number().int().min(1).max(5), comment: z.string().trim().max(1000).default("") });
+export async function saveFeedback(id: string, input: { useful: number; comment?: string }): Promise<Result> {
+  const parsed = feedbackSchema.safeParse(input);
+  if (!parsed.success) return fail("Please pick how useful it was.");
+  const d = await owned(id);
+  if (!d) return fail("We can't find that discovery.");
+  await update(id, { feedback: { ...parsed.data, at: new Date().toISOString() } });
+  await recordEvent(id, { kind: "feedback", data: { useful: parsed.data.useful, has_comment: parsed.data.comment.length > 0 } });
+  return { ok: true };
 }
 
 export async function deleteDiscovery(id: string): Promise<Result> {

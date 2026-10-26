@@ -1,6 +1,7 @@
 import { getPlatform } from "@/lib/config/platforms";
 import { coachDesign } from "@/lib/discover/model";
 import { renderDiscoveryPdf } from "@/lib/discover/pdf";
+import { recordEvent } from "@/lib/discover/events";
 import { getOwnDiscovery } from "@/lib/discover/server";
 import { buildGuideMarkdown, fileSlug } from "@/lib/export/guide";
 import { compileN8n } from "@/lib/export/n8n/compile";
@@ -20,6 +21,8 @@ export async function GET(_request: Request, ctx: RouteContext<"/api/discover/[i
   const own = await getOwnDiscovery(id);
   if (!own) return new Response("Not found", { status: 404 });
   const d = own.discovery;
+  const known = ["pdf", "n8n", "mcp-workflow", "mcp-server", "mcp-tool"].includes(file) || file.startsWith("guide-");
+  if (known) await recordEvent(d.id, { kind: "downloaded", data: { file: file.startsWith("guide-") ? "guide" : file } });
   const plan = d.plan;
   const slug = fileSlug(plan?.name || d.design.name || d.challenge?.title || "automation");
   const json = (body: unknown, name: string) =>

@@ -18,6 +18,9 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             <Link href="/admin" className="hover:text-amber-300">
               Overview
             </Link>
+            <Link href="/admin/pilot" className="hover:text-amber-300">
+              Pilot
+            </Link>
             <Link href="/console" className="hover:text-amber-300">
               Console
             </Link>

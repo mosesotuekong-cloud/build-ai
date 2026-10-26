@@ -55,6 +55,13 @@ describe("discoveries: access", () => {
     expect((await owner.client.from("discoveries").insert({ user_id: owner.id, function_slug: "hr" })).error).not.toBeNull();
   });
 
+  it("visitors can't read or write pilot events, even for their own discovery", async () => {
+    await service.from("discovery_events").insert({ discovery_id: id, kind: "started", data: {} });
+    const read = await owner.client.from("discovery_events").select("id").eq("discovery_id", id);
+    expect(read.error !== null || (read.data ?? []).length === 0).toBe(true);
+    expect((await owner.client.from("discovery_events").insert({ discovery_id: id, kind: "feedback", data: {} })).error).not.toBeNull();
+  });
+
   it("visitors can't spend the AI allowance themselves", async () => {
     const { error } = await owner.client.rpc("spend_discovery_ai", { target: id, units: 1, per_discovery: 20, daily_limit: 1500 });
     expect(error).not.toBeNull();

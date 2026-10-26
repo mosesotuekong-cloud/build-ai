@@ -109,6 +109,8 @@ export type Discovery = {
   tasks: TriagedTask[] | null;
   // The business case inputs, once someone has seen or changed them.
   business: BusinessInputs | null;
+  // "Was this useful?", 1–5, with an optional comment.
+  feedback: { useful: number; comment: string } | null;
   created_at: string;
 };
 
@@ -122,6 +124,7 @@ export function toDiscovery(row: Record<string, unknown>): Discovery {
   const strengthened = storedStrengthenSchema.safeParse(row.strengthened);
   const tasks = z.array(triagedTaskSchema).safeParse(row.tasks);
   const business = businessInputsSchema.safeParse(row.business);
+  const feedbackRow = z.object({ useful: z.number().int().min(1).max(5), comment: z.string().default("") }).safeParse(row.feedback);
   return {
     id: String(row.id),
     function_slug: String(row.function_slug),
@@ -141,6 +144,7 @@ export function toDiscovery(row: Record<string, unknown>): Discovery {
     strengthened: strengthened.success ? strengthened.data : null,
     tasks: tasks.success ? tasks.data : null,
     business: business.success ? business.data : null,
+    feedback: feedbackRow.success ? feedbackRow.data : null,
     created_at: String(row.created_at ?? ""),
   };
 }

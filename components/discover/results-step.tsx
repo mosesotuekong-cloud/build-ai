@@ -13,6 +13,7 @@ import { AI_KINDS } from "@/lib/discovery/scorecard";
 import { aiActOf, businessInputsOf, verdictOf } from "@/lib/discover/insights";
 import { VERDICTS } from "@/lib/discover/verdict";
 import { AiActPanel, BusinessCasePanel, VerdictPanel } from "./worth-panels";
+import { FeedbackBox } from "./feedback-box";
 import { coachDesign, regionOf, type Discovery } from "@/lib/discover/model";
 import { orderBlocks } from "@/lib/export/plan";
 
@@ -176,6 +177,8 @@ export function ResultsStep({ discovery, anonymous, onChange }: { discovery: Dis
       </section>
 
       <Strengthen discovery={d} onChange={onChange} />
+
+      <FeedbackBox id={d.id} initial={d.feedback} />
 
       <footer className="flex flex-wrap items-center gap-3 border-t border-cream-300 pt-6">
         <Button type="button" variant="ghost" disabled={editing} onClick={() => startEditing(async () => { const r = await editCards(d.id); if (r.ok) onChange(); })}>
