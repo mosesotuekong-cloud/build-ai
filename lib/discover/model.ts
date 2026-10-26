@@ -111,6 +111,11 @@ export type Discovery = {
   business: BusinessInputs | null;
   // "Was this useful?", 1–5, with an optional comment.
   feedback: { useful: number; comment: string } | null;
+  // Facts the discovery score needs: coach questions asked, files taken,
+  // and the twist drawn on the results screen with the team's answer.
+  game: Game;
+  // Ask Builda, the chat. No player names.
+  chat: ChatTurn[];
   created_at: string;
 };
 
@@ -145,9 +150,20 @@ export function toDiscovery(row: Record<string, unknown>): Discovery {
     tasks: tasks.success ? tasks.data : null,
     business: business.success ? business.data : null,
     feedback: feedbackRow.success ? feedbackRow.data : null,
+    game: gameSchema.safeParse(row.game ?? {}).data ?? gameSchema.parse({}),
+    chat: z.array(chatTurnSchema).safeParse(row.chat ?? []).data ?? [],
     created_at: String(row.created_at ?? ""),
   };
 }
+
+export const gameSchema = z.object({
+  nudges: z.number().int().min(0).default(0),
+  downloaded: z.boolean().default(false),
+  twist: z.object({ key: z.string(), response: z.string().default("") }).nullable().default(null),
+});
+export type Game = z.infer<typeof gameSchema>;
+export const chatTurnSchema = z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(4000) });
+export type ChatTurn = z.infer<typeof chatTurnSchema>;
 
 export const functionLabel = (slug: string) => FUNCTIONS.find((f) => f.slug === slug)?.name ?? slug;
 

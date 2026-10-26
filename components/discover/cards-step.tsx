@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { buildWorkflow, nudge, saveCards } from "@/app/discover/actions";
 import { Button } from "@/components/ui/button";
 import { ChipSelect } from "@/components/ui/chip-select";
@@ -10,6 +10,9 @@ import { FIX_PROMPTS, OVERSIGHT_LEVELS, type Oversight } from "@/lib/ai/schemas/
 import { COMMON_SYSTEMS } from "@/lib/config/systems";
 import { READINESS, RISK_LEVELS, VALUE_LABELS } from "@/lib/discovery/scorecard";
 import { EFFORT_LEVELS, REVERSIBILITY_LEVELS } from "@/lib/discover/verdict";
+import { discoveryScore } from "@/lib/discover/score";
+import { Board, BadgeToasts, ScoreBar } from "./board";
+import { useAssistantCard } from "./assistant";
 import { CARD_EXAMPLES, CARDS, playerFor, type CardKey, type Discovery, type DiscoveryDesign, type Rank } from "@/lib/discover/model";
 
 const tile = (on: boolean, amber = false) =>
@@ -24,6 +27,12 @@ export function CardsStep({ discovery, onBuilt }: { discovery: Discovery; onBuil
   const [design, setDesign] = useState<DiscoveryDesign>(discovery.design);
   const [rank, setRank] = useState<Rank>(discovery.rank);
   const [nudges, setNudges] = useState<Partial<Record<CardKey, string>>>({});
+  // What the board and score show: the design as of the last card passed,
+  // so tiles snap in when a card is passed, not on every keystroke.
+  const [committed, setCommitted] = useState({ design: discovery.design, rank: discovery.rank });
+  const [nudgeCount, setNudgeCount] = useState(discovery.game.nudges);
+  const setAssistantCard = useAssistantCard();
+  useEffect(() => setAssistantCard(card), [card, setAssistantCard]);
   const [error, setError] = useState<string | null>(null);
   const [saving, startSaving] = useTransition();
   const [nudging, startNudging] = useTransition();
@@ -35,6 +44,16 @@ export function CardsStep({ discovery, onBuilt }: { discovery: Discovery; onBuil
   const progress = (c = card) => ({ design, rank, card: c });
   const set = (patch: Partial<DiscoveryDesign>) => setDesign((d) => ({ ...d, ...patch }));
   const last = card === CARDS.length - 1;
+  const cd = committed.design;
+  const score = discoveryScore({
+    ...cd,
+    rank: committed.rank,
+    nudges: nudgeCount,
+    twistAnswered: Boolean(discovery.game.twist?.response.trim()),
+    questionsAnswered: 0,
+    businessEdited: false,
+    downloaded: false,
+  });
 
   const go = (next: number) =>
     startSaving(async () => {
@@ -42,6 +61,7 @@ export function CardsStep({ discovery, onBuilt }: { discovery: Discovery; onBuil
       const r = await saveCards(discovery.id, progress(next));
       if (!r.ok) return setError(r.error);
       setCard(next);
+      setCommitted({ design, rank });
       window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
     });
 
@@ -51,6 +71,7 @@ export function CardsStep({ discovery, onBuilt }: { discovery: Discovery; onBuil
       const r = await nudge(discovery.id, current.key, progress());
       if (!r.ok) return setError(r.error);
       setNudges((n) => ({ ...n, [current.key]: r.question }));
+      setNudgeCount((n) => n + 1);
     });
 
   const build = () =>
@@ -74,6 +95,19 @@ export function CardsStep({ discovery, onBuilt }: { discovery: Discovery; onBuil
           <p className="mt-2">{discovery.challenge?.story}</p>
         </details>
       </div>
+
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 flex-1 basis-[36rem]">
+          <Board
+            slots={cd}
+            fixDone={Boolean(cd.fix.eliminate.trim() || cd.fix.combine.trim() || cd.fix.simplify.trim())}
+            worthDone={committed.rank.value !== null && committed.rank.readiness !== null}
+            activeSlot={["trigger", "steps", "decision", "action", "human"].includes(current.key) ? current.key : null}
+          />
+        </div>
+        <ScoreBar points={score.points} max={score.max} level={score.level} next={score.next} />
+      </div>
+      <BadgeToasts badges={score.badges} />
 
       {/* The deck: which cards are done */}
       <ol className="flex flex-wrap gap-2" aria-label="Cards">

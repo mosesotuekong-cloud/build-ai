@@ -18,7 +18,8 @@ export type AITask =
   | "card-nudge"
   | "follow-up"
   | "strengthen"
-  | "triage-tasks";
+  | "triage-tasks"
+  | "discovery-chat";
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 

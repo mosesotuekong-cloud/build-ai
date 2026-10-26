@@ -30,8 +30,9 @@ const serverEnvSchema = z.object({
   // Salt for hashing visitor IP addresses. Falls back to the service role key.
   DEMO_IP_SALT: optionalString,
   // Quick discovery (no sign-in). Units are roughly one AI call each; a
-  // whole discovery with follow-up questions uses about eight.
-  DISCOVERY_AI_UNITS: z.coerce.number().int().min(0).default(20),
+  // whole discovery with follow-up questions uses about eight, and each Ask
+  // Builda question one more.
+  DISCOVERY_AI_UNITS: z.coerce.number().int().min(0).default(40),
   DISCOVERY_DAILY_AI_UNITS: z.coerce.number().int().min(0).default(1500),
   DISCOVERY_STARTS_PER_IP_PER_DAY: z.coerce.number().int().min(1).default(15),
 });

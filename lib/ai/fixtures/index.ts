@@ -97,6 +97,10 @@ export const objectFixtures: Partial<Record<AITask, Record<string, unknown>>> = 
 
 export const textFixtures: Partial<Record<AITask, Record<string, string>>> = {
   "coach-reply": { default: coachReplies.question.text },
+  "discovery-chat": {
+    default:
+      "Good question. The verdict comes from your Worth it? answers, worked out by a fixed rule rather than by the AI: low value is parked, data that isn't ready comes first, and big, risky or irreversible work needs planning. You can change your answers on the Worth it? card and rebuild to see it move. (This is a sample reply: the free AI allowance is used up.)",
+  },
 };
 
 export function findFixture<T>(table: Partial<Record<AITask, Record<string, T>>>, task: AITask, key?: string): T | undefined {

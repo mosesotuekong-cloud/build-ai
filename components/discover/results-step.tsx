@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { motion } from "motion/react";
+import { useEffect, useState, useTransition } from "react";
+import { Stamp } from "@/components/game/stamp";
+import { scoreOf } from "@/lib/discover/score";
+import { BadgeShelf, BadgeToasts, ScoreBar } from "./board";
+import { TwistCard } from "./twist-card";
 import { editCards, followUpQuestions, saveToAccount, strengthenDiscovery } from "@/app/discover/actions";
 import { ScoreRing } from "@/components/game/score-ring";
 import { Button, buttonClasses } from "@/components/ui/button";
@@ -49,6 +54,26 @@ export function ResultsStep({ discovery, anonymous, onChange }: { discovery: Dis
   const { verdict, reasons } = verdictOf(d);
   const region = regionOf(d);
   const aiAct = aiActOf(d);
+  const score = scoreOf(d);
+  // The reveal: the verdict stamps down once, the first time results open.
+  const [stamp, setStamp] = useState(false);
+  useEffect(() => {
+    const key = `builda-revealed-${d.id}-${d.plan?.name ?? ""}-${verdict ?? ""}`;
+    let seen = false;
+    try {
+      seen = sessionStorage.getItem(key) === "1";
+      sessionStorage.setItem(key, "1");
+    } catch {
+      // Storage blocked: show the stamp anyway.
+    }
+    if (seen || !verdict) return;
+    const show = setTimeout(() => setStamp(true), 900);
+    const hide = setTimeout(() => setStamp(false), 3200);
+    return () => {
+      clearTimeout(show);
+      clearTimeout(hide);
+    };
+  }, [d.id, d.plan?.name, verdict]);
   const [mcpOpen, setMcpOpen] = useState(false);
   const [editing, startEditing] = useTransition();
 
@@ -67,7 +92,10 @@ export function ResultsStep({ discovery, anonymous, onChange }: { discovery: Dis
             {st && <span className="rounded-full bg-cream-200 px-3 py-1">{AI_KINDS.find((k) => k.value === st.ai_kind)?.label}</span>}
           </div>
         </div>
-        {st && <ScoreRing value={readinessScore(st.readiness)} label="Readiness" size={140} />}
+        <div className="flex flex-col items-end gap-3">
+          <ScoreBar points={score.points} max={score.max} level={score.level} next={score.next} />
+          {st && <ScoreRing value={readinessScore(st.readiness)} label="Readiness" size={140} />}
+        </div>
       </header>
 
       {/* The workflow, block by block */}
@@ -77,7 +105,7 @@ export function ResultsStep({ discovery, anonymous, onChange }: { discovery: Dis
         </h2>
         <ol className="flex flex-wrap items-stretch gap-2">
           {blocks.map((b, i) => (
-            <li key={b.id} className="flex items-center gap-2">
+            <motion.li key={b.id} className="flex items-center gap-2" initial={{ opacity: 0, y: 14, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: 0.08 * i, type: "spring", stiffness: 380, damping: 22 }}>
               <div className={`max-w-56 rounded-xl border-2 px-3 py-2 ${b.slot === "human" || b.kind === "approval" ? "border-amber-400 bg-amber-50" : "border-cream-300 bg-white"}`}>
                 <span className="block text-[11px] font-bold tracking-wide text-green-700 uppercase">{SLOT_LABELS[b.slot].title}</span>
                 <span className="block font-semibold">{b.label}</span>
@@ -88,12 +116,15 @@ export function ResultsStep({ discovery, anonymous, onChange }: { discovery: Dis
                   →
                 </span>
               )}
-            </li>
+            </motion.li>
           ))}
         </ol>
       </section>
 
-      <VerdictPanel verdict={verdict} reasons={reasons} rank={{ ...d.rank, oversight: design.oversight ?? null }} />
+      <div className="relative">
+        <VerdictPanel verdict={verdict} reasons={reasons} rank={{ ...d.rank, oversight: design.oversight ?? null }} />
+        {verdict && <Stamp show={stamp} text={{ fund: "Fund it", plan: "Plan it", fix_data: "Fix data", park: "Park it" }[verdict]} tone={verdict === "fund" ? "green" : "amber"} />}
+      </div>
       <BusinessCasePanel key={JSON.stringify(businessInputsOf(d))} id={d.id} initial={businessInputsOf(d)} currency={region.currency} />
       <AiActPanel check={aiAct} emphasise={region.euAiAct} />
 
@@ -177,6 +208,21 @@ export function ResultsStep({ discovery, anonymous, onChange }: { discovery: Dis
       </section>
 
       <Strengthen discovery={d} onChange={onChange} />
+
+      <TwistCard id={d.id} initial={d.game.twist} onChange={onChange} />
+
+      <section aria-labelledby="badges-h" className="space-y-3">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 id="badges-h" className="font-display text-2xl font-bold">
+            Your badges
+          </h2>
+          <p className="text-sm text-ink-500">
+            {score.badges.filter((b) => b.earned).length} of {score.badges.length} earned · points reward thinking, never speed
+          </p>
+        </div>
+        <BadgeShelf badges={score.badges} />
+      </section>
+      <BadgeToasts badges={score.badges} />
 
       <FeedbackBox id={d.id} initial={d.feedback} />
 

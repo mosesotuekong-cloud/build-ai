@@ -15,6 +15,7 @@ import { businessInputsSchema, type BusinessInputs } from "@/lib/discover/busine
 import type { TriagedTask } from "@/lib/ai/schemas/discovery";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { recordEvent } from "@/lib/discover/events";
+import { TWISTS } from "@/lib/discover/twists";
 import { readinessScore } from "@/lib/ai/schemas/discovery";
 import { compileN8n } from "@/lib/export/n8n/compile";
 import { validatePlan, type Plan } from "@/lib/export/plan";
@@ -167,7 +168,9 @@ export async function nudge(id: string, card: NudgeCard, progress: z.input<typeo
   if (!d) return fail("We can't find that discovery.");
   try {
     const { provider, scripted } = await aiForDiscovery(id, 1);
-    return { ok: true, question: await nudgeCard(provider, d, card), scripted };
+    const question = await nudgeCard(provider, d, card);
+    await update(id, { game: { ...d.game, nudges: d.game.nudges + 1 } });
+    return { ok: true, question, scripted };
   } catch (error) {
     console.error("Card nudge failed:", error instanceof Error ? error.message : error);
     return fail(AI_TROUBLE);
@@ -288,6 +291,26 @@ export async function saveFeedback(id: string, input: { useful: number; comment?
   if (!d) return fail("We can't find that discovery.");
   await update(id, { feedback: { ...parsed.data, at: new Date().toISOString() } });
   await recordEvent(id, { kind: "feedback", data: { useful: parsed.data.useful, has_comment: parsed.data.comment.length > 0 } });
+  return { ok: true };
+}
+
+// Stress test it: draw a twist card (a different one each time), then say
+// what changes.
+export async function drawTwist(id: string): Promise<Result<{ key: string }>> {
+  const d = await owned(id);
+  if (!d) return fail("We can't find that discovery.");
+  const choices = TWISTS.filter((t) => t.key !== d.game.twist?.key);
+  const pick = choices[Math.floor(Math.random() * choices.length)];
+  await update(id, { game: { ...d.game, twist: { key: pick.key, response: "" } } });
+  return { ok: true, key: pick.key };
+}
+
+export async function answerTwist(id: string, response: string): Promise<Result> {
+  const text = response.trim().slice(0, 800);
+  if (text.split(/\s+/).length < 3) return fail("Say a little more about what changes.");
+  const d = await owned(id);
+  if (!d?.game.twist) return fail("Draw a twist first.");
+  await update(id, { game: { ...d.game, twist: { ...d.game.twist, response: text } } });
   return { ok: true };
 }
 
