@@ -45,7 +45,8 @@ function Token({ on, label, icon }: { on: boolean; label: string; icon: string }
     <motion.span
       className={`inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-1 ${on ? "border-green-600 bg-green-600 text-cream-50" : "border-dashed border-cream-300 text-ink-500"}`}
       animate={on ? { scale: [1, 1.15, 1] } : { scale: 1 }}
-      transition={SPRINGS.bouncy}
+      // Three keyframes need a timed animation; springs only take two.
+      transition={{ duration: 0.45, ease: "easeOut" }}
     >
       <span aria-hidden>{icon}</span>
       {label}
