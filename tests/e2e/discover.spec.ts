@@ -41,7 +41,7 @@ test("a team runs a quick discovery from setup to a strengthened workflow", asyn
   await page.getByRole("button", { name: "A lot" }).click();
   await page.getByRole("button", { name: /^Ready/ }).click();
   await page.getByRole("button", { name: /Build my workflow/ }).click();
-  await expect(page.getByRole("heading", { name: "Take it away" })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByRole("heading", { name: "At a glance" })).toBeVisible({ timeout: 60_000 });
 
   const id = url.split("/").pop();
   for (const file of ["pdf", "n8n", "mcp-server", "mcp-workflow", "mcp-tool"]) {

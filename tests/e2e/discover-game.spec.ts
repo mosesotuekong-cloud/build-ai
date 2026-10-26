@@ -41,7 +41,7 @@ test("the board, badges, twist and Ask Builda", async ({ page }, testInfo) => {
   await page.getByRole("button", { name: "A big deal" }).click();
   await page.getByRole("button", { name: /^Partly/ }).click();
   await page.getByRole("button", { name: /Build my workflow/ }).click();
-  await expect(page.getByRole("heading", { name: "Take it away" })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByRole("heading", { name: "At a glance" })).toBeVisible({ timeout: 60_000 });
   await expect(page.locator("[role=status]", { hasText: "Plan it" })).toBeVisible({ timeout: 5_000 });
 
   await page.getByRole("button", { name: "Draw a twist card" }).click();

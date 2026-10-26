@@ -43,24 +43,35 @@ function suggestions(d: Discovery, card: number | null): string[] {
   return ["Which way should we choose a challenge?", "What makes a good challenge?", "How does Start from our week work?"];
 }
 
+const BULLET = /^\s*([-•*]|\d+\.)\s+/;
+
 // Light formatting for answers: paragraphs, bullet lists and **bold**.
 function Formatted({ text }: { text: string }) {
   const blocks = text.split(/\n{2,}/);
   const inline = (line: string) => line.split(/(\*\*[^*]+\*\*)/g).map((part, i) => (part.startsWith("**") && part.endsWith("**") ? <strong key={i}>{part.slice(2, -2)}</strong> : <span key={i}>{part}</span>));
   return (
     <div className="space-y-2">
-      {blocks.map((b, i) => {
-        const lines = b.split("\n").filter(Boolean);
-        if (lines.length && lines.every((l) => /^\s*([-•*]|\d+\.)\s+/.test(l))) {
-          return (
-            <ul key={i} className="list-disc space-y-1 pl-5">
-              {lines.map((l, j) => (
-                <li key={j}>{inline(l.replace(/^\s*([-•*]|\d+\.)\s+/, ""))}</li>
+      {blocks.flatMap((b, i) => {
+        // Group runs of bullet lines into lists; other lines stay paragraphs,
+        // so "Here's how:" followed by bullets still renders as a list.
+        const groups: { list: boolean; lines: string[] }[] = [];
+        for (const l of b.split("\n").filter((x) => x.trim())) {
+          const list = BULLET.test(l);
+          const last = groups[groups.length - 1];
+          if (last && last.list === list) last.lines.push(l);
+          else groups.push({ list, lines: [l] });
+        }
+        return groups.map((g, j) =>
+          g.list ? (
+            <ul key={`${i}-${j}`} className="list-disc space-y-1 pl-5">
+              {g.lines.map((l, k) => (
+                <li key={k}>{inline(l.replace(BULLET, ""))}</li>
               ))}
             </ul>
-          );
-        }
-        return <p key={i}>{inline(b)}</p>;
+          ) : (
+            <p key={`${i}-${j}`}>{inline(g.lines.join(" "))}</p>
+          ),
+        );
       })}
     </div>
   );

@@ -9,14 +9,15 @@ import { BadgeShelf, BadgeToasts, ScoreBar } from "./board";
 import { TwistCard } from "./twist-card";
 import { DEMO_ANSWERS } from "@/lib/discover/demo-scenario";
 import { editCards, followUpQuestions, saveToAccount, strengthenDiscovery } from "@/app/discover/actions";
-import { ScoreRing } from "@/components/game/score-ring";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { TextInput } from "@/components/ui/field";
-import { oversightLabel, SLOT_LABELS } from "@/lib/ai/schemas/canvas";
+import { SLOT_LABELS } from "@/lib/ai/schemas/canvas";
 import { READINESS_DIMENSIONS, readinessScore, type FollowUpQuestion } from "@/lib/ai/schemas/discovery";
 import { getPlatform } from "@/lib/config/platforms";
-import { AI_KINDS } from "@/lib/discovery/scorecard";
-import { aiActOf, businessInputsOf, verdictOf } from "@/lib/discover/insights";
+import { aiActOf, businessInputsOf, businessOf, verdictOf } from "@/lib/discover/insights";
+import { AI_ACT_LABELS } from "@/lib/discover/ai-act";
+import { paybackText } from "@/lib/discover/business";
+import { money } from "@/lib/discover/regions";
 import { VERDICTS } from "@/lib/discover/verdict";
 import { AiActPanel, BusinessCasePanel, VerdictPanel } from "./worth-panels";
 import { FeedbackBox } from "./feedback-box";
@@ -24,23 +25,6 @@ import { coachDesign, regionOf, type Discovery } from "@/lib/discover/model";
 import { orderBlocks } from "@/lib/export/plan";
 
 const file = (id: string, name: string) => `/api/discover/${id}/${name}`;
-
-function Output({ icon, title, text, children }: { icon: string; title: string; text: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-cream-300 bg-cream-50 p-5 shadow-card">
-      <div className="flex items-start gap-3">
-        <span className="text-2xl" aria-hidden>
-          {icon}
-        </span>
-        <div>
-          <h3 className="font-display text-lg font-bold">{title}</h3>
-          <p className="text-sm text-ink-700">{text}</p>
-        </div>
-      </div>
-      <div className="mt-auto flex flex-wrap gap-2">{children}</div>
-    </div>
-  );
-}
 
 // Step four: the workflow and everything to take away, then "Make it
 // stronger" with the AI's follow-up questions.
@@ -77,38 +61,100 @@ export function ResultsStep({ discovery, anonymous, onChange }: { discovery: Dis
   }, [d.id, d.plan?.name, verdict]);
   const [mcpOpen, setMcpOpen] = useState(false);
   const [editing, startEditing] = useTransition();
+  const biz = businessOf(d);
+  const likely = biz.result.scenarios[1];
+  const cash = (n: number) => money(n, region.currency);
+  const actShort = { prohibited: "Likely banned", high_risk: "Check needed", transparency: "Must say it's AI", minimal: "Minimal risk" }[aiAct.category];
+  const toolName = (plan?.name ?? "workflow").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+  const earned = score.badges.filter((b) => b.earned).length;
 
   return (
-    <div className="space-y-10">
-      <header className="flex flex-wrap items-start justify-between gap-6">
-        <div className="max-w-2xl space-y-2">
+    <div className="space-y-8">
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="max-w-3xl space-y-2">
           <p className="text-sm font-bold tracking-wide text-green-700 uppercase">Your workflow{st ? " · strengthened" : ""}</p>
           <h1 className="font-display text-4xl font-bold">{design.name || plan?.name}</h1>
           <p className="text-lg text-ink-700">{st?.summary ?? plan?.summary}</p>
-          <div className="flex flex-wrap gap-2 pt-1 text-sm font-semibold">
-            {verdict && <span className="rounded-full bg-green-600 px-3 py-1 text-cream-50">{VERDICTS[verdict].title}</span>}
-            {(aiAct.category === "high_risk" || aiAct.category === "prohibited") && <span className="rounded-full bg-amber-400 px-3 py-1 text-ink-900">EU AI Act: check needed</span>}
-            {design.hours_saved_per_month ? <span className="rounded-full bg-cream-200 px-3 py-1">~{design.hours_saved_per_month} hours a month</span> : null}
-            {oversightLabel(design.oversight) && <span className="rounded-full bg-amber-100 px-3 py-1">{oversightLabel(design.oversight)}</span>}
-            {st && <span className="rounded-full bg-cream-200 px-3 py-1">{AI_KINDS.find((k) => k.value === st.ai_kind)?.label}</span>}
-          </div>
         </div>
-        <div className="flex flex-col items-end gap-3">
-          <ScoreBar points={score.points} max={score.max} level={score.level} next={score.next} />
-          {st && <ScoreRing value={readinessScore(st.readiness)} label="Readiness" size={140} />}
-        </div>
+        <ScoreBar points={score.points} max={score.max} level={score.level} next={score.next} />
       </header>
 
-      {/* The workflow, block by block */}
-      <section aria-labelledby="flow-h" className="space-y-3">
-        <h2 id="flow-h" className="font-display text-2xl font-bold">
-          How it works
+      {/* 1. The answer at a glance */}
+      <section aria-labelledby="glance-h" className="relative space-y-2">
+        <h2 id="glance-h" className="text-sm font-bold tracking-wide text-ink-500 uppercase">
+          At a glance
         </h2>
+        <div className={`grid gap-3 sm:grid-cols-2 ${st ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
+          <Glance label="Verdict" value={verdict ? VERDICTS[verdict].title : "Not rated"} note={reasons[0] ?? ""} tone={verdict === "fund" ? "good" : verdict ? "warn" : "plain"} />
+          <Glance label="Likely payback" value={paybackText(likely.paybackMonths)} note={`${cash(likely.netPerMonth)} a month saved, after running costs`} />
+          <Glance label="Time freed" value={`${Math.round(likely.hoursSavedPerMonth)} hours a month`} note={`of about ${Math.round(biz.result.hoursTodayPerMonth)} spent on it today`} />
+          <Glance label="EU AI Act" value={actShort} note={aiAct.area ?? (aiAct.category === "minimal" ? "No high-risk use spotted" : "")} tone={aiAct.category === "high_risk" || aiAct.category === "prohibited" ? "warn" : "plain"} />
+          {st && <Glance label="Readiness" value={`${readinessScore(st.readiness)} / 100`} note="from your answers below" />}
+        </div>
+        {verdict && <Stamp show={stamp} text={{ fund: "Fund it", plan: "Plan it", fix_data: "Fix data", park: "Park it" }[verdict]} tone={verdict === "fund" ? "green" : "amber"} />}
+      </section>
+
+      {/* 2. What to do next, and the files */}
+      <section aria-labelledby="next-h" className="space-y-4 rounded-3xl border-2 border-green-600 bg-white p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="max-w-2xl space-y-1">
+            <h2 id="next-h" className="font-display text-2xl font-bold">
+              {st ? "Next: take it to your team" : "Next: make it stronger"}
+            </h2>
+            <p className="text-ink-700">
+              {st
+                ? "Share the PDF with whoever owns the budget and give the workflow file to your builder. Your 30-day plan is further down."
+                : "Answer a few questions a discovery consultant would ask (about 3 minutes). The AI sharpens the workflow, scores how ready it is and plans your next 30 days."}
+            </p>
+          </div>
+          {st ? (
+            <a href={file(d.id, "pdf")} className={buttonClasses("primary", "px-6 py-3 text-lg")}>
+              Download the PDF
+            </a>
+          ) : (
+            <a href="#strong-h" className={buttonClasses("primary", "px-6 py-3 text-lg")}>
+              Make it stronger ↓
+            </a>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 border-t border-cream-200 pt-4">
+          <span className="mr-1 text-sm font-semibold text-ink-500">Take it away:</span>
+          <a href={file(d.id, "pdf")} className={buttonClasses("secondary", "px-3 py-1.5 text-sm")}>
+            📄 Workflow PDF
+          </a>
+          {hasN8n && (
+            <a href={file(d.id, "n8n")} className={buttonClasses("secondary", "px-3 py-1.5 text-sm")}>
+              ⚙️ n8n JSON
+            </a>
+          )}
+          <a href="#mcp" onClick={() => setMcpOpen(true)} className={buttonClasses("secondary", "px-3 py-1.5 text-sm")}>
+            🔌 MCP tool
+          </a>
+          {guides.map((g) => (
+            <a key={g.slug} href={file(d.id, `guide-${g.slug}`)} className={buttonClasses("secondary", "px-3 py-1.5 text-sm")}>
+              🧭 {g.name} guide
+            </a>
+          ))}
+        </div>
+      </section>
+
+      {/* 3. The workflow, block by block */}
+      <section aria-labelledby="flow-h" className="space-y-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="flow-h" className="font-display text-2xl font-bold">
+            How it works
+          </h2>
+          <p className="text-sm text-ink-500">
+            Read the steps in order. <span className="rounded bg-amber-100 px-1.5 py-0.5 font-semibold text-ink-900">Orange</span> is where a person stays in control.
+          </p>
+        </div>
         <ol className="flex flex-wrap items-stretch gap-2">
           {blocks.map((b, i) => (
             <motion.li key={b.id} className="flex items-center gap-2" initial={{ opacity: 0, y: 14, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: 0.08 * i, type: "spring", stiffness: 380, damping: 22 }}>
               <div className={`max-w-56 rounded-xl border-2 px-3 py-2 ${b.slot === "human" || b.kind === "approval" ? "border-amber-400 bg-amber-50" : "border-cream-300 bg-white"}`}>
-                <span className="block text-[11px] font-bold tracking-wide text-green-700 uppercase">{SLOT_LABELS[b.slot].title}</span>
+                <span className="block text-[11px] font-bold tracking-wide text-green-700 uppercase">
+                  {i + 1}. {SLOT_LABELS[b.slot].title}
+                </span>
                 <span className="block font-semibold">{b.label}</span>
                 {b.note && <span className="block text-xs text-ink-500">{b.note}</span>}
               </div>
@@ -122,64 +168,27 @@ export function ResultsStep({ discovery, anonymous, onChange }: { discovery: Dis
         </ol>
       </section>
 
-      <div className="relative">
-        <VerdictPanel verdict={verdict} reasons={reasons} rank={{ ...d.rank, oversight: design.oversight ?? null }} />
-        {verdict && <Stamp show={stamp} text={{ fund: "Fund it", plan: "Plan it", fix_data: "Fix data", park: "Park it" }[verdict]} tone={verdict === "fund" ? "green" : "amber"} />}
-      </div>
-      <BusinessCasePanel key={JSON.stringify(businessInputsOf(d))} id={d.id} initial={businessInputsOf(d)} currency={region.currency} />
-      <AiActPanel check={aiAct} emphasise={region.euAiAct} />
+      {/* 4. Make it stronger */}
+      <Strengthen discovery={d} onChange={onChange} />
 
-      {/* Take it away */}
-      <section aria-labelledby="out-h" className="space-y-3">
-        <h2 id="out-h" className="font-display text-2xl font-bold">
-          Take it away
+      {/* 5. The detail, folded away until someone wants it */}
+      <section aria-labelledby="detail-h" className="space-y-3">
+        <h2 id="detail-h" className="font-display text-2xl font-bold">
+          The detail behind it
         </h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          <Output icon="📄" title="Workflow PDF" text={st ? "The challenge, the workflow, readiness, risks and your next 30 days." : "The challenge, your cards and the workflow, ready to share."}>
-            <a href={file(d.id, "pdf")} className={buttonClasses("primary")}>
-              Download PDF
-            </a>
-          </Output>
-          <Output icon="🔌" title="Create an MCP tool" text="Let Claude, ChatGPT or Copilot Studio call this workflow as a tool.">
-            <Button type="button" variant="secondary" onClick={() => setMcpOpen((o) => !o)} aria-expanded={mcpOpen}>
-              {mcpOpen ? "Hide" : "Create MCP tool"}
-            </Button>
-          </Output>
-          {hasN8n ? (
-            <Output icon="⚙️" title="n8n workflow" text="Import it into n8n, connect your accounts and test with made-up data.">
-              <a href={file(d.id, "n8n")} className={buttonClasses("primary")}>
-                Download n8n JSON
-              </a>
-            </Output>
-          ) : (
-            <Output icon="🧭" title="Build guides" text="Step-by-step for your tools, slot by slot.">
-              {guides.map((g) => (
-                <a key={g.slug} href={file(d.id, `guide-${g.slug}`)} className={buttonClasses("secondary", "px-3 py-2 text-sm")}>
-                  {g.name}
-                </a>
-              ))}
-            </Output>
-          )}
-        </div>
-        {hasN8n && guides.length > 0 && (
-          <p className="text-sm text-ink-700">
-            Build guides for the rest of your stack:{" "}
-            {guides.map((g, i) => (
-              <span key={g.slug}>
-                {i > 0 && " · "}
-                <a href={file(d.id, `guide-${g.slug}`)} className="font-semibold text-green-700 underline">
-                  {g.name}
-                </a>
-              </span>
-            ))}
-          </p>
-        )}
-
-        {mcpOpen && (
-          <div className="space-y-4 rounded-2xl border-2 border-green-200 bg-white p-5">
-            <h3 className="font-display text-xl font-bold">Your MCP tool</h3>
+        <Fold title="Why this verdict" summary={reasons.join(" ")}>
+          <VerdictPanel verdict={verdict} reasons={reasons} rank={{ ...d.rank, oversight: design.oversight ?? null }} />
+        </Fold>
+        <Fold title="The business case" summary={`Three scenarios from cautious to optimistic. Open it to check or change the numbers.`}>
+          <BusinessCasePanel key={JSON.stringify(businessInputsOf(d))} id={d.id} initial={businessInputsOf(d)} currency={region.currency} />
+        </Fold>
+        <Fold title="EU AI Act check" summary={`${AI_ACT_LABELS[aiAct.category].title}. A first read, not legal advice.`}>
+          <AiActPanel check={aiAct} emphasise={region.euAiAct} />
+        </Fold>
+        <Fold id="mcp" open={mcpOpen} onToggle={setMcpOpen} title="Create an MCP tool" summary="Let Claude, ChatGPT or Copilot Studio call this workflow as a tool.">
+          <div className="space-y-3">
             <p className="text-ink-700">
-              MCP is the open standard AI apps use to call tools. Your workflow becomes a tool called <code className="rounded bg-cream-100 px-1.5 py-0.5">{(plan?.name ?? "workflow").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "")}</code>.
+              MCP is the open standard AI apps use to call tools. Your workflow becomes a tool called <code className="rounded bg-cream-100 px-1.5 py-0.5">{toolName}</code>.
             </p>
             {hasN8n ? (
               <ol className="list-decimal space-y-2 pl-5 text-ink-700">
@@ -205,23 +214,18 @@ export function ResultsStep({ discovery, anonymous, onChange }: { discovery: Dis
             </a>
             <p className="text-sm text-ink-500">Always add authentication, start read-only, and keep a person approving anything that changes records.</p>
           </div>
-        )}
+        </Fold>
       </section>
 
-      <Strengthen discovery={d} onChange={onChange} />
-
-      <TwistCard id={d.id} initial={d.game.twist} onChange={onChange} />
-
-      <section aria-labelledby="badges-h" className="space-y-3">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 id="badges-h" className="font-display text-2xl font-bold">
-            Your badges
-          </h2>
-          <p className="text-sm text-ink-500">
-            {score.badges.filter((b) => b.earned).length} of {score.badges.length} earned · points reward thinking, never speed
-          </p>
-        </div>
-        <BadgeShelf badges={score.badges} />
+      {/* 6. Play on */}
+      <section aria-labelledby="play-h" className="space-y-3">
+        <h2 id="play-h" className="font-display text-2xl font-bold">
+          Play on
+        </h2>
+        <TwistCard id={d.id} initial={d.game.twist} onChange={onChange} />
+        <Fold title={`Your badges: ${earned} of ${score.badges.length}`} summary="Points reward thinking, never speed. Open to see how to earn the rest.">
+          <BadgeShelf badges={score.badges} />
+        </Fold>
       </section>
       <BadgeToasts badges={score.badges} />
 
@@ -240,6 +244,37 @@ export function ResultsStep({ discovery, anonymous, onChange }: { discovery: Dis
       </footer>
       {anonymous && <SaveToAccount />}
     </div>
+  );
+}
+
+const GLANCE_TONE = { good: "border-green-600 bg-green-50", warn: "border-amber-400 bg-amber-50", plain: "border-cream-300 bg-cream-50" } as const;
+
+// One answer at a glance: a label, a big value and one line of context.
+function Glance({ label, value, note, tone = "plain" }: { label: string; value: string; note: string; tone?: keyof typeof GLANCE_TONE }) {
+  return (
+    <div className={`space-y-1 rounded-2xl border-2 p-4 ${GLANCE_TONE[tone]}`}>
+      <p className="text-xs font-bold tracking-wide text-ink-500 uppercase">{label}</p>
+      <p className="font-display text-2xl leading-tight font-bold">{value}</p>
+      {note && <p className="text-sm text-ink-700">{note}</p>}
+    </div>
+  );
+}
+
+// A section folded away until someone opens it.
+function Fold({ id, title, summary, open, onToggle, children }: { id?: string; title: string; summary: string; open?: boolean; onToggle?: (open: boolean) => void; children: React.ReactNode }) {
+  return (
+    <details id={id} open={open} onToggle={onToggle ? (e) => onToggle(e.currentTarget.open) : undefined} className="group scroll-mt-6 rounded-2xl border border-cream-300 bg-cream-50 open:bg-white">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 [&::-webkit-details-marker]:hidden">
+        <span>
+          <span className="block font-display text-lg font-bold">{title}</span>
+          <span className="block text-sm text-ink-700">{summary}</span>
+        </span>
+        <span className="text-xl text-ink-500 transition-transform group-open:rotate-180" aria-hidden>
+          ▾
+        </span>
+      </summary>
+      <div className="border-t border-cream-200 p-4">{children}</div>
+    </details>
   );
 }
 

@@ -53,7 +53,7 @@ test("feedback and downloads reach the pilot dashboard", async ({ page, browser 
   await page.getByRole("button", { name: "Useful" }).click();
   await page.getByRole("button", { name: /^Ready/ }).click();
   await page.getByRole("button", { name: /Build my workflow/ }).click();
-  await expect(page.getByRole("heading", { name: "Take it away" })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByRole("heading", { name: "At a glance" })).toBeVisible({ timeout: 60_000 });
 
   expect((await page.request.get(`/api/discover/${id}/pdf`)).status()).toBe(200);
   await page.getByRole("radio", { name: "Very" }).click();

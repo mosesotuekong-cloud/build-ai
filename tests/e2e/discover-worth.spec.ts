@@ -37,13 +37,16 @@ test("a team starts from its week and gets a verdict, business case and AI Act c
   await page.getByRole("button", { name: /^Low/ }).click();
   await page.getByRole("button", { name: /^Can't be undone/ }).click();
   await page.getByRole("button", { name: /Build my workflow/ }).click();
-  await expect(page.getByRole("heading", { name: "Take it away" })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByRole("heading", { name: "At a glance" })).toBeVisible({ timeout: 60_000 });
 
+  // The detail is folded away under the at-a-glance tiles.
+  for (const fold of ["Why this verdict", "The business case", "EU AI Act check"]) await page.locator("summary", { hasText: fold }).click();
   await expect(page.getByRole("heading", { name: "Plan it" })).toBeVisible();
   await expect(page.getByRole("heading", { name: /Likely high-risk under the EU AI Act/ })).toBeVisible();
   await page.getByLabel("Cases a month").fill("500");
   await page.getByRole("button", { name: "Save these numbers" }).click();
   await expect(page.getByText("Saved. The PDF uses these numbers.")).toBeVisible();
   await page.reload();
+  await page.locator("summary", { hasText: "The business case" }).click();
   await expect(page.getByLabel("Cases a month")).toHaveValue("500");
 });

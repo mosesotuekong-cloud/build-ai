@@ -19,8 +19,8 @@ test("the worked example runs from one click", async ({ page }, testInfo) => {
   }
   await expect(page.locator("[aria-label='Your design so far']")).toContainText("Finance confirms any order");
   await page.getByRole("button", { name: /Build my workflow/ }).click();
-  await expect(page.getByRole("heading", { name: "Take it away" })).toBeVisible({ timeout: 60_000 });
-  await expect(page.getByRole("heading", { name: "Plan it" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "At a glance" })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText("Plan it").first()).toBeVisible();
   await expect(page.getByLabel("Cases a month")).toHaveValue("300");
   await expect(page.getByText("8 months").first()).toBeVisible();
 
