@@ -160,6 +160,8 @@ export const gameSchema = z.object({
   nudges: z.number().int().min(0).default(0),
   downloaded: z.boolean().default(false),
   twist: z.object({ key: z.string(), response: z.string().default("") }).nullable().default(null),
+  // A worked-example run (one-click demo mode): kept out of pilot metrics.
+  demo: z.boolean().default(false),
 });
 export type Game = z.infer<typeof gameSchema>;
 export const chatTurnSchema = z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(4000) });

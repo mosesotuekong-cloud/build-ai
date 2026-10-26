@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { buttonClasses } from "@/components/ui/button";
+import { DemoLauncher } from "@/components/discover/demo-launcher";
 import { readinessScore } from "@/lib/ai/schemas/discovery";
 import { functionLabel } from "@/lib/discover/model";
 import { listOwnDiscoveries } from "@/lib/discover/server";
@@ -18,9 +19,12 @@ export default async function DiscoveriesPage() {
           <h1 className="font-display text-4xl font-bold">Your discoveries</h1>
           <p className="text-ink-700">Saved in this browser. Add your email on any finished discovery to keep them everywhere.</p>
         </div>
-        <Link href="/discover/new" className={buttonClasses("primary")}>
-          Start a discovery
-        </Link>
+        <div className="flex flex-wrap items-start gap-3">
+          <DemoLauncher label="▶ Worked example" />
+          <Link href="/discover/new" className={buttonClasses("primary")}>
+            Start a discovery
+          </Link>
+        </div>
       </div>
       {list.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-cream-300 p-8 text-center text-ink-700">Nothing here yet. Start your first discovery: it takes about 15 minutes.</p>

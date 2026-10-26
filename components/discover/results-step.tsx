@@ -7,6 +7,7 @@ import { Stamp } from "@/components/game/stamp";
 import { scoreOf } from "@/lib/discover/score";
 import { BadgeShelf, BadgeToasts, ScoreBar } from "./board";
 import { TwistCard } from "./twist-card";
+import { DEMO_ANSWERS } from "@/lib/discover/demo-scenario";
 import { editCards, followUpQuestions, saveToAccount, strengthenDiscovery } from "@/app/discover/actions";
 import { ScoreRing } from "@/components/game/score-ring";
 import { Button, buttonClasses } from "@/components/ui/button";
@@ -378,6 +379,15 @@ function Strengthen({ discovery: d, onChange }: { discovery: Discovery; onChange
               />
             </fieldset>
           ))}
+          {d.game.demo && (
+            <button
+              type="button"
+              onClick={() => setAnswers((a) => ({ ...a, ...Object.fromEntries(questions.map((q) => [q.id, a[q.id] || DEMO_ANSWERS[q.topic] || ""])) }))}
+              className="rounded-full border-2 border-dashed border-amber-400 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-ink-900 hover:bg-amber-100"
+            >
+              ✨ Fill demo answers
+            </button>
+          )}
           <p className="text-sm text-ink-500">Don&apos;t include anyone&apos;s name or personal details.</p>
           <Button type="submit" disabled={working} className="px-7 py-4 text-lg">
             {working ? "Strengthening your workflow…" : "Strengthen my workflow →"}

@@ -31,10 +31,11 @@ export default async function PilotPage({ searchParams }: PageProps<"/admin/pilo
   const since = sinceFor(period);
   const admin = createAdminClient();
 
-  let dq = admin.from("discoveries").select("id, created_at, function_slug, challenge, feedback").order("created_at", { ascending: false }).limit(5000);
+  let dq = admin.from("discoveries").select("id, created_at, function_slug, challenge, feedback, game").order("created_at", { ascending: false }).limit(5000);
   if (since) dq = dq.gte("created_at", since);
   const { data: rows } = await dq;
-  const discoveries: MetricDiscovery[] = (rows ?? []).map((r) => ({
+  // Worked-example runs (demo mode) are demos, not pilots.
+  const discoveries: MetricDiscovery[] = (rows ?? []).filter((r) => (r.game as { demo?: boolean } | null)?.demo !== true).map((r) => ({
     id: r.id,
     created_at: r.created_at,
     function_slug: r.function_slug,

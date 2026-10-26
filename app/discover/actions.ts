@@ -16,6 +16,7 @@ import type { TriagedTask } from "@/lib/ai/schemas/discovery";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { recordEvent } from "@/lib/discover/events";
 import { TWISTS } from "@/lib/discover/twists";
+import { DEMO_BUSINESS, DEMO_CHALLENGE, DEMO_DESIGN, DEMO_RANK, DEMO_SETUP } from "@/lib/discover/demo-scenario";
 import { readinessScore } from "@/lib/ai/schemas/discovery";
 import { compileN8n } from "@/lib/export/n8n/compile";
 import { validatePlan, type Plan } from "@/lib/export/plan";
@@ -40,6 +41,57 @@ async function update(id: string, patch: Record<string, unknown>) {
     .update({ ...patch, updated_at: new Date().toISOString() })
     .eq("id", id);
   if (error) throw new Error(error.message);
+}
+
+// Signs in anonymously if needed, and checks the per-IP daily limit.
+async function visitorFor(): Promise<{ userId: string; ipHash: string } | { error: string }> {
+  const supabase = await createClient();
+  let { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) {
+    const { data, error } = await supabase.auth.signInAnonymously();
+    if (error || !data.user) return { error: "We couldn't start just now. Please try again in a minute." };
+    auth = { user: data.user };
+  }
+  const h = await headers();
+  const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
+  const ipHash = hashIp(ip);
+  const since = new Date(Date.now() - 86_400_000).toISOString();
+  const { count } = await createAdminClient().from("discoveries").select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("created_at", since);
+  if ((count ?? 0) >= readServerEnv().DISCOVERY_STARTS_PER_IP_PER_DAY) {
+    return { error: "You've started a lot of discoveries today. Carry on with one of your earlier ones, or come back tomorrow." };
+  }
+  return { userId: auth.user!.id, ipHash };
+}
+
+// The worked example in one click: the payment-proof checker with every
+// card already answered, opening on the first card. Marked as a demo so it
+// stays out of the pilot metrics.
+export async function startDemoDiscovery(): Promise<Result> {
+  const v = await visitorFor();
+  if ("error" in v) return fail(v.error);
+  const s = DEMO_SETUP;
+  const { data, error } = await createAdminClient()
+    .from("discoveries")
+    .insert({
+      user_id: v.userId,
+      function_slug: s.function_slug,
+      players: s.players,
+      player_names: s.player_names,
+      stack: s.stack,
+      region: s.region,
+      ip_hash: v.ipHash,
+      challenge: DEMO_CHALLENGE,
+      stage: "cards",
+      card: 0,
+      design: DEMO_DESIGN,
+      rank: DEMO_RANK,
+      business: DEMO_BUSINESS,
+      game: { nudges: 0, downloaded: false, twist: null, demo: true },
+    })
+    .select("id")
+    .single();
+  if (error || !data) return fail("We couldn't load the example. Please try again.");
+  redirect(`/discover/${data.id}`);
 }
 
 // Step 1: function, team size, stack and region. Starts an anonymous
