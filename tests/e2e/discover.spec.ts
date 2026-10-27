@@ -47,6 +47,8 @@ test("a team runs a quick discovery from setup to a strengthened workflow", asyn
   for (const file of ["pdf", "n8n", "mcp-server", "mcp-workflow", "mcp-tool"]) {
     expect((await page.request.get(`/api/discover/${id}/${file}`)).status(), file).toBe(200);
   }
+  // Starter packages for tools outside the stack aren't offered.
+  expect((await page.request.get(`/api/discover/${id}/power-automate`)).status()).toBe(404);
 
   await page.getByRole("button", { name: /Make it stronger/ }).click();
   await page.getByRole("button", { name: "20 to 100" }).click();

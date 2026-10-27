@@ -2,6 +2,7 @@ import "server-only";
 import { Document, Page, renderToBuffer, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { FIX_PROMPTS, oversightLabel, SLOT_LABELS } from "@/lib/ai/schemas/canvas";
 import { READINESS_DIMENSIONS, readinessScore } from "@/lib/ai/schemas/discovery";
+import { packagesFor } from "@/lib/export/packages";
 import { APP_NAME } from "@/lib/config/app";
 import { getPlatform } from "@/lib/config/platforms";
 import { AI_KINDS, READINESS, RISK_LEVELS, VALUE_LABELS } from "@/lib/discovery/scorecard";
@@ -226,7 +227,7 @@ function DiscoveryDocument({ d }: { d: Discovery }) {
 
         <T style={s.h2}>Build it</T>
         <T style={s.p}>
-          {`Made for ${stack || "your stack"}. Download the starter files from ${APP_NAME}: ${d.stack.includes("n8n") ? "an n8n workflow, " : ""}an MCP tool so AI apps can call it, and a build guide for each tool. Build with made-up data first, and keep a person in control of anything that matters.`}
+          {`Made for ${stack || "your stack"}. Download the starter files from ${APP_NAME}: ${d.stack.includes("n8n") ? "an n8n workflow, " : ""}${packagesFor(d.stack).map((p) => `a ${p.label}, `).join("")}an MCP tool so AI apps can call it, and a build guide for each tool. Build with made-up data first, and keep a person in control of anything that matters.`}
         </T>
 
         <Text style={s.footerLeft} fixed>

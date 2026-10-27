@@ -1,8 +1,8 @@
 import type { Plan } from "./plan";
 
 // Every platform compiler turns the neutral plan into a file the builder can
-// import. n8n is the first; Power Automate and Copilot Studio come later and
-// plug in here without touching the plan.
+// import. n8n uses this interface; the zip packages (Power Automate, Copilot,
+// Databricks, Fabric) are listed in ./packages.
 export interface WorkflowCompiler {
   platform: string;
   fileExtension: string;

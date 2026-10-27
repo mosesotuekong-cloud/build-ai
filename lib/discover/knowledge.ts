@@ -4,6 +4,7 @@ import { AI_KINDS, READINESS, RISK_LEVELS, VALUE_LABELS } from "@/lib/discovery/
 import { AI_ACT_CHECKER_URL } from "./ai-act";
 import { CARDS, CARD_EXAMPLES } from "./model";
 import { REGIONS } from "./regions";
+import { PACKAGES } from "@/lib/export/packages";
 import { LEVELS } from "./score";
 import { TWISTS } from "./twists";
 import { EFFORT_LEVELS, REVERSIBILITY_LEVELS, VERDICTS } from "./verdict";
@@ -61,6 +62,8 @@ Points reward thinking, never speed. Badges: Waste hunter (all of Fix it first),
 - Workflow PDF: the challenge, workflow, verdict, business case, AI Act check and, once strengthened, readiness, risks and the 30-day plan.
 - n8n JSON (when n8n is in the stack): in n8n choose Import from file, read the setup note, connect your own accounts (credentials are empty on purpose), replace every value starting with REPLACE, test with made-up data, and check the approval step waits for a person.
 - Create MCP tool: MCP is the open standard AI apps use to call tools. For n8n: import "the workflow, callable as a tool", then the MCP server; in the server's tool node pick that workflow; add a Bearer Auth token to the MCP Server node; publish both; paste the Production URL and token into Claude, ChatGPT, Copilot Studio or another MCP client. For other stacks: an MCP tool definition (name, description, inputs) with hosting notes. Always add authentication, start read-only, and keep a person approving anything that changes records.
+${PACKAGES.map((p) => `- ${p.label} (when the stack includes ${p.platforms.join(" or ")}): ${p.what} How: ${p.how}`).join("\n")}
+- The Databricks and Fabric packages have no "wait for a person" step, so cases needing a person go to a review table; a second notebook applies only the decisions people have made. Messages wait in an outbox table until a sender is connected. These starter packages follow Microsoft's and Databricks' published formats but haven't been test-imported on a live system yet, so check them on a test workspace first.
 - Build guides: step-by-step for each other tool in the stack, slot by slot.
 
 ## Saving and privacy

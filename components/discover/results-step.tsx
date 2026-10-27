@@ -22,6 +22,7 @@ import { VERDICTS } from "@/lib/discover/verdict";
 import { AiActPanel, BusinessCasePanel, VerdictPanel } from "./worth-panels";
 import { FeedbackBox } from "./feedback-box";
 import { coachDesign, regionOf, type Discovery } from "@/lib/discover/model";
+import { packagesFor } from "@/lib/export/packages";
 import { orderBlocks } from "@/lib/export/plan";
 
 const file = (id: string, name: string) => `/api/discover/${id}/${name}`;
@@ -35,6 +36,7 @@ export function ResultsStep({ discovery, anonymous, onChange }: { discovery: Dis
   const blocks = plan ? orderBlocks(plan) : [];
   const st = d.strengthened;
   const hasN8n = d.stack.includes("n8n");
+  const packages = packagesFor(d.stack);
   const guides = d.stack.filter((s) => s !== "n8n").map((s) => getPlatform(s)).filter((p): p is NonNullable<typeof p> => Boolean(p));
   const { verdict, reasons } = verdictOf(d);
   const region = regionOf(d);
@@ -127,6 +129,11 @@ export function ResultsStep({ discovery, anonymous, onChange }: { discovery: Dis
               ⚙️ n8n JSON
             </a>
           )}
+          {packages.map((p) => (
+            <a key={p.key} href={file(d.id, p.key)} className={buttonClasses("secondary", "px-3 py-1.5 text-sm")}>
+              {p.icon} {p.label}
+            </a>
+          ))}
           <a href="#mcp" onClick={() => setMcpOpen(true)} className={buttonClasses("secondary", "px-3 py-1.5 text-sm")}>
             🔌 MCP tool
           </a>
@@ -185,6 +192,26 @@ export function ResultsStep({ discovery, anonymous, onChange }: { discovery: Dis
         <Fold title="EU AI Act check" summary={`${AI_ACT_LABELS[aiAct.category].title}. A first read, not legal advice.`}>
           <AiActPanel check={aiAct} emphasise={region.euAiAct} />
         </Fold>
+        {packages.length > 0 && (
+          <Fold title="How to use the starter packages" summary={`${packages.map((p) => p.label).join(", ")}: what's inside and how to import ${packages.length > 1 ? "them" : "it"}.`}>
+            <div className="space-y-4">
+              {packages.map((p) => (
+                <div key={p.key} className="space-y-1">
+                  <h3 className="font-display text-lg font-bold">
+                    {p.icon} {p.label}
+                  </h3>
+                  <p className="text-ink-700">{p.what}</p>
+                  <p className="text-ink-700">
+                    <strong>How:</strong> {p.how}
+                  </p>
+                </div>
+              ))}
+              <p className="text-sm text-ink-500">
+                Every value that starts with REPLACE needs filling in, and no credentials are included. These follow the vendors&apos; published formats but haven&apos;t been test-imported on a live system yet, so try them on a test workspace with made-up data first.
+              </p>
+            </div>
+          </Fold>
+        )}
         <Fold id="mcp" open={mcpOpen} onToggle={setMcpOpen} title="Create an MCP tool" summary="Let Claude, ChatGPT or Copilot Studio call this workflow as a tool.">
           <div className="space-y-3">
             <p className="text-ink-700">

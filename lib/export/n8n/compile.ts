@@ -1,5 +1,5 @@
-import { createHash } from "node:crypto";
 import type { WorkflowCompiler } from "../compiler";
+import { idMaker } from "../ids";
 import { orderBlocks, validatePlan, type Plan, type PlanBlock } from "../plan";
 import * as T from "./templates";
 
@@ -39,14 +39,6 @@ const SERVICE_LABEL: Partial<Record<string, string>> = {
   [T.N8N_TYPES.slack.type]: "Slack",
   [T.N8N_TYPES.chatModel.type]: "OpenAI (or swap the chat model for the one your organisation uses)",
 };
-
-function idMaker(seed: string) {
-  let n = 0;
-  return () => {
-    const h = createHash("sha1").update(`${seed}:${n++}`).digest("hex");
-    return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`;
-  };
-}
 
 const replace = (what: string | null, fallback: string) => `${T.REPLACE}: ${what?.trim() || fallback}`;
 
